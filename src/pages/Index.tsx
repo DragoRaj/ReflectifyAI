@@ -773,12 +773,12 @@ const Index = () => {
             <div className="flex justify-center overflow-x-auto pb-3">
               <div className="flex space-x-1 p-1 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm min-w-max">
                 <button
-                  onClick={() => setActiveTab("rant")}
-                  className={`tab-button ${activeTab === "rant" ? "active" : ""}`}
+                  onClick={() => setActiveTab("content")}
+                  className={`tab-button ${activeTab === "content" ? "active" : ""}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>Express</span>
+                    <Shield className="h-4 w-4" />
+                    <span>Content Analysis</span>
                   </div>
                 </button>
                 
@@ -787,18 +787,18 @@ const Index = () => {
                   className={`tab-button ${activeTab === "chat" ? "active" : ""}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <HeartPulse className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4" />
                     <span>Chat</span>
                   </div>
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab("health")}
-                  className={`tab-button ${activeTab === "health" ? "active" : ""}`}
+                  onClick={() => setActiveTab("rant")}
+                  className={`tab-button ${activeTab === "rant" ? "active" : ""}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <HeartPulse className="h-4 w-4" />
-                    <span>Health</span>
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Express</span>
                   </div>
                 </button>
                 
@@ -823,22 +823,12 @@ const Index = () => {
                 </button>
                 
                 <button
-                  onClick={() => setActiveTab("content")}
-                  className={`tab-button ${activeTab === "content" ? "active" : ""}`}
+                  onClick={() => setActiveTab("health")}
+                  className={`tab-button ${activeTab === "health" ? "active" : ""}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <Shield className="h-4 w-4" />
-                    <span>Content Analysis</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab("analytics")}
-                  className={`tab-button ${activeTab === "analytics" ? "active" : ""}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <BarChart2 className="h-4 w-4" />
-                    <span>Analytics</span>
+                    <HeartPulse className="h-4 w-4" />
+                    <span>Health</span>
                   </div>
                 </button>
               </div>

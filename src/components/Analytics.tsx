@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -15,81 +15,63 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Activity, Brain, TrendingUp, Calendar, Award, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Activity, Brain, TrendingUp, Calendar, Award, ArrowUpRight, Info, Sparkles } from "lucide-react";
 
-// Sample data - in a real app this would come from a database
-const moodData = [
-  { date: "Jan 01", value: 3, mood: "neutral" },
-  { date: "Jan 05", value: 2, mood: "sad" },
-  { date: "Jan 10", value: 4, mood: "happy" },
-  { date: "Jan 15", value: 5, mood: "excited" },
-  { date: "Jan 20", value: 3, mood: "neutral" },
-  { date: "Jan 25", value: 4, mood: "calm" },
-  { date: "Feb 01", value: 4, mood: "happy" },
-  { date: "Feb 05", value: 2, mood: "angry" },
-  { date: "Feb 10", value: 5, mood: "loving" },
-  { date: "Feb 15", value: 4, mood: "peaceful" },
-  { date: "Feb 20", value: 3, mood: "neutral" },
-  { date: "Feb 25", value: 4, mood: "happy" },
-];
+// Sample data with empty state alternatives
+const getEmptyLineChartData = () => {
+  return [
+    { date: "Day 1", value: 0, mood: "neutral" },
+    { date: "Day 7", value: 0, mood: "neutral" },
+    { date: "Day 14", value: 0, mood: "neutral" },
+    { date: "Day 21", value: 0, mood: "neutral" },
+    { date: "Day 30", value: 0, mood: "neutral" },
+  ];
+};
 
-const activityData = [
-  { name: "Jan", meditation: 8, journal: 12, chat: 20 },
-  { name: "Feb", meditation: 10, journal: 15, chat: 18 },
-  { name: "Mar", meditation: 15, journal: 20, chat: 25 },
-  { name: "Apr", meditation: 12, journal: 18, chat: 22 },
-  { name: "May", meditation: 18, journal: 22, chat: 30 },
-  { name: "Jun", meditation: 20, journal: 25, chat: 35 },
-];
+const getEmptyBarChartData = () => {
+  return [
+    { name: "Week 1", meditation: 0, journal: 0, chat: 0 },
+    { name: "Week 2", meditation: 0, journal: 0, chat: 0 },
+    { name: "Week 3", meditation: 0, journal: 0, chat: 0 },
+    { name: "Week 4", meditation: 0, journal: 0, chat: 0 },
+  ];
+};
 
-const moodDistribution = [
-  { name: "Happy", value: 35, color: "#10b981" },
-  { name: "Calm", value: 20, color: "#d97706" },
-  { name: "Peaceful", value: 15, color: "#10b981" },
-  { name: "Neutral", value: 15, color: "#6366f1" },
-  { name: "Sad", value: 10, color: "#8b5cf6" },
-  { name: "Angry", value: 5, color: "#ef4444" },
-];
-
-const progressMetrics = [
-  {
-    title: "Wellbeing Score",
-    value: 78,
-    change: 12,
-    trend: "up",
-    icon: <Activity className="h-4 w-4" />,
-    color: "from-reflectify-blue to-reflectify-teal"
-  },
-  {
-    title: "Mindfulness",
-    value: 65,
-    change: 8,
-    trend: "up",
-    icon: <Brain className="h-4 w-4" />,
-    color: "from-reflectify-purple to-reflectify-blue"
-  },
-  {
-    title: "Mood Stability",
-    value: 82,
-    change: 5,
-    trend: "up",
-    icon: <TrendingUp className="h-4 w-4" />,
-    color: "from-reflectify-teal to-green-400"
-  },
-  {
-    title: "Journaling Streak",
-    value: 12,
-    unit: "days",
-    change: 4,
-    trend: "up",
-    icon: <Calendar className="h-4 w-4" />,
-    color: "from-amber-500 to-orange-400"
-  },
-];
+const getEmptyMoodDistribution = () => {
+  return [
+    { name: "No Data", value: 100, color: "#64748b" }
+  ];
+};
 
 const Analytics = () => {
-  const [timeframe, setTimeframe] = useState("6m");
+  const [timeframe, setTimeframe] = useState("1m");
+  const [hasData, setHasData] = useState(false);
+  const [daysSinceStart, setDaysSinceStart] = useState(0);
+  const [moodData, setMoodData] = useState(getEmptyLineChartData());
+  const [activityData, setActivityData] = useState(getEmptyBarChartData());
+  const [moodDistribution, setMoodDistribution] = useState(getEmptyMoodDistribution());
+  
+  // Simulating user data loading and checking
+  useEffect(() => {
+    // Check if user has stored start date
+    const startDate = localStorage.getItem("userStartDate");
+    
+    if (startDate) {
+      const start = new Date(startDate);
+      const today = new Date();
+      const diffTime = Math.abs(today.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      setDaysSinceStart(diffDays);
+      
+      // If user has been using the app for at least 7 days, we could show some data
+      setHasData(diffDays >= 7);
+    } else {
+      // Set today as start date if not exist
+      localStorage.setItem("userStartDate", new Date().toISOString());
+      setDaysSinceStart(0);
+      setHasData(false);
+    }
+  }, []);
   
   const getMoodColor = (mood: string): string => {
     switch (mood) {
@@ -116,162 +98,245 @@ const Analytics = () => {
       
       {/* Metrics Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {progressMetrics.map((metric, index) => (
-          <div 
-            key={index} 
-            className="glass-card rounded-xl p-4 border border-reflectify-blue/10 shadow-lg shadow-reflectify-blue/5 transition-all duration-300 hover:border-reflectify-blue/20 animate-fade-in"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div className={`p-2 rounded-lg bg-gradient-to-r ${metric.color} text-white`}>
-                {metric.icon}
+        {!hasData ? (
+          <div className="col-span-full glass-card rounded-xl p-6 border border-reflectify-blue/10 shadow-lg shadow-reflectify-blue/5 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="p-3 rounded-full bg-reflectify-blue/10 text-reflectify-blue">
+                <Info className="h-6 w-6" />
               </div>
-              <div className={`flex items-center ${metric.trend === 'up' ? 'text-reflectify-teal' : 'text-red-500'}`}>
-                <span className="text-xs font-medium">{metric.change}%</span>
-                {metric.trend === 'up' ? (
-                  <ArrowUpRight className="h-3 w-3 ml-0.5" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3 ml-0.5" />
-                )}
+              <h3 className="text-lg font-medium">Your analytics are being prepared</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                As you continue to use Reflectify, we'll gather insights about your wellbeing journey.
+                Check back soon to see your personalized analytics.
+              </p>
+              <div className="mt-2 text-sm text-reflectify-blue">
+                Day {daysSinceStart} of your journey
               </div>
-            </div>
-            <h3 className="text-sm font-medium text-muted-foreground">{metric.title}</h3>
-            <div className="flex items-baseline">
-              <span className="text-2xl font-bold">{metric.value}</span>
-              {metric.unit && <span className="text-sm text-muted-foreground ml-1">{metric.unit}</span>}
             </div>
           </div>
-        ))}
+        ) : (
+          // Your normal metrics here when hasData is true
+          [
+            {
+              title: "Wellbeing Score",
+              value: "N/A",
+              change: 0,
+              trend: "up",
+              icon: <Activity className="h-4 w-4" />,
+              color: "from-reflectify-blue to-reflectify-teal"
+            },
+            {
+              title: "Mindfulness",
+              value: "N/A",
+              change: 0,
+              trend: "up",
+              icon: <Brain className="h-4 w-4" />,
+              color: "from-reflectify-purple to-reflectify-blue"
+            },
+            {
+              title: "Mood Stability",
+              value: "N/A",
+              change: 0,
+              trend: "up",
+              icon: <TrendingUp className="h-4 w-4" />,
+              color: "from-reflectify-teal to-green-400"
+            },
+            {
+              title: "Journaling Streak",
+              value: 0,
+              unit: "days",
+              change: 0,
+              trend: "up",
+              icon: <Calendar className="h-4 w-4" />,
+              color: "from-amber-500 to-orange-400"
+            }
+          ].map((metric, index) => (
+            <div 
+              key={index} 
+              className="glass-card rounded-xl p-4 border border-reflectify-blue/10 shadow-lg shadow-reflectify-blue/5 transition-all duration-300 hover:border-reflectify-blue/20 animate-fade-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div className={`p-2 rounded-lg bg-gradient-to-r ${metric.color} text-white`}>
+                  {metric.icon}
+                </div>
+                <div className={`flex items-center ${metric.trend === 'up' ? 'text-reflectify-teal' : 'text-muted-foreground'}`}>
+                  <span className="text-xs font-medium">{metric.change}%</span>
+                  {metric.trend === 'up' && (
+                    <ArrowUpRight className="h-3 w-3 ml-0.5" />
+                  )}
+                </div>
+              </div>
+              <h3 className="text-sm font-medium text-muted-foreground">{metric.title}</h3>
+              <div className="flex items-baseline">
+                <span className="text-2xl font-bold">{metric.value}</span>
+                {metric.unit && <span className="text-sm text-muted-foreground ml-1">{metric.unit}</span>}
+              </div>
+            </div>
+          ))
+        )}
       </div>
       
-      {/* Time frame selector */}
-      <div className="flex justify-center space-x-1 p-1 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm w-fit mx-auto">
-        <button
-          onClick={() => setTimeframe("1m")}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            timeframe === "1m" ? "bg-reflectify-blue text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-          }`}
-        >
-          1 Month
-        </button>
-        <button
-          onClick={() => setTimeframe("3m")}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            timeframe === "3m" ? "bg-reflectify-blue text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-          }`}
-        >
-          3 Months
-        </button>
-        <button
-          onClick={() => setTimeframe("6m")}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            timeframe === "6m" ? "bg-reflectify-blue text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-          }`}
-        >
-          6 Months
-        </button>
-        <button
-          onClick={() => setTimeframe("1y")}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            timeframe === "1y" ? "bg-reflectify-blue text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-          }`}
-        >
-          1 Year
-        </button>
-      </div>
+      {/* Time frame selector - only show if hasData */}
+      {hasData && (
+        <div className="flex justify-center space-x-1 p-1 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm w-fit mx-auto">
+          <button
+            onClick={() => setTimeframe("1m")}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              timeframe === "1m" ? "bg-reflectify-blue text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            1 Month
+          </button>
+          <button
+            onClick={() => setTimeframe("3m")}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              timeframe === "3m" ? "bg-reflectify-blue text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            3 Months
+          </button>
+          <button
+            onClick={() => setTimeframe("6m")}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              timeframe === "6m" ? "bg-reflectify-blue text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            6 Months
+          </button>
+          <button
+            onClick={() => setTimeframe("1y")}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              timeframe === "1y" ? "bg-reflectify-blue text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            1 Year
+          </button>
+        </div>
+      )}
       
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Mood Trends */}
         <div className="glass-card rounded-xl p-4 border border-reflectify-blue/10 shadow-lg shadow-reflectify-blue/5 transition-all duration-300 hover:border-reflectify-blue/20">
           <h3 className="font-display font-medium mb-4">Mood Trends</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={moodData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="date" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const mood = payload[0].payload.mood;
-                      return (
-                        <div className="bg-white dark:bg-gray-800 p-2 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
-                          <p className="text-sm font-medium">{payload[0].payload.date}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getMoodColor(mood) }}></div>
-                            <span className="capitalize text-xs">{mood}</span>
+          
+          {!hasData ? (
+            <div className="h-64 flex items-center justify-center">
+              <div className="text-center p-6">
+                <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Sparkles className="h-7 w-7 text-reflectify-blue/60" />
+                </div>
+                <h4 className="text-base font-medium mb-2">No mood data yet</h4>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  As you log your moods in the chat and journaling features, you'll see trends appear here.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={moodData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const mood = payload[0].payload.mood;
+                        return (
+                          <div className="bg-white dark:bg-gray-800 p-2 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+                            <p className="text-sm font-medium">{payload[0].payload.date}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getMoodColor(mood) }}></div>
+                              <span className="capitalize text-xs">{mood}</span>
+                            </div>
                           </div>
-                        </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#8884d8"
+                    strokeWidth={2}
+                    dot={(props) => {
+                      const mood = props.payload.mood;
+                      return (
+                        <circle
+                          cx={props.cx}
+                          cy={props.cy}
+                          r={4}
+                          fill={getMoodColor(mood)}
+                          stroke="none"
+                          strokeWidth={2}
+                        />
                       );
-                    }
-                    return null;
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#8884d8"
-                  strokeWidth={2}
-                  dot={(props) => {
-                    const mood = props.payload.mood;
-                    return (
-                      <circle
-                        cx={props.cx}
-                        cy={props.cy}
-                        r={4}
-                        fill={getMoodColor(mood)}
-                        stroke="none"
-                        strokeWidth={2}
-                      />
-                    );
-                  }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+                    }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
         
         {/* Activity Engagement */}
         <div className="glass-card rounded-xl p-4 border border-reflectify-blue/10 shadow-lg shadow-reflectify-blue/5 transition-all duration-300 hover:border-reflectify-blue/20">
           <h3 className="font-display font-medium mb-4">Activity Engagement</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={activityData}
-                margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-white dark:bg-gray-800 p-2 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
-                          <p className="text-sm font-medium">{payload[0].payload.name}</p>
-                          <div className="space-y-1 mt-1">
-                            {payload.map((entry, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
-                                <span className="text-xs">{entry.name}: {entry.value}</span>
-                              </div>
-                            ))}
+          
+          {!hasData ? (
+            <div className="h-64 flex items-center justify-center">
+              <div className="text-center p-6">
+                <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Activity className="h-7 w-7 text-reflectify-blue/60" />
+                </div>
+                <h4 className="text-base font-medium mb-2">No activity data yet</h4>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  Your activity data will appear here as you use meditation, journaling, and chat features.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={activityData}
+                  margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white dark:bg-gray-800 p-2 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+                            <p className="text-sm font-medium">{payload[0].payload.name}</p>
+                            <div className="space-y-1 mt-1">
+                              {payload.map((entry, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                                  <span className="text-xs">{entry.name}: {entry.value}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
-                <Bar dataKey="meditation" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="journal" fill="#82ca9d" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="chat" fill="#ffc658" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
+                  <Bar dataKey="meditation" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="journal" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="chat" fill="#ffc658" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       </div>
       
@@ -279,86 +344,100 @@ const Analytics = () => {
         {/* Mood Distribution */}
         <div className="glass-card rounded-xl p-4 border border-reflectify-blue/10 shadow-lg shadow-reflectify-blue/5 transition-all duration-300 hover:border-reflectify-blue/20">
           <h3 className="font-display font-medium mb-4">Mood Distribution</h3>
-          <div className="h-64 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={moodDistribution}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {moodDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-white dark:bg-gray-800 p-2 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }}></div>
-                            <span className="text-sm font-medium">{data.name}</span>
+          
+          {!hasData ? (
+            <div className="h-64 flex items-center justify-center">
+              <div className="text-center p-6">
+                <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <TrendingUp className="h-7 w-7 text-reflectify-blue/60" />
+                </div>
+                <h4 className="text-base font-medium mb-2">Mood distribution coming soon</h4>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  As you track your moods, we'll analyze the distribution to help you understand your emotional patterns.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={moodDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {moodDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white dark:bg-gray-800 p-2 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }}></div>
+                              <span className="text-sm font-medium">{data.name}</span>
+                            </div>
+                            <p className="text-xs mt-1">{data.value}% of your moods</p>
                           </div>
-                          <p className="text-xs mt-1">{data.value}% of your moods</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
         
         {/* Progress Analysis */}
         <div className="glass-card rounded-xl p-4 border border-reflectify-blue/10 shadow-lg shadow-reflectify-blue/5 transition-all duration-300 hover:border-reflectify-blue/20">
           <h3 className="font-display font-medium mb-4">Progress Analysis</h3>
-          <div className="py-6 px-4 space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-r from-reflectify-blue to-reflectify-purple p-3 rounded-full text-white">
-                <Award className="h-6 w-6" />
-              </div>
-              <div>
-                <h4 className="font-medium">Your Wellbeing Journey</h4>
-                <p className="text-sm text-muted-foreground">Day 45</p>
-              </div>
-            </div>
-            
-            <div className="border-l-2 border-reflectify-blue/20 pl-4 ml-6 space-y-4 py-2">
-              <div className="relative">
-                <div className="absolute -left-6 mt-1 w-3 h-3 bg-reflectify-blue rounded-full"></div>
-                <h5 className="font-medium">Consistent Progress</h5>
-                <p className="text-sm text-muted-foreground">
-                  You've been consistent in your journaling practice, with an impressive 12-day streak. Keep it up!
-                </p>
-              </div>
-              
-              <div className="relative">
-                <div className="absolute -left-6 mt-1 w-3 h-3 bg-reflectify-teal rounded-full"></div>
-                <h5 className="font-medium">Mood Improvements</h5>
-                <p className="text-sm text-muted-foreground">
-                  Your mood stability has improved by 5% over the past month, showing great resilience.
-                </p>
-              </div>
-              
-              <div className="relative">
-                <div className="absolute -left-6 mt-1 w-3 h-3 bg-reflectify-purple rounded-full"></div>
-                <h5 className="font-medium">Mindfulness Achievement</h5>
-                <p className="text-sm text-muted-foreground">
-                  You've completed 18 meditation sessions this month - that's 8% more than last month!
+          
+          {!hasData ? (
+            <div className="py-6 px-4 h-64 flex items-center justify-center">
+              <div className="text-center p-6">
+                <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Award className="h-7 w-7 text-reflectify-blue/60" />
+                </div>
+                <h4 className="text-base font-medium mb-2">Your journey is just beginning</h4>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  Day {daysSinceStart} of your wellbeing journey. Keep using Reflectify to unlock insights about your progress.
                 </p>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="py-6 px-4 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-gradient-to-r from-reflectify-blue to-reflectify-purple p-3 rounded-full text-white">
+                  <Award className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Your Wellbeing Journey</h4>
+                  <p className="text-sm text-muted-foreground">Day {daysSinceStart}</p>
+                </div>
+              </div>
+              
+              <div className="border-l-2 border-reflectify-blue/20 pl-4 ml-6 space-y-4 py-2">
+                <div className="relative">
+                  <div className="absolute -left-6 mt-1 w-3 h-3 bg-reflectify-blue rounded-full"></div>
+                  <h5 className="font-medium">Just Started</h5>
+                  <p className="text-sm text-muted-foreground">
+                    You're at the beginning of your wellbeing journey. Keep using Reflectify to see your progress!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

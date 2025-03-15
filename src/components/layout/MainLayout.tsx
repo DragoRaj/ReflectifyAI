@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, BarChart2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 interface MainLayoutProps {
@@ -56,6 +56,15 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
               onClick={() => handleTabClick("home")}
             >
               Home
+            </button>
+            <button 
+              className={`tab-button ${activeTab === "analytics" ? "active" : ""}`}
+              onClick={() => handleTabClick("analytics")}
+            >
+              <div className="flex items-center gap-1.5">
+                <BarChart2 className="h-4 w-4" />
+                <span>Analytics</span>
+              </div>
             </button>
           </nav>
           
