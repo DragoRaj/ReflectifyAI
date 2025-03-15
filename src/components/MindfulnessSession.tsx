@@ -1,8 +1,6 @@
-
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, SkipForward, Volume2, Moon, Sun, Clock, MessageCircle } from "lucide-react";
+import { Play, Pause, SkipForward, Moon, Sun, Clock, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { getAIAnalysis } from "@/utils/aiUtils";
 
@@ -15,6 +13,7 @@ interface MeditationPreset {
   duration: number;
   description: string;
   color: string;
+  audioSrc: string;
 }
 
 const MEDITATION_PRESETS: MeditationPreset[] = [
@@ -25,6 +24,7 @@ const MEDITATION_PRESETS: MeditationPreset[] = [
     duration: 300, // 5 minutes in seconds
     description: "Reduce stress and find your inner peace",
     color: "from-blue-400 to-indigo-500",
+    audioSrc: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0c6ff1bab.mp3?filename=calm-meditation-145038.mp3",
   },
   {
     id: "focus",
@@ -33,6 +33,7 @@ const MEDITATION_PRESETS: MeditationPreset[] = [
     duration: 600, // 10 minutes in seconds
     description: "Sharpen your mind and enhance productivity",
     color: "from-amber-400 to-orange-500",
+    audioSrc: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_1ddd3c63da.mp3?filename=om-mantra-chanting-for-meditation-108-times-148551.mp3",
   },
   {
     id: "sleep",
@@ -41,6 +42,7 @@ const MEDITATION_PRESETS: MeditationPreset[] = [
     duration: 900, // 15 minutes in seconds
     description: "Wind down and prepare for restful sleep",
     color: "from-indigo-500 to-purple-600",
+    audioSrc: "https://cdn.pixabay.com/download/audio/2022/05/16/audio_aeeb103b32.mp3?filename=positive-light-meditation-with-bells-theta-waves-and-rain-116057.mp3",
   },
   {
     id: "gratitude",
@@ -49,6 +51,7 @@ const MEDITATION_PRESETS: MeditationPreset[] = [
     duration: 300, // 5 minutes in seconds
     description: "Cultivate appreciation and positivity",
     color: "from-teal-400 to-green-500",
+    audioSrc: "https://cdn.pixabay.com/download/audio/2021/10/26/audio_fca7b3d63a.mp3?filename=meditation-soothing-music-for-yoga-and-self-affirmation-131543.mp3",
   },
 ];
 
@@ -87,7 +90,6 @@ const MindfulnessSession = () => {
   const [selectedPreset, setSelectedPreset] = useState<MeditationPreset | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
-  const [volume, setVolume] = useState<number>(70);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
   const [feedback, setFeedback] = useState<string | null>(null);
   
@@ -95,10 +97,6 @@ const MindfulnessSession = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   useEffect(() => {
-    // Initialize audio
-    audioRef.current = new Audio("/ambient-meditation.mp3"); // You'd need to add this file
-    audioRef.current.loop = true;
-    
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -111,22 +109,22 @@ const MindfulnessSession = () => {
     };
   }, []);
   
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-    }
-  }, [volume]);
-  
   const selectPreset = (preset: MeditationPreset) => {
     if (isPlaying) {
       pauseSession();
     }
     
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    
+    audioRef.current = new Audio(preset.audioSrc);
+    audioRef.current.loop = true;
+    
     setSelectedPreset(preset);
     setCurrentTime(0);
     setFeedback(null);
     
-    // Set initial prompt
     if (prompts[preset.id] && prompts[preset.id].length > 0) {
       setCurrentPrompt(prompts[preset.id][0]);
     }
@@ -137,25 +135,21 @@ const MindfulnessSession = () => {
     
     setIsPlaying(true);
     
-    // Start playing audio
     if (audioRef.current) {
       audioRef.current.play().catch(err => {
         console.error("Failed to play audio:", err);
       });
     }
     
-    // Set up interval to update time and prompts
     intervalRef.current = window.setInterval(() => {
       setCurrentTime(prevTime => {
         const newTime = prevTime + 1;
         
-        // Change prompts every 60 seconds
         if (newTime % 60 === 0) {
           const promptIndex = Math.floor(newTime / 60) % prompts[selectedPreset.id].length;
           setCurrentPrompt(prompts[selectedPreset.id][promptIndex]);
         }
         
-        // End session when time is up
         if (newTime >= selectedPreset.duration) {
           endSession();
           return selectedPreset.duration;
@@ -194,13 +188,11 @@ const MindfulnessSession = () => {
       setCurrentTime(prevTime => {
         const newTime = prevTime + 1;
         
-        // Change prompts every 60 seconds
         if (newTime % 60 === 0) {
           const promptIndex = Math.floor(newTime / 60) % prompts[selectedPreset.id].length;
           setCurrentPrompt(prompts[selectedPreset.id][promptIndex]);
         }
         
-        // End session when time is up
         if (newTime >= selectedPreset.duration) {
           endSession();
           return selectedPreset.duration;
@@ -262,9 +254,9 @@ const MindfulnessSession = () => {
             <button
               key={preset.id}
               onClick={() => selectPreset(preset)}
-              className="glass-card rounded-xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border border-white/20 dark:border-gray-800/40"
+              className="glass-card rounded-xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border border-white/20 dark:border-gray-800/40 group"
             >
-              <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${preset.color} flex items-center justify-center text-white mb-4`}>
+              <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${preset.color} flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300`}>
                 {preset.icon}
               </div>
               
@@ -345,16 +337,6 @@ const MindfulnessSession = () => {
                 >
                   <SkipForward className="h-4 w-4" />
                 </Button>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <Volume2 className="h-4 w-4 text-muted-foreground" />
-                <Slider 
-                  min={0} 
-                  max={100} 
-                  value={[volume]} 
-                  onValueChange={(value) => setVolume(value[0])}
-                />
               </div>
             </>
           ) : (

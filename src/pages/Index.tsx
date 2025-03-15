@@ -1,8 +1,8 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import HealthAnalysis from "@/components/HealthAnalysis";
 import MindfulnessSession from "@/components/MindfulnessSession";
+import Journal from "@/components/Journal";
 import { 
   Send, 
   Trash, 
@@ -22,7 +22,8 @@ import {
   Heart,
   Coffee,
   Angry,
-  Leaf
+  Leaf,
+  ArrowDown
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,18 +34,20 @@ type Mood = "happy" | "neutral" | "sad" | "excited" | "loving" | "calm" | "angry
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<FeatureTab>("rant");
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
   
-  // Rant Mode State
+  useEffect(() => {
+    setIsPageLoaded(true);
+  }, []);
+  
   const [rantText, setRantText] = useState("");
   const [response, setResponse] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Wellbeing Chat State
   const [mood, setMood] = useState<Mood>(null);
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState<{role: "user" | "ai"; content: string}[]>([]);
   
-  // Content Analysis State
   const [content, setContent] = useState("");
   const [analysis, setAnalysis] = useState<null | {
     toxicity: number;
@@ -56,7 +59,6 @@ const Index = () => {
     summary: string;
   }>(null);
   
-  // === RANT MODE FUNCTIONS ===
   const handleRantSubmit = async () => {
     if (!rantText.trim()) return;
     
@@ -85,7 +87,6 @@ const Index = () => {
     setResponse(null);
   };
   
-  // === WELLBEING CHAT FUNCTIONS ===
   const selectMood = (selectedMood: Mood) => {
     setMood(selectedMood);
     
@@ -219,7 +220,6 @@ const Index = () => {
     }
   };
   
-  // === CONTENT ANALYSIS FUNCTIONS ===
   const handleAnalyzeContent = async () => {
     if (!content.trim()) {
       toast.error("Please enter some content to analyze");
@@ -291,7 +291,6 @@ const Index = () => {
     toast.success("Copied to clipboard");
   };
   
-  // === RENDER FUNCTIONS ===
   const renderRantMode = () => (
     <div className="w-full max-w-2xl mx-auto space-y-6 animate-fade-in">
       <div className="space-y-2">
@@ -676,23 +675,7 @@ const Index = () => {
     </div>
   );
   
-  const renderJournal = () => (
-    <div className="w-full max-w-2xl mx-auto space-y-6 animate-fade-in">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-display font-semibold tracking-tight">Journal</h2>
-        <p className="text-muted-foreground">
-          Maintain a personal journal of your thoughts, emotions, and experiences.
-        </p>
-      </div>
-      
-      <div className="glass-card rounded-xl p-6 text-center space-y-6 border border-reflectify-teal/10 shadow-lg shadow-reflectify-teal/5">
-        <div className="flex items-center justify-center p-10">
-          <BookText className="h-12 w-12 text-muted-foreground" />
-        </div>
-        <p className="text-muted-foreground">Journal functionality coming soon!</p>
-      </div>
-    </div>
-  );
+  const renderJournal = () => <Journal />;
   
   const renderFeatureContent = () => {
     switch (activeTab) {
@@ -713,23 +696,70 @@ const Index = () => {
     }
   };
   
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto">
-        <section className="py-6 px-4 animate-fade-in">
-          <div className="text-center space-y-4 max-w-3xl mx-auto">
+        <section className="min-h-[85vh] flex flex-col justify-center py-6 px-4 animate-fade-in">
+          <div className={`text-center space-y-6 max-w-3xl mx-auto transition-all duration-1000 ${isPageLoaded ? 'opacity-100 transform-none' : 'opacity-0 translate-y-10'}`}>
             <div className="inline-flex items-center justify-center p-1.5 bg-gradient-to-r from-reflectify-blue/10 via-reflectify-purple/10 to-reflectify-teal/10 backdrop-blur-sm rounded-full">
               <span className="text-sm font-medium reflectify-gradient-text px-3 py-1">
                 AI-Powered Health & Wellbeing
               </span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-display font-semibold tracking-tight reflectify-gradient-text">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight reflectify-gradient-text animate-pulse-glow">
               Reflectify
             </h1>
             
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Express your thoughts, track your health, and maintain your mental wellbeing with personalized AI guidance.
+            </p>
+            
+            <div className="flex flex-wrap justify-center gap-4 pt-4">
+              <button 
+                onClick={() => {
+                  setActiveTab("rant");
+                  scrollToFeatures();
+                }}
+                className="reflectify-button"
+              >
+                Get Started
+              </button>
+              
+              <button 
+                onClick={() => {
+                  setActiveTab("mindfulness");
+                  scrollToFeatures();
+                }}
+                className="px-4 py-2 rounded-full border border-reflectify-blue text-reflectify-blue font-medium transition-all duration-300 hover:bg-reflectify-blue/10"
+              >
+                Try Mindfulness
+              </button>
+            </div>
+          </div>
+          
+          <div className={`flex justify-center mt-16 transition-all duration-1000 ${isPageLoaded ? 'opacity-100 transform-none' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '300ms' }}>
+            <button 
+              onClick={scrollToFeatures}
+              className="animate-bounce p-2 rounded-full bg-white/50 dark:bg-gray-800/50 shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              <ArrowDown className="h-5 w-5 text-reflectify-blue" />
+            </button>
+          </div>
+        </section>
+        
+        <section id="features-section" className="py-16 px-4">
+          <div className={`text-center space-y-6 max-w-3xl mx-auto mb-12 transition-all duration-1000 ${isPageLoaded ? 'opacity-100 transform-none' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '200ms' }}>
+            <h2 className="text-3xl font-display font-semibold tracking-tight">Comprehensive Wellbeing Tools</h2>
+            <p className="text-muted-foreground">
+              Explore our suite of AI-powered features designed to support your physical and mental wellbeing journey.
             </p>
           </div>
           

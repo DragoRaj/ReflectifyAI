@@ -9,6 +9,8 @@
 /* Base transitions for smooth theme changes */
 body {
   transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
 }
 
 .logo {
@@ -24,6 +26,18 @@ body {
 
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+/* Typography enhancements */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+p {
+  max-width: 65ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Animations */
@@ -78,6 +92,15 @@ body {
   }
 }
 
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
@@ -97,6 +120,10 @@ body {
   
   .animate-pulse-glow {
     animation: pulse-glow 2s infinite;
+  }
+  
+  .animate-floating {
+    animation: floating 3s ease-in-out infinite;
   }
 }
 
@@ -127,6 +154,12 @@ body {
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* Journal specific styles */
+.font-journal {
+  font-size: 1.25rem;
+  line-height: 1.75;
+}
+
 /* Refined ui elements */
 .mood-button {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -143,4 +176,29 @@ body {
 
 .mood-button:hover .mood-icon {
   transform: scale(1.1);
+}
+
+/* Content analysis improvements */
+.analysis-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.analysis-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: rgba(209, 213, 219, 0.5);
+}
+
+.progress-bar-inner {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
 }
