@@ -1,7 +1,4 @@
 
-import { toast } from "sonner";
-
-// API key and endpoint configuration
 const GEMINI_API_KEY = "AIzaSyDJDWd17Om9K0NFx8jNcoRoIwQ1NRWYLEo";
 const GEMINI_API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -15,9 +12,7 @@ export const getAIAnalysis = async (prompt: string): Promise<string> => {
       body: JSON.stringify({
         contents: [{
           role: "user",
-          parts: [{
-            text: prompt
-          }]
+          parts: [{ text: prompt }]
         }],
         generationConfig: {
           temperature: 0.7,
@@ -28,18 +23,13 @@ export const getAIAnalysis = async (prompt: string): Promise<string> => {
       })
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to get AI response");
-    }
+    if (!response.ok) throw new Error("Failed to get AI response");
     
     const data = await response.json();
-    const aiResponseText = data.candidates[0].content.parts[0].text;
-    
-    return aiResponseText;
+    return data.candidates[0].content.parts[0].text;
   } catch (error) {
-    console.error("AI Analysis Error:", error);
-    toast.error("Failed to get AI response. Please try again.");
-    return "I'm having trouble connecting right now. Please try again in a moment.";
+    console.error("Error in AI analysis:", error);
+    throw error;
   }
 };
 
@@ -73,9 +63,7 @@ export const analyzeContent = async (content: string) => {
       })
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to analyze content");
-    }
+    if (!response.ok) throw new Error("Failed to analyze content");
     
     const data = await response.json();
     
@@ -87,10 +75,10 @@ export const analyzeContent = async (content: string) => {
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     } catch (err) {
       console.error("Error parsing response:", err);
-      return null;
+      throw new Error("Could not parse analysis result");
     }
   } catch (error) {
     console.error("Analysis error:", error);
-    return null;
+    throw error;
   }
 };

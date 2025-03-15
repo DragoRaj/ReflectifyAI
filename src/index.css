@@ -95,12 +95,13 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/20 dark:border-slate-700/20;
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/20 dark:border-slate-700/20 transition-all duration-300;
   }
   
   .reflectify-gradient-text {
@@ -116,7 +117,7 @@
   }
   
   .tab-button.active {
-    @apply text-reflectify-blue;
+    @apply text-reflectify-blue dark:text-reflectify-blue;
   }
   
   .tab-button.active::after {
@@ -137,5 +138,22 @@
   
   .shimmer::before {
     @apply content-[''] absolute top-0 -left-[100%] w-[100%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer;
+  }
+  
+  /* Enhance transitions */
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-md;
+  }
+  
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-lg;
+  }
+  
+  .pulse-subtle {
+    @apply animate-[pulse_3s_ease-in-out_infinite];
   }
 }
