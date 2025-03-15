@@ -57,24 +57,6 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
             >
               Home
             </button>
-            <button 
-              className={`tab-button ${activeTab === "health" ? "active" : ""}`}
-              onClick={() => handleTabClick("health")}
-            >
-              Health
-            </button>
-            <button 
-              className={`tab-button ${activeTab === "mindfulness" ? "active" : ""}`}
-              onClick={() => handleTabClick("mindfulness")}
-            >
-              Mindfulness
-            </button>
-            <button 
-              className={`tab-button ${activeTab === "analytics" ? "active" : ""}`}
-              onClick={() => handleTabClick("analytics")}
-            >
-              Analytics
-            </button>
           </nav>
           
           <div className="flex items-center space-x-4">

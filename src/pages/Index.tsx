@@ -3,6 +3,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import HealthAnalysis from "@/components/HealthAnalysis";
 import MindfulnessSession from "@/components/MindfulnessSession";
 import Journal from "@/components/Journal";
+import Analytics from "@/components/Analytics";
 import { 
   Send, 
   Trash, 
@@ -23,13 +24,14 @@ import {
   Coffee,
   Angry,
   Leaf,
-  ArrowDown
+  ArrowDown,
+  BarChart2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { analyzeContent, getAIAnalysis } from "@/utils/aiUtils";
 
-type FeatureTab = "rant" | "chat" | "journal" | "content" | "health" | "mindfulness";
+type FeatureTab = "rant" | "chat" | "journal" | "content" | "health" | "mindfulness" | "analytics";
 type Mood = "happy" | "neutral" | "sad" | "excited" | "loving" | "calm" | "angry" | "peaceful" | null;
 
 const Index = () => {
@@ -677,6 +679,8 @@ const Index = () => {
   
   const renderJournal = () => <Journal />;
   
+  const renderAnalytics = () => <Analytics />;
+  
   const renderFeatureContent = () => {
     switch (activeTab) {
       case "rant":
@@ -691,6 +695,8 @@ const Index = () => {
         return <HealthAnalysis />;
       case "mindfulness":
         return <MindfulnessSession />;
+      case "analytics":
+        return renderAnalytics();
       default:
         return renderRantMode();
     }
@@ -764,7 +770,7 @@ const Index = () => {
           </div>
           
           <div className="mt-12 max-w-5xl mx-auto">
-            <div className="overflow-x-auto pb-3">
+            <div className="flex justify-center overflow-x-auto pb-3">
               <div className="flex space-x-1 p-1 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm min-w-max">
                 <button
                   onClick={() => setActiveTab("rant")}
@@ -792,7 +798,7 @@ const Index = () => {
                 >
                   <div className="flex items-center gap-1.5">
                     <HeartPulse className="h-4 w-4" />
-                    <span>Health Analysis</span>
+                    <span>Health</span>
                   </div>
                 </button>
                 
@@ -825,10 +831,20 @@ const Index = () => {
                     <span>Content Analysis</span>
                   </div>
                 </button>
+                
+                <button
+                  onClick={() => setActiveTab("analytics")}
+                  className={`tab-button ${activeTab === "analytics" ? "active" : ""}`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <BarChart2 className="h-4 w-4" />
+                    <span>Analytics</span>
+                  </div>
+                </button>
               </div>
             </div>
             
-            <div className="min-h-[70vh] pt-8">
+            <div className="min-h-[70vh] pt-8 flex justify-center">
               {renderFeatureContent()}
             </div>
           </div>

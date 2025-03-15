@@ -40,6 +40,25 @@ p {
   margin-right: auto;
 }
 
+/* Chart styling */
+.recharts-wrapper {
+  margin: 0 auto;
+}
+
+.recharts-legend-item {
+  margin-right: 10px !important;
+}
+
+.recharts-tooltip-cursor {
+  opacity: 0.1 !important;
+}
+
+.recharts-default-tooltip {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+}
+
 /* Animations */
 @keyframes logo-spin {
   from {
@@ -154,6 +173,23 @@ p {
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* Dark mode chart styling */
+.dark .recharts-cartesian-axis-tick-value {
+  fill: rgba(255, 255, 255, 0.6) !important;
+}
+
+.dark .recharts-text {
+  fill: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dark .recharts-legend-item-text {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dark .recharts-cartesian-grid line {
+  stroke: rgba(255, 255, 255, 0.1) !important;
+}
+
 /* Journal specific styles */
 .font-journal {
   font-size: 1.25rem;
@@ -201,4 +237,29 @@ p {
   height: 100%;
   border-radius: 4px;
   transition: width 0.5s ease-out;
+}
+
+/* Analytics specific styles */
+.analytics-metric-card {
+  transition: all 0.3s ease;
+}
+
+.analytics-metric-card:hover {
+  transform: translateY(-3px);
+}
+
+.tab-button {
+  @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors;
+  @apply text-gray-500 dark:text-gray-400;
+  @apply hover:bg-gray-100 dark:hover:bg-gray-800;
+}
+
+.tab-button.active {
+  @apply bg-white dark:bg-gray-800 text-reflectify-blue dark:text-reflectify-blue shadow-sm;
+}
+
+.reflectify-button {
+  @apply px-5 py-2.5 rounded-full font-medium transition-all duration-300;
+  @apply bg-gradient-to-r from-reflectify-blue to-reflectify-purple text-white;
+  @apply hover:shadow-md hover:translate-y-[-2px];
 }
