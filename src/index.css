@@ -4,10 +4,11 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 160 59% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -16,74 +17,89 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 221.2 83% 53.9%;
+    --primary: 161 94% 39%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 166 76% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 150 60% 94%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83% 53.9%;
+    --border: 150 39% 91%;
+    --input: 150 39% 91%;
+    --ring: 161 94% 39%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 152 50% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary: 161 94% 39%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 152 50% 95%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 150 39% 91%;
+    --sidebar-ring: 161 94% 39%;
+
+    --seafoam-50: hsl(160, 59%, 98%);
+    --seafoam-100: hsl(160, 51%, 95%);
+    --mint-100: hsl(152, 50%, 95%);
+    --emerald-100: hsl(150, 60%, 94%);
+    --teal-300: hsl(173, 80%, 62%);
+    --teal-400: hsl(172, 66%, 50%);
+    --emerald-400: hsl(151, 65%, 54%);
+    --emerald-500: hsl(160, 84%, 39%);
+    --emerald-600: hsl(161, 94%, 30%);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 240 70% 10%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 240 70% 10%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 240 70% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 173 80% 62%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 245 70% 20%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 245 70% 20%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 245 70% 20%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 245 70% 20%;
+    --input: 245 70% 20%;
+    --ring: 173 80% 62%;
     
-    --sidebar-background: 240 5.9% 10%;
+    --sidebar-background: 240 70% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 173 80% 62%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent: 245 70% 20%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 245 70% 20%;
+    --sidebar-ring: 173 80% 62%;
+
+    --indigo-800: hsl(245, 70%, 30%);
+    --indigo-900: hsl(245, 70%, 20%);
+    --indigo-950: hsl(240, 70%, 12%);
+    --slate-900: hsl(240, 70%, 10%);
   }
 }
 
@@ -95,21 +111,26 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.5s ease, color 0.5s ease;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/20 dark:border-slate-700/20 transition-all duration-300;
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-emerald-100 dark:border-indigo-800/20 shadow-sm transition-all duration-300;
   }
   
   .reflectify-gradient-text {
-    @apply bg-gradient-to-r from-reflectify-blue via-reflectify-purple to-reflectify-teal bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent dark:from-teal-300 dark:to-emerald-400;
   }
   
   .reflectify-button {
-    @apply px-4 py-2 rounded-full bg-gradient-to-r from-reflectify-blue to-reflectify-indigo text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-reflectify-blue/20 active:scale-95;
+    @apply px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-95 dark:from-teal-400 dark:to-emerald-500;
   }
   
   .tab-button {
@@ -117,15 +138,15 @@
   }
   
   .tab-button.active {
-    @apply text-reflectify-blue dark:text-reflectify-blue;
+    @apply text-emerald-600 dark:text-teal-300;
   }
   
   .tab-button.active::after {
-    @apply content-[''] absolute bottom-0 left-0 right-0 h-0.5 bg-reflectify-blue rounded-full transform scale-x-100 transition-transform duration-300;
+    @apply content-[''] absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500 dark:bg-teal-300 rounded-full transform scale-x-100 transition-transform duration-300;
   }
   
   .tab-button:not(.active)::after {
-    @apply content-[''] absolute bottom-0 left-0 right-0 h-0.5 bg-reflectify-blue rounded-full transform scale-x-0 transition-transform duration-300;
+    @apply content-[''] absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500 dark:bg-teal-300 rounded-full transform scale-x-0 transition-transform duration-300;
   }
   
   .tab-button:hover:not(.active)::after {
@@ -140,6 +161,80 @@
     @apply content-[''] absolute top-0 -left-[100%] w-[100%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer;
   }
   
+  /* Splash screen and animations */
+  .splash-screen {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-seafoam-50 dark:bg-indigo-950 transition-all duration-700;
+  }
+  
+  .splash-content {
+    @apply relative flex flex-col items-center justify-center;
+  }
+  
+  .splash-logo {
+    @apply relative z-10 mb-8;
+  }
+  
+  .splash-particles {
+    @apply absolute inset-0 z-0;
+  }
+  
+  .particle {
+    @apply absolute rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-teal-300 dark:to-emerald-400 opacity-70;
+    width: var(--size);
+    height: var(--size);
+    animation: float var(--speed) infinite ease-in-out var(--delay);
+  }
+  
+  .fade-transition {
+    animation: fadeTransition 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeTransition {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+      opacity: 0.7;
+    }
+    25% {
+      transform: translateY(-30px) translateX(15px) scale(1.1) rotate(90deg);
+      opacity: 0.9;
+    }
+    50% {
+      transform: translateY(10px) translateX(30px) scale(0.9) rotate(180deg);
+      opacity: 0.6;
+    }
+    75% {
+      transform: translateY(-15px) translateX(-20px) scale(1.05) rotate(270deg);
+      opacity: 0.8;
+    }
+  }
+  
+  .animate-float {
+    animation: textFloat 3s infinite ease-in-out;
+  }
+  
+  @keyframes textFloat {
+    0%, 100% {
+      transform: translateY(0);
+      filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.3));
+    }
+    50% {
+      transform: translateY(-10px);
+      filter: drop-shadow(0 0 16px rgba(45, 212, 191, 0.5));
+    }
+  }
+  
   /* Enhance transitions */
   .hover-scale {
     @apply transition-transform duration-300 hover:scale-105;
@@ -150,10 +245,97 @@
   }
   
   .hover-glow {
-    @apply transition-all duration-300 hover:shadow-lg;
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 dark:hover:shadow-teal-300/20;
   }
   
   .pulse-subtle {
     @apply animate-[pulse_3s_ease-in-out_infinite];
   }
+  
+  /* Card animations */
+  .card-enter {
+    animation: cardEnter 0.5s ease-out forwards;
+  }
+  
+  @keyframes cardEnter {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .staggered-item {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  .staggered-item:nth-child(1) { animation-delay: 0.1s; }
+  .staggered-item:nth-child(2) { animation-delay: 0.2s; }
+  .staggered-item:nth-child(3) { animation-delay: 0.3s; }
+  .staggered-item:nth-child(4) { animation-delay: 0.4s; }
+  .staggered-item:nth-child(5) { animation-delay: 0.5s; }
+  .staggered-item:nth-child(6) { animation-delay: 0.6s; }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(200%);
+  }
+}
+
+/* Chart styling */
+.recharts-wrapper {
+  margin: 0 auto;
+}
+
+.recharts-legend-item {
+  margin-right: 10px !important;
+}
+
+.recharts-tooltip-cursor {
+  opacity: 0.1 !important;
+}
+
+.recharts-default-tooltip {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Dark mode chart styling */
+.dark .recharts-cartesian-axis-tick-value {
+  fill: rgba(255, 255, 255, 0.6) !important;
+}
+
+.dark .recharts-text {
+  fill: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dark .recharts-legend-item-text {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dark .recharts-cartesian-grid line {
+  stroke: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .recharts-default-tooltip {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }

@@ -1,37 +1,16 @@
 
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
 /* Base transitions for smooth theme changes */
 body {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.5s ease, color 0.5s ease;
   line-height: 1.6;
   letter-spacing: 0.01em;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
 /* Typography enhancements */
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
   letter-spacing: -0.02em;
+  font-family: 'Poppins', sans-serif;
 }
 
 p {
@@ -40,36 +19,17 @@ p {
   margin-right: auto;
 }
 
-/* Chart styling */
-.recharts-wrapper {
-  margin: 0 auto;
-}
-
-.recharts-legend-item {
-  margin-right: 10px !important;
-}
-
-.recharts-tooltip-cursor {
-  opacity: 0.1 !important;
-}
-
-.recharts-default-tooltip {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  border-radius: 8px !important;
-}
-
 /* Animations */
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    transform: translateY(-10px);
   }
 }
 
-@keyframes fade-in {
+@keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -80,7 +40,7 @@ p {
   }
 }
 
-@keyframes scale-in {
+@keyframes scaleIn {
   from {
     opacity: 0;
     transform: scale(0.95);
@@ -91,7 +51,7 @@ p {
   }
 }
 
-@keyframes slide-up {
+@keyframes slideUp {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -102,12 +62,12 @@ p {
   }
 }
 
-@keyframes pulse-glow {
+@keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 5px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 5px rgba(22, 163, 74, 0.2);
   }
   50% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 15px rgba(22, 163, 74, 0.4);
   }
 }
 
@@ -120,74 +80,81 @@ p {
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-  
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out forwards;
-  }
-  
-  .animate-scale-in {
-    animation: scale-in 0.4s ease-out forwards;
-  }
-  
-  .animate-slide-up {
-    animation: slide-up 0.5s ease-out forwards;
-  }
-  
-  .animate-pulse-glow {
-    animation: pulse-glow 2s infinite;
-  }
-  
-  .animate-floating {
-    animation: floating 3s ease-in-out infinite;
+@keyframes shimmer {
+  to {
+    transform: translateX(200%);
   }
 }
 
-.card {
-  padding: 2em;
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
-.read-the-docs {
-  color: #888;
+.animate-scaleIn {
+  animation: scaleIn 0.4s ease-out forwards;
 }
 
-/* Dark mode specific styles */
-.dark .glass-card {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out forwards;
 }
 
-.dark .reflectify-gradient-text {
-  background-image: linear-gradient(to right, #60a5fa, #a78bfa, #34d399);
+.animate-pulseGlow {
+  animation: pulseGlow 2s infinite;
 }
 
-.dark input, 
-.dark textarea {
-  background-color: rgba(30, 41, 59, 0.5);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+.animate-float {
+  animation: floating 3s ease-in-out infinite;
 }
 
-/* Dark mode chart styling */
-.dark .recharts-cartesian-axis-tick-value {
-  fill: rgba(255, 255, 255, 0.6) !important;
+/* Animation delays for staggered animations */
+.delay-100 {
+  animation-delay: 100ms;
 }
 
-.dark .recharts-text {
-  fill: rgba(255, 255, 255, 0.8) !important;
+.delay-200 {
+  animation-delay: 200ms;
 }
 
-.dark .recharts-legend-item-text {
-  color: rgba(255, 255, 255, 0.8) !important;
+.delay-300 {
+  animation-delay: 300ms;
 }
 
-.dark .recharts-cartesian-grid line {
-  stroke: rgba(255, 255, 255, 0.1) !important;
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Splash screen particles animation */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(1px);
+  opacity: 0.7;
+}
+
+.particles-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+/* Card animations */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Tab transitions */
+.tab-content-transition {
+  transition: all 0.3s ease;
 }
 
 /* Journal specific styles */
@@ -214,16 +181,28 @@ p {
   transform: scale(1.1);
 }
 
-/* Content analysis improvements */
-.analysis-card {
+/* Analytics component styling */
+.analytics-metric-card {
   transition: all 0.3s ease;
-  border-radius: 12px;
+  border-radius: 1rem;
   overflow: hidden;
+  padding: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(167, 243, 208, 0.2);
 }
 
-.analysis-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+.analytics-metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.1);
+}
+
+.dark .analytics-metric-card {
+  background-color: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(45, 212, 191, 0.2);
+}
+
+.dark .analytics-metric-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(45, 212, 191, 0.1);
 }
 
 .progress-bar {
@@ -236,30 +215,117 @@ p {
 .progress-bar-inner {
   height: 100%;
   border-radius: 4px;
-  transition: width 0.5s ease-out;
+  transition: width 1s ease-out;
 }
 
-/* Analytics specific styles */
-.analytics-metric-card {
+.pulse-background {
+  animation: pulseBg 3s infinite;
+}
+
+@keyframes pulseBg {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Empty state styling */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.empty-state-icon {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 50%;
+  background-color: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+.dark .empty-state-icon {
+  background-color: rgba(45, 212, 191, 0.1);
+  color: #2dd4bf;
+}
+
+.empty-state-message {
+  max-width: 20rem;
+  color: #6b7280;
+}
+
+.dark .empty-state-message {
+  color: #9ca3af;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(229, 231, 235, 0.5);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.5);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(45, 212, 191, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(45, 212, 191, 0.7);
+}
+
+/* Tooltip animations */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  background-color: rgba(16, 185, 129, 0.9);
+  color: white;
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
   transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 10;
 }
 
-.analytics-metric-card:hover {
-  transform: translateY(-3px);
+.dark [data-tooltip]::after {
+  background-color: rgba(45, 212, 191, 0.9);
 }
 
-.tab-button {
-  @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors;
-  @apply text-gray-500 dark:text-gray-400;
-  @apply hover:bg-gray-100 dark:hover:bg-gray-800;
-}
-
-.tab-button.active {
-  @apply bg-white dark:bg-gray-800 text-reflectify-blue dark:text-reflectify-blue shadow-sm;
-}
-
-.reflectify-button {
-  @apply px-5 py-2.5 rounded-full font-medium transition-all duration-300;
-  @apply bg-gradient-to-r from-reflectify-blue to-reflectify-purple text-white;
-  @apply hover:shadow-md hover:translate-y-[-2px];
+[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
 }

@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import HealthAnalysis from "@/components/HealthAnalysis";
 import MindfulnessSession from "@/components/MindfulnessSession";
 import Journal from "@/components/Journal";
-import Analytics from "@/components/Analytics";
+import FunctionalAnalytics from "@/components/FunctionalAnalytics";
 import { 
   Send, 
   Trash, 
@@ -34,8 +34,19 @@ import { analyzeContent, getAIAnalysis } from "@/utils/aiUtils";
 type FeatureTab = "rant" | "chat" | "journal" | "content" | "health" | "mindfulness" | "analytics";
 type Mood = "happy" | "neutral" | "sad" | "excited" | "loving" | "calm" | "angry" | "peaceful" | null;
 
+const trackFeatureUsage = (feature: string, value: number = 1) => {
+  const currentCount = parseInt(localStorage.getItem(`${feature}Count`) || '0');
+  localStorage.setItem(`${feature}Count`, String(currentCount + value));
+  
+  if (!localStorage.getItem('appStartDate')) {
+    localStorage.setItem('appStartDate', new Date().toISOString());
+  }
+  
+  localStorage.setItem(`${feature}LastUsed`, new Date().toISOString());
+};
+
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<FeatureTab>("rant");
+  const [activeTab, setActiveTab] = useState<FeatureTab>("content");
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   
   useEffect(() => {
@@ -76,6 +87,8 @@ const Index = () => {
       );
       
       setResponse(aiResponseText);
+      
+      trackFeatureUsage('expressInteraction');
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to get a response. Please try again.");
@@ -98,6 +111,31 @@ const Index = () => {
     };
     
     setMessages([initialMessage]);
+    
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString();
+    
+    const moodValue = {
+      "happy": 5,
+      "excited": 5,
+      "loving": 4,
+      "neutral": 3,
+      "calm": 4,
+      "peaceful": 4,
+      "sad": 2,
+      "angry": 1
+    }[selectedMood || "neutral"] || 3;
+    
+    const moodEntriesStr = localStorage.getItem('moodEntries');
+    const moodEntries = moodEntriesStr ? JSON.parse(moodEntriesStr) : [];
+    
+    moodEntries.push({
+      date: formattedDate,
+      mood: selectedMood,
+      value: moodValue
+    });
+    
+    localStorage.setItem('moodEntries', JSON.stringify(moodEntries));
   };
   
   const getMoodWelcomeMessage = (selectedMood: Mood): string => {
@@ -157,6 +195,8 @@ const Index = () => {
       
       const aiMessage = { role: "ai" as const, content: aiResponseText };
       setMessages(prev => [...prev, aiMessage]);
+      
+      trackFeatureUsage('chatInteraction');
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to get a response. Please try again.");
@@ -235,6 +275,8 @@ const Index = () => {
       
       if (analysisResult) {
         setAnalysis(analysisResult);
+        
+        trackFeatureUsage('contentAnalysis');
       } else {
         throw new Error("Could not parse analysis result");
       }
@@ -677,9 +719,14 @@ const Index = () => {
     </div>
   );
   
-  const renderJournal = () => <Journal />;
+  const renderJournal = () => {
+    useEffect(() => {
+      trackFeatureUsage('journalVisit');
+    }, []);
+    return <Journal />;
+  };
   
-  const renderAnalytics = () => <Analytics />;
+  const renderAnalytics = () => <FunctionalAnalytics />;
   
   const renderFeatureContent = () => {
     switch (activeTab) {
@@ -698,7 +745,7 @@ const Index = () => {
       case "analytics":
         return renderAnalytics();
       default:
-        return renderRantMode();
+        return renderContentAnalysis();
     }
   };
   
@@ -714,13 +761,13 @@ const Index = () => {
       <div className="max-w-7xl mx-auto">
         <section className="min-h-[85vh] flex flex-col justify-center py-6 px-4 animate-fade-in">
           <div className={`text-center space-y-6 max-w-3xl mx-auto transition-all duration-1000 ${isPageLoaded ? 'opacity-100 transform-none' : 'opacity-0 translate-y-10'}`}>
-            <div className="inline-flex items-center justify-center p-1.5 bg-gradient-to-r from-reflectify-blue/10 via-reflectify-purple/10 to-reflectify-teal/10 backdrop-blur-sm rounded-full">
+            <div className="inline-flex items-center justify-center p-1.5 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-400/10 backdrop-blur-sm rounded-full">
               <span className="text-sm font-medium reflectify-gradient-text px-3 py-1">
                 AI-Powered Health & Wellbeing
               </span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight reflectify-gradient-text animate-pulse-glow">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight reflectify-gradient-text animate-float">
               Reflectify
             </h1>
             
@@ -731,7 +778,7 @@ const Index = () => {
             <div className="flex flex-wrap justify-center gap-4 pt-4">
               <button 
                 onClick={() => {
-                  setActiveTab("rant");
+                  setActiveTab("content");
                   scrollToFeatures();
                 }}
                 className="reflectify-button"
@@ -741,12 +788,12 @@ const Index = () => {
               
               <button 
                 onClick={() => {
-                  setActiveTab("mindfulness");
+                  setActiveTab("analytics");
                   scrollToFeatures();
                 }}
-                className="px-4 py-2 rounded-full border border-reflectify-blue text-reflectify-blue font-medium transition-all duration-300 hover:bg-reflectify-blue/10"
+                className="px-4 py-2 rounded-full border border-emerald-500 text-emerald-600 dark:border-teal-400 dark:text-teal-300 font-medium transition-all duration-300 hover:bg-emerald-500/10 dark:hover:bg-teal-400/10"
               >
-                Try Mindfulness
+                View Analytics
               </button>
             </div>
           </div>
@@ -754,89 +801,16 @@ const Index = () => {
           <div className={`flex justify-center mt-16 transition-all duration-1000 ${isPageLoaded ? 'opacity-100 transform-none' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '300ms' }}>
             <button 
               onClick={scrollToFeatures}
-              className="animate-bounce p-2 rounded-full bg-white/50 dark:bg-gray-800/50 shadow-md hover:shadow-lg transition-all duration-300"
+              className="animate-bounce p-2 rounded-full bg-white/50 dark:bg-slate-800/50 shadow-md hover:shadow-lg transition-all duration-300"
             >
-              <ArrowDown className="h-5 w-5 text-reflectify-blue" />
+              <ArrowDown className="h-5 w-5 text-emerald-600 dark:text-teal-300" />
             </button>
           </div>
         </section>
         
         <section id="features-section" className="py-16 px-4">
-          <div className={`text-center space-y-6 max-w-3xl mx-auto mb-12 transition-all duration-1000 ${isPageLoaded ? 'opacity-100 transform-none' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '200ms' }}>
-            <h2 className="text-3xl font-display font-semibold tracking-tight">Comprehensive Wellbeing Tools</h2>
-            <p className="text-muted-foreground">
-              Explore our suite of AI-powered features designed to support your physical and mental wellbeing journey.
-            </p>
-          </div>
-          
-          <div className="mt-12 max-w-5xl mx-auto">
-            <div className="flex justify-center overflow-x-auto pb-3">
-              <div className="flex space-x-1 p-1 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm min-w-max">
-                <button
-                  onClick={() => setActiveTab("content")}
-                  className={`tab-button ${activeTab === "content" ? "active" : ""}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Shield className="h-4 w-4" />
-                    <span>Content Analysis</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab("chat")}
-                  className={`tab-button ${activeTab === "chat" ? "active" : ""}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>Chat</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab("rant")}
-                  className={`tab-button ${activeTab === "rant" ? "active" : ""}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>Express</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab("mindfulness")}
-                  className={`tab-button ${activeTab === "mindfulness" ? "active" : ""}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4" />
-                    <span>Mindfulness</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab("journal")}
-                  className={`tab-button ${activeTab === "journal" ? "active" : ""}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <BookText className="h-4 w-4" />
-                    <span>Journal</span>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab("health")}
-                  className={`tab-button ${activeTab === "health" ? "active" : ""}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <HeartPulse className="h-4 w-4" />
-                    <span>Health</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-            
-            <div className="min-h-[70vh] pt-8 flex justify-center">
-              {renderFeatureContent()}
-            </div>
+          <div className="min-h-[70vh] flex justify-center">
+            {renderFeatureContent()}
           </div>
         </section>
       </div>
