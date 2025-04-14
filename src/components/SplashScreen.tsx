@@ -8,7 +8,7 @@ interface SplashScreenProps {
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ 
   onComplete, 
-  duration = 2500 
+  duration = 4000 // Increased duration from 2500ms to 4000ms
 }) => {
   const [visible, setVisible] = useState(true);
   
@@ -24,15 +24,15 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   if (!visible) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-seafoam-50 dark:bg-indigo-950 transition-all duration-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-all duration-700">
       <div className="splash-content">
         <div className="splash-logo animate-float">
-          <span className="text-5xl font-display font-bold bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent dark:from-teal-300 dark:to-emerald-400">
+          <span className="text-5xl font-display font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
             Reflectify
           </span>
         </div>
         <div className="splash-particles">
-          {Array(15).fill(0).map((_, i) => (
+          {Array(20).fill(0).map((_, i) => (
             <div 
               key={i} 
               className="particle" 

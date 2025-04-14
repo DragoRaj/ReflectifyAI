@@ -14,15 +14,8 @@ const queryClient = new QueryClient();
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   
-  // Skip splash screen if we've shown it before in this session
-  useEffect(() => {
-    const hasSeenSplash = sessionStorage.getItem("hasSeenSplash");
-    if (hasSeenSplash) {
-      setShowSplash(false);
-    } else {
-      sessionStorage.setItem("hasSeenSplash", "true");
-    }
-  }, []);
+  // Always show the splash screen for better user experience 
+  // (removed the session storage check)
   
   return (
     <QueryClientProvider client={queryClient}>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Moon, Sun, BarChart2, Home, Shield, MessageCircle, BookText, HeartPulse, Sparkles } from "lucide-react";
+import { Moon, Sun, BarChart2, Home, Shield, MessageCircle, Sparkles, HeartPulse } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { 
   NavigationMenu,
@@ -18,7 +18,7 @@ interface MainLayoutProps {
   className?: string;
 }
 
-// Function groups for the app
+// Simplified function groups for the app - reduced to 4 main groups
 const featureGroups = [
   {
     name: "Home",
@@ -34,13 +34,7 @@ const featureGroups = [
     name: "Content",
     icon: <Shield className="h-4 w-4" />,
     subItems: [
-      { name: "Content Analysis", id: "content" }
-    ]
-  },
-  {
-    name: "Communication",
-    icon: <MessageCircle className="h-4 w-4" />,
-    subItems: [
+      { name: "Content Analysis", id: "content" },
       { name: "Chat", id: "chat" },
       { name: "Express", id: "rant" }
     ]
@@ -50,14 +44,8 @@ const featureGroups = [
     icon: <Sparkles className="h-4 w-4" />,
     subItems: [
       { name: "Mindfulness", id: "mindfulness" },
-      { name: "Journal", id: "journal" }
-    ]
-  },
-  {
-    name: "Health",
-    icon: <HeartPulse className="h-4 w-4" />,
-    subItems: [
-      { name: "Health Tracking", id: "health" }
+      { name: "Journal", id: "journal" },
+      { name: "Health", id: "health" }
     ]
   }
 ];
@@ -97,24 +85,35 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
+    // Update URL hash for better navigation
+    window.location.hash = tab;
+    
     // Add animation effect for tab change
     const mainContent = document.querySelector("main");
     if (mainContent) {
       mainContent.classList.add("fade-transition");
       setTimeout(() => {
         mainContent.classList.remove("fade-transition");
-        // Scroll to the top of the page
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 300);
     }
+    
+    // Scroll to the feature section
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Custom event for tab change (to be used in Index.tsx)
+    const tabChangeEvent = new CustomEvent('tabChange', { detail: { tab } });
+    window.dispatchEvent(tabChangeEvent);
   };
 
   return (
-    <div className={cn("min-h-screen bg-gradient-to-b from-seafoam-50 to-mint-100 dark:from-indigo-950 dark:to-slate-900 transition-colors duration-500", className)}>
-      <header className="fixed top-0 left-0 right-0 z-50 py-3 px-6 backdrop-blur-lg bg-white/80 dark:bg-slate-900/80 border-b border-emerald-100 dark:border-indigo-800/50 transition-all duration-500 shadow-sm">
+    <div className={cn("min-h-screen bg-gradient-to-b from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-500", className)}>
+      <header className="fixed top-0 left-0 right-0 z-50 py-3 px-6 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-blue-100 dark:border-blue-900/50 transition-all duration-500 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="font-display font-semibold text-xl bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent dark:from-teal-300 dark:to-emerald-400">
+            <span className="font-display font-semibold text-xl bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
               Reflectify
             </span>
           </div>
@@ -128,7 +127,7 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
                       <NavigationMenuLink 
                         className={cn(
                           navigationMenuTriggerStyle(),
-                          activeTab === group.id ? "bg-emerald-50 dark:bg-indigo-900 text-emerald-600 dark:text-teal-300" : ""
+                          activeTab === group.id ? "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300" : ""
                         )}
                         onClick={() => handleTabClick(group.id)}
                       >
@@ -143,7 +142,7 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
                       <NavigationMenuTrigger
                         className={cn(
                           group.subItems.some(item => item.id === activeTab) ? 
-                          "bg-emerald-50 dark:bg-indigo-900 text-emerald-600 dark:text-teal-300" : ""
+                          "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300" : ""
                         )}
                       >
                         <div className="flex items-center gap-1.5">
@@ -158,8 +157,8 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
                               <NavigationMenuLink
                                 className={cn(
                                   "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors",
-                                  "hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-indigo-900 dark:hover:text-teal-300",
-                                  activeTab === item.id ? "bg-emerald-50 dark:bg-indigo-900 text-emerald-600 dark:text-teal-300" : ""
+                                  "hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900 dark:hover:text-blue-300",
+                                  activeTab === item.id ? "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300" : ""
                                 )}
                                 onClick={() => handleTabClick(item.id)}
                               >
@@ -183,45 +182,21 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
               <Moon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
             </div>
             
-            <button className="rounded-full bg-emerald-100/80 dark:bg-indigo-800/80 p-2 transition hover:bg-emerald-200 dark:hover:bg-indigo-700">
+            <button className="rounded-full bg-blue-100/80 dark:bg-blue-900/80 p-2 transition hover:bg-blue-200 dark:hover:bg-blue-800">
               <span className="sr-only">User settings</span>
-              <div className="h-7 w-7 rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 dark:from-teal-300 dark:to-emerald-400"></div>
+              <div className="h-7 w-7 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-400 dark:to-indigo-400"></div>
             </button>
           </div>
         </div>
       </header>
       
       <main className="pt-24 pb-16 transition-opacity duration-300 ease-in-out">
-        {!isLoaded && (
-          <div className="splash-screen">
-            <div className="splash-content">
-              <div className="splash-logo animate-float">
-                <span className="text-4xl font-display font-bold bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent dark:from-teal-300 dark:to-emerald-400">
-                  Reflectify
-                </span>
-              </div>
-              <div className="splash-particles">
-                {Array(12).fill(0).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="particle" 
-                    style={{
-                      '--delay': `${i * 0.2}s`,
-                      '--size': `${Math.random() * 20 + 10}px`,
-                      '--speed': `${Math.random() * 10 + 10}s`
-                    } as React.CSSProperties}
-                  ></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
         <div className={`transition-opacity duration-500 ease-in-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
           {children}
         </div>
       </main>
       
-      <footer className="py-6 px-6 border-t border-emerald-100 dark:border-indigo-800/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg transition-colors duration-300">
+      <footer className="py-6 px-6 border-t border-blue-100 dark:border-blue-800/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -230,13 +205,13 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-teal-300 transition-colors">
+            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
               Privacy
             </a>
-            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-teal-300 transition-colors">
+            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
               Terms
             </a>
-            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-teal-300 transition-colors">
+            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
               Contact
             </a>
           </div>

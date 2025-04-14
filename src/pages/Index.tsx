@@ -31,7 +31,7 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { analyzeContent, getAIAnalysis } from "@/utils/aiUtils";
 
-type FeatureTab = "rant" | "chat" | "journal" | "content" | "health" | "mindfulness" | "analytics";
+type FeatureTab = "rant" | "chat" | "journal" | "content" | "health" | "mindfulness" | "analytics" | "home";
 type Mood = "happy" | "neutral" | "sad" | "excited" | "loving" | "calm" | "angry" | "peaceful" | null;
 
 const trackFeatureUsage = (feature: string, value: number = 1) => {
@@ -51,6 +51,20 @@ const Index = () => {
   
   useEffect(() => {
     setIsPageLoaded(true);
+
+    const hash = window.location.hash.substring(1);
+    if (hash && ["content", "chat", "rant", "journal", "health", "mindfulness", "analytics", "home"].includes(hash)) {
+      setActiveTab(hash as FeatureTab);
+    }
+    
+    const handleTabChange = (event: CustomEvent) => {
+      setActiveTab(event.detail.tab as FeatureTab);
+    };
+    
+    window.addEventListener('tabChange', handleTabChange as EventListener);
+    return () => {
+      window.removeEventListener('tabChange', handleTabChange as EventListener);
+    };
   }, []);
   
   const [rantText, setRantText] = useState("");
@@ -744,24 +758,35 @@ const Index = () => {
         return <MindfulnessSession />;
       case "analytics":
         return renderAnalytics();
+      case "home":
       default:
-        return renderContentAnalysis();
-    }
-  };
-  
-  const scrollToFeatures = () => {
-    const featuresSection = document.getElementById('features-section');
-    if (featuresSection) {
-      featuresSection.scrollIntoView({ behavior: 'smooth' });
+        return (
+          <div className="text-center py-12 space-y-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-semibold tracking-tight reflectify-gradient-text animate-float">
+              Welcome to Reflectify
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Express your thoughts, track your health, and maintain your mental wellbeing with personalized AI guidance.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 pt-4">
+              <button 
+                onClick={() => setActiveTab("content")}
+                className="reflectify-button"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
+        );
     }
   };
   
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto">
-        <section className="min-h-[85vh] flex flex-col justify-center py-6 px-4 animate-fade-in">
+        <section className="min-h-[40vh] flex flex-col justify-center py-6 px-4 animate-fade-in">
           <div className={`text-center space-y-6 max-w-3xl mx-auto transition-all duration-1000 ${isPageLoaded ? 'opacity-100 transform-none' : 'opacity-0 translate-y-10'}`}>
-            <div className="inline-flex items-center justify-center p-1.5 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-400/10 backdrop-blur-sm rounded-full">
+            <div className="inline-flex items-center justify-center p-1.5 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-blue-400/10 backdrop-blur-sm rounded-full">
               <span className="text-sm font-medium reflectify-gradient-text px-3 py-1">
                 AI-Powered Health & Wellbeing
               </span>
@@ -777,34 +802,19 @@ const Index = () => {
             
             <div className="flex flex-wrap justify-center gap-4 pt-4">
               <button 
-                onClick={() => {
-                  setActiveTab("content");
-                  scrollToFeatures();
-                }}
+                onClick={() => setActiveTab("content")}
                 className="reflectify-button"
               >
                 Get Started
               </button>
               
               <button 
-                onClick={() => {
-                  setActiveTab("analytics");
-                  scrollToFeatures();
-                }}
-                className="px-4 py-2 rounded-full border border-emerald-500 text-emerald-600 dark:border-teal-400 dark:text-teal-300 font-medium transition-all duration-300 hover:bg-emerald-500/10 dark:hover:bg-teal-400/10"
+                onClick={() => setActiveTab("analytics")}
+                className="px-4 py-2 rounded-full border border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-300 font-medium transition-all duration-300 hover:bg-blue-500/10 dark:hover:bg-blue-400/10"
               >
                 View Analytics
               </button>
             </div>
-          </div>
-          
-          <div className={`flex justify-center mt-16 transition-all duration-1000 ${isPageLoaded ? 'opacity-100 transform-none' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '300ms' }}>
-            <button 
-              onClick={scrollToFeatures}
-              className="animate-bounce p-2 rounded-full bg-white/50 dark:bg-slate-800/50 shadow-md hover:shadow-lg transition-all duration-300"
-            >
-              <ArrowDown className="h-5 w-5 text-emerald-600 dark:text-teal-300" />
-            </button>
           </div>
         </section>
         

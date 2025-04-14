@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 160 59% 98%;
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -16,90 +16,74 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 161 94% 39%;
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 166 76% 96%;
+    --secondary: 217 91% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 150 60% 94%;
+    --accent: 213 94% 95%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 150 39% 91%;
-    --input: 150 39% 91%;
-    --ring: 161 94% 39%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 152 50% 98%;
+    --sidebar-background: 213 100% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 161 94% 39%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 152 50% 95%;
+    --sidebar-accent: 213 94% 95%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 150 39% 91%;
-    --sidebar-ring: 161 94% 39%;
-
-    /* Note: these variables are still kept for reference but we're now using direct color utility classes */
-    --seafoam-50: hsl(160, 59%, 98%);
-    --seafoam-100: hsl(160, 51%, 95%);
-    --mint-100: hsl(152, 50%, 95%);
-    --emerald-100: hsl(150, 60%, 94%);
-    --teal-300: hsl(173, 80%, 62%);
-    --teal-400: hsl(172, 66%, 50%);
-    --emerald-400: hsl(151, 65%, 54%);
-    --emerald-500: hsl(160, 84%, 39%);
-    --emerald-600: hsl(161, 94%, 30%);
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 221 83% 53%;
   }
 
   .dark {
-    --background: 240 70% 10%;
+    --background: 222 47% 11%;
     --foreground: 210 40% 98%;
 
-    --card: 240 70% 10%;
+    --card: 222 47% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 240 70% 10%;
+    --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 173 80% 62%;
+    --primary: 217 91% 60%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 245 70% 20%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 245 70% 20%;
+    --muted: 217 33% 17%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 245 70% 20%;
+    --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 245 70% 20%;
-    --input: 245 70% 20%;
-    --ring: 173 80% 62%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
     
-    --sidebar-background: 240 70% 10%;
+    --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 173 80% 62%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 245 70% 20%;
+    --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 245 70% 20%;
-    --sidebar-ring: 173 80% 62%;
-
-    --indigo-800: hsl(245, 70%, 30%);
-    --indigo-900: hsl(245, 70%, 20%);
-    --indigo-950: hsl(240, 70%, 12%);
-    --slate-900: hsl(240, 70%, 10%);
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 217 91% 60%;
   }
 }
 
@@ -122,15 +106,15 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-emerald-100 dark:border-indigo-800/20 shadow-sm transition-all duration-300;
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-blue-100 dark:border-blue-800/20 shadow-sm transition-all duration-300;
   }
   
   .reflectify-gradient-text {
-    @apply bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent dark:from-teal-300 dark:to-emerald-400;
+    @apply bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400;
   }
   
   .reflectify-button {
-    @apply px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-95 dark:from-teal-400 dark:to-emerald-500;
+    @apply px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 dark:from-blue-400 dark:to-indigo-400;
   }
   
   .tab-button {
@@ -179,7 +163,7 @@
   }
   
   .particle {
-    @apply absolute rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-teal-300 dark:to-emerald-400 opacity-70;
+    @apply absolute rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 opacity-70;
     width: var(--size);
     height: var(--size);
     animation: float var(--speed) infinite ease-in-out var(--delay);
@@ -227,11 +211,11 @@
   @keyframes textFloat {
     0%, 100% {
       transform: translateY(0);
-      filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.3));
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
     }
     50% {
       transform: translateY(-10px);
-      filter: drop-shadow(0 0 16px rgba(45, 212, 191, 0.5));
+      filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.5));
     }
   }
   
@@ -245,7 +229,7 @@
   }
   
   .hover-glow {
-    @apply transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 dark:hover:shadow-teal-300/20;
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 dark:hover:shadow-indigo-400/20;
   }
   
   .pulse-subtle {
