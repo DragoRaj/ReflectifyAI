@@ -24,7 +24,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   if (!visible) return null;
   
   return (
-    <div className="splash-screen" style={{ opacity: visible ? 1 : 0 }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-seafoam-50 dark:bg-indigo-950 transition-all duration-700">
       <div className="splash-content">
         <div className="splash-logo animate-float">
           <span className="text-5xl font-display font-bold bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent dark:from-teal-300 dark:to-emerald-400">

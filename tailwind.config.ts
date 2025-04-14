@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -73,6 +74,32 @@ export default {
 					purple: '#8b5cf6',
 					indigo: '#6366f1',
 					slate: '#64748b',
+				},
+				// Add the seafoam and related colors as direct hex values
+				seafoam: {
+					50: 'hsl(160, 59%, 98%)',
+					100: 'hsl(160, 51%, 95%)',
+				},
+				mint: {
+					100: 'hsl(152, 50%, 95%)',
+				},
+				emerald: {
+					100: 'hsl(150, 60%, 94%)',
+					400: 'hsl(151, 65%, 54%)',
+					500: 'hsl(160, 84%, 39%)',
+					600: 'hsl(161, 94%, 30%)',
+				},
+				teal: {
+					300: 'hsl(173, 80%, 62%)',
+					400: 'hsl(172, 66%, 50%)',
+				},
+				indigo: {
+					800: 'hsl(245, 70%, 30%)',
+					900: 'hsl(245, 70%, 20%)',
+					950: 'hsl(240, 70%, 12%)',
+				},
+				slate: {
+					900: 'hsl(240, 70%, 10%)',
 				}
 			},
 			borderRadius: {

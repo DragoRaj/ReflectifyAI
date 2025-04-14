@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -47,6 +46,7 @@
     --sidebar-border: 150 39% 91%;
     --sidebar-ring: 161 94% 39%;
 
+    /* Note: these variables are still kept for reference but we're now using direct color utility classes */
     --seafoam-50: hsl(160, 59%, 98%);
     --seafoam-100: hsl(160, 51%, 95%);
     --mint-100: hsl(152, 50%, 95%);
