@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import HealthAnalysis from "@/components/HealthAnalysis";
@@ -85,6 +86,13 @@ const Index = () => {
     overall: "safe" | "caution" | "toxic";
     summary: string;
   }>(null);
+  
+  // Track journal visits at the component level, not in the render function
+  useEffect(() => {
+    if (activeTab === "journal") {
+      trackFeatureUsage('journalVisit');
+    }
+  }, [activeTab]);
   
   const handleRantSubmit = async () => {
     if (!rantText.trim()) return;
@@ -733,12 +741,8 @@ const Index = () => {
     </div>
   );
   
-  const renderJournal = () => {
-    useEffect(() => {
-      trackFeatureUsage('journalVisit');
-    }, []);
-    return <Journal />;
-  };
+  // Fixed: Removed the useEffect hook from inside this render function
+  const renderJournal = () => <Journal />;
   
   const renderAnalytics = () => <FunctionalAnalytics />;
   
