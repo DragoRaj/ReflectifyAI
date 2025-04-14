@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Moon, Sun, BarChart2, Home, Shield, MessageCircle, Sparkles, HeartPulse } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { BarChart2, Home, Shield, Sparkles } from "lucide-react";
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -12,6 +11,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -66,6 +66,12 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
     setTimeout(() => {
       setIsLoaded(true);
     }, 300);
+    
+    // Check URL hash for active tab
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+      setActiveTab(hash);
+    }
   }, []);
 
   const toggleDarkMode = () => {
@@ -109,11 +115,11 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
   };
 
   return (
-    <div className={cn("min-h-screen bg-gradient-to-b from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-500", className)}>
-      <header className="fixed top-0 left-0 right-0 z-50 py-3 px-6 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-blue-100 dark:border-blue-900/50 transition-all duration-500 shadow-sm">
+    <div className={cn("min-h-screen bg-gradient-to-b from-background to-accent/30 transition-colors duration-500", className)}>
+      <header className="fixed top-0 left-0 right-0 z-50 py-3 px-6 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-border transition-all duration-500 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="font-display font-semibold text-xl bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
+            <span className="font-display font-semibold text-xl bg-gradient-to-r from-primary to-primary-foreground/20 bg-clip-text text-transparent">
               Reflectify
             </span>
           </div>
@@ -127,7 +133,7 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
                       <NavigationMenuLink 
                         className={cn(
                           navigationMenuTriggerStyle(),
-                          activeTab === group.id ? "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300" : ""
+                          activeTab === group.id ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary" : ""
                         )}
                         onClick={() => handleTabClick(group.id)}
                       >
@@ -142,7 +148,7 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
                       <NavigationMenuTrigger
                         className={cn(
                           group.subItems.some(item => item.id === activeTab) ? 
-                          "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300" : ""
+                          "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary" : ""
                         )}
                       >
                         <div className="flex items-center gap-1.5">
@@ -157,8 +163,8 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
                               <NavigationMenuLink
                                 className={cn(
                                   "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors",
-                                  "hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900 dark:hover:text-blue-300",
-                                  activeTab === item.id ? "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300" : ""
+                                  "hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary",
+                                  activeTab === item.id ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary" : ""
                                 )}
                                 onClick={() => handleTabClick(item.id)}
                               >
@@ -176,15 +182,11 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
           </nav>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 mr-2">
-              <Sun className="h-4 w-4 text-amber-500 dark:text-amber-300" />
-              <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
-              <Moon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-            </div>
+            <ThemeSwitcher isDarkMode={isDarkMode} onDarkModeChange={toggleDarkMode} />
             
-            <button className="rounded-full bg-blue-100/80 dark:bg-blue-900/80 p-2 transition hover:bg-blue-200 dark:hover:bg-blue-800">
+            <button className="rounded-full bg-primary/10 dark:bg-primary/20 p-2 transition hover:bg-primary/20 dark:hover:bg-primary/30">
               <span className="sr-only">User settings</span>
-              <div className="h-7 w-7 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-400 dark:to-indigo-400"></div>
+              <div className="h-7 w-7 rounded-full bg-gradient-to-r from-primary to-primary dark:from-primary dark:to-primary/80"></div>
             </button>
           </div>
         </div>
@@ -196,22 +198,22 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
         </div>
       </main>
       
-      <footer className="py-6 px-6 border-t border-blue-100 dark:border-blue-800/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg transition-colors duration-300">
+      <footer className="py-6 px-6 border-t border-border bg-background/80 dark:bg-background/80 backdrop-blur-lg transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} Reflectify. All rights reserved.
             </p>
           </div>
           
           <div className="flex items-center space-x-4">
-            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
+            <a href="#" className="text-sm text-muted-foreground hover:text-primary dark:hover:text-primary transition-colors">
               Privacy
             </a>
-            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
+            <a href="#" className="text-sm text-muted-foreground hover:text-primary dark:hover:text-primary transition-colors">
               Terms
             </a>
-            <a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
+            <a href="#" className="text-sm text-muted-foreground hover:text-primary dark:hover:text-primary transition-colors">
               Contact
             </a>
           </div>
