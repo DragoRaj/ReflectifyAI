@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Calendar, PenLine, Save, Plus, Trash, ArrowLeft, ArrowRight, FileText, Search } from "lucide-react";
@@ -32,6 +31,9 @@ const Journal = () => {
   // Save entries to localStorage when they change
   useEffect(() => {
     localStorage.setItem("journalEntries", JSON.stringify(entries));
+    
+    // Update the journal entry count in localStorage for analytics
+    localStorage.setItem("journalEntryCount", String(entries.length));
   }, [entries]);
   
   const createNewEntry = () => {
@@ -70,6 +72,10 @@ const Journal = () => {
       // Otherwise add a new entry
       setEntries([...entries, currentEntry]);
       toast.success("New journal entry saved");
+      
+      // Track this as a journal entry for analytics
+      const currentCount = parseInt(localStorage.getItem('journalEntryCount') || '0');
+      localStorage.setItem('journalEntryCount', String(currentCount + 1));
     }
     
     setIsEditing(false);

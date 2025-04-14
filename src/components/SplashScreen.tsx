@@ -28,10 +28,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   if (!visible) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-indigo-950 dark:to-purple-950 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br theme-gradient overflow-hidden">
       <div className="splash-content">
         <div className="splash-logo animate-float relative z-10">
-          <span className="text-5xl font-display font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
+          <span className="text-5xl font-display font-bold bg-gradient-to-r theme-text-gradient bg-clip-text text-transparent">
             {title}
           </span>
           {subtitle && (
@@ -62,8 +62,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
           
           {/* Additional decorative elements */}
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_0%,transparent_70%)]"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur-3xl"></div>
-          <div className="absolute bottom-0 w-full h-40 bg-gradient-to-t from-blue-300/10 to-transparent dark:from-purple-900/10"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full theme-glow blur-3xl"></div>
+          <div className="absolute bottom-0 w-full h-40 theme-bottom-gradient"></div>
         </div>
       </div>
     </div>

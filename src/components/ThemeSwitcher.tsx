@@ -43,12 +43,48 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
     const savedTheme = localStorage.getItem('colorTheme') || 'blue';
     setCurrentTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Apply CSS variables for the theme colors
+    applyThemeColors(savedTheme);
   }, []);
   
   const handleThemeChange = (theme: string) => {
     setCurrentTheme(theme);
     localStorage.setItem('colorTheme', theme);
     document.documentElement.setAttribute('data-theme', theme);
+    
+    // Apply CSS variables for the theme colors
+    applyThemeColors(theme);
+  };
+  
+  const applyThemeColors = (themeValue: string) => {
+    const theme = THEMES.find(t => t.value === themeValue) || THEMES[0];
+    
+    // Set CSS variables that will be used throughout the app
+    document.documentElement.style.setProperty('--theme-primary-light', getGradientColor(theme.primaryLight));
+    document.documentElement.style.setProperty('--theme-primary-dark', getGradientColor(theme.primaryDark));
+    document.documentElement.style.setProperty('--theme-accent', getTextColor(theme.accent));
+    document.documentElement.style.setProperty('--theme-icon', getTextColor(theme.iconColor));
+    document.documentElement.style.setProperty('--theme-value', theme.value);
+  };
+  
+  // Helper function to extract color from gradient class
+  const getGradientColor = (gradientClass: string): string => {
+    if (gradientClass.includes('blue')) return '#3b82f6';
+    if (gradientClass.includes('purple')) return '#a855f7';
+    if (gradientClass.includes('teal')) return '#14b8a6';
+    if (gradientClass.includes('indigo')) return '#6366f1';
+    if (gradientClass.includes('pink')) return '#ec4899';
+    if (gradientClass.includes('emerald')) return '#10b981';
+    return '#3b82f6'; // Default blue
+  };
+  
+  // Helper function to extract color from text class
+  const getTextColor = (textClass: string): string => {
+    if (textClass.includes('blue')) return isDarkMode ? '#93c5fd' : '#2563eb';
+    if (textClass.includes('purple')) return isDarkMode ? '#d8b4fe' : '#9333ea';
+    if (textClass.includes('teal')) return isDarkMode ? '#5eead4' : '#0d9488';
+    return isDarkMode ? '#93c5fd' : '#2563eb'; // Default blue
   };
   
   const selectedTheme = THEMES.find(theme => theme.value === currentTheme) || THEMES[0];
