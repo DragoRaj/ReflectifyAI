@@ -15,21 +15,24 @@ const THEMES = [
     value: 'blue', 
     primaryLight: 'from-blue-500 to-indigo-500', 
     primaryDark: 'from-blue-400 to-indigo-400',
-    background: 'bg-blue-100 dark:bg-blue-900' 
+    accent: 'text-blue-600 dark:text-blue-400',
+    iconColor: 'text-blue-500 dark:text-blue-400'
   },
   { 
     name: 'Purple', 
     value: 'purple', 
     primaryLight: 'from-purple-500 to-pink-500', 
     primaryDark: 'from-purple-400 to-pink-400',
-    background: 'bg-purple-100 dark:bg-purple-900'
+    accent: 'text-purple-600 dark:text-purple-400',
+    iconColor: 'text-purple-500 dark:text-purple-400'
   },
   { 
     name: 'Teal', 
     value: 'teal', 
     primaryLight: 'from-teal-500 to-emerald-500', 
     primaryDark: 'from-teal-400 to-emerald-400',
-    background: 'bg-teal-100 dark:bg-teal-900' 
+    accent: 'text-teal-600 dark:text-teal-400',
+    iconColor: 'text-teal-500 dark:text-teal-400'
   }
 ];
 
@@ -68,7 +71,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="Change color theme"
           >
-            <Palette className="h-5 w-5 text-slate-700 dark:text-slate-300" />
+            <Palette className={`h-5 w-5 ${selectedTheme.iconColor}`} />
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-56 p-2">
@@ -79,7 +82,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
                 key={theme.value}
                 className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm ${
                   currentTheme === theme.value 
-                    ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300' 
+                    ? `bg-${theme.value}-50 dark:bg-${theme.value}-900/20 ${theme.accent}` 
                     : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}
                 onClick={() => handleThemeChange(theme.value)}

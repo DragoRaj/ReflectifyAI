@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Calendar, PenLine, Save, Plus, Trash, ArrowLeft, ArrowRight, FileText, Search } from "lucide-react";
@@ -131,7 +132,7 @@ const Journal = () => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 animate-fade-in">
       <div className="space-y-2">
-        <h2 className="text-2xl font-display font-semibold tracking-tight">Journal</h2>
+        <h2 className="text-2xl font-display font-semibold tracking-tight reflectify-gradient-text">Journal</h2>
         <p className="text-muted-foreground">
           Maintain a personal journal of your thoughts, emotions, and experiences.
         </p>
@@ -153,7 +154,7 @@ const Journal = () => {
             
             <Button 
               onClick={createNewEntry}
-              className="bg-reflectify-blue hover:bg-reflectify-blue/90"
+              className="theme-bg hover:bg-opacity-90"
             >
               <Plus className="h-4 w-4 mr-2" />
               New Entry
@@ -161,7 +162,7 @@ const Journal = () => {
           </div>
           
           {sortedEntries.length === 0 ? (
-            <div className="glass-card rounded-xl p-10 text-center space-y-4 border border-reflectify-blue/10">
+            <div className="glass-card rounded-xl p-10 text-center space-y-4 border theme-border border-opacity-10">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
               <h3 className="text-xl font-medium">No Journal Entries</h3>
               <p className="text-muted-foreground">
@@ -169,7 +170,7 @@ const Journal = () => {
               </p>
               <Button 
                 onClick={createNewEntry}
-                className="bg-reflectify-blue hover:bg-reflectify-blue/90 mt-2"
+                className="theme-bg hover:bg-opacity-90 mt-2"
               >
                 <PenLine className="h-4 w-4 mr-2" />
                 Start Writing
@@ -180,7 +181,7 @@ const Journal = () => {
               {sortedEntries.map(entry => (
                 <div 
                   key={entry.id} 
-                  className="glass-card rounded-xl p-4 cursor-pointer hover:shadow-md transition-all duration-300 hover:-translate-y-1 border border-reflectify-purple/10"
+                  className="glass-card rounded-xl p-4 cursor-pointer hover:shadow-md transition-all duration-300 hover:-translate-y-1 border theme-border border-opacity-10"
                   onClick={() => viewEntry(entry)}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -199,7 +200,7 @@ const Journal = () => {
           )}
         </div>
       ) : (
-        <div className="glass-card rounded-xl p-6 space-y-4 border border-reflectify-blue/10 animate-scale-in">
+        <div className="glass-card rounded-xl p-6 space-y-4 border theme-border border-opacity-10 animate-scale-in">
           <div className="flex items-center justify-between">
             <button 
               onClick={() => {
@@ -284,7 +285,7 @@ const Journal = () => {
               <div className="flex justify-end">
                 <Button 
                   onClick={saveEntry}
-                  className="bg-reflectify-blue hover:bg-reflectify-blue/90"
+                  className="theme-bg hover:bg-opacity-90"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Save Entry
@@ -295,7 +296,7 @@ const Journal = () => {
             currentEntry && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-medium">{currentEntry.title}</h3>
+                  <h3 className="text-xl font-medium theme-text">{currentEntry.title}</h3>
                   <span className="text-sm text-muted-foreground bg-muted rounded-full px-3 py-1">
                     {format(parseISO(currentEntry.date), 'MMMM d, yyyy')}
                   </span>
