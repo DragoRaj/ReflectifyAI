@@ -309,7 +309,7 @@ const FunctionalAnalytics = () => {
     } else if (wellbeingScores.emotional < 70) {
       insights.push({
         area: 'Emotional',
-        insight: 'You're making good progress with emotional wellbeing. Regular mood check-ins could help maintain this balance.',
+        insight: "You're making good progress with emotional wellbeing. Regular mood check-ins could help maintain this balance.",
         priority: 'medium'
       });
     } else {
