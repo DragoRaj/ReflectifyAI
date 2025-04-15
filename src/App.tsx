@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 import FeatureSplashScreen from "@/components/FeatureSplashScreen";
 import { BarChart2, MessageCircle, Shield, HeartPulse, Sparkles, Home } from "lucide-react";
+import DevControls from "@/components/DevControls";
 
 const queryClient = new QueryClient();
 
@@ -24,68 +25,94 @@ const FeatureRouter = () => {
   });
   
   useEffect(() => {
-    // Get the feature from URL hash
+    // Check for developer overrides
+    const overrideType = localStorage.getItem('overrideSplashType');
+    const overrideFeature = localStorage.getItem('overrideFeatureSplash');
+    
+    if (overrideType === 'feature' && overrideFeature) {
+      // Override with specific feature splash
+      const featureId = overrideFeature;
+      showFeatureSplashForId(featureId);
+      
+      // Clear the override to prevent loops
+      localStorage.removeItem('overrideFeatureType');
+      localStorage.removeItem('overrideFeatureSplash');
+      return;
+    }
+    
+    // Regular behavior - get feature from URL hash
     const featureId = location.hash.replace('#', '') || 'home';
     
     // Only show splash screen when hash changes and it's not the initial load
-    if (location.hash && sessionStorage.getItem('initialLoadComplete') === 'true') {
-      let splashInfo = {
-        name: "Welcome",
-        description: "Loading your content...",
-        icon: <Home size={48} />
-      };
+    // Also respect developer override if set
+    if ((location.hash && sessionStorage.getItem('initialLoadComplete') === 'true') || 
+        overrideType === 'feature') {
+      showFeatureSplashForId(featureId);
       
-      // Set splash info based on feature
-      switch (featureId) {
-        case 'analytics':
-          splashInfo = {
-            name: "Analytics",
-            description: "Analyzing your data and insights...",
-            icon: <BarChart2 size={48} />
-          };
-          break;
-        case 'content':
-        case 'chat':
-        case 'rant':
-          splashInfo = {
-            name: "Content",
-            description: "Loading your content workspace...",
-            icon: <Shield size={48} />
-          };
-          break;
-        case 'mindfulness':
-          splashInfo = {
-            name: "Mindfulness",
-            description: "Preparing your mindfulness session...",
-            icon: <Sparkles size={48} />
-          };
-          break;
-        case 'journal':
-          splashInfo = {
-            name: "Journal",
-            description: "Opening your journal...",
-            icon: <MessageCircle size={48} />
-          };
-          break;
-        case 'health':
-          splashInfo = {
-            name: "Health",
-            description: "Analyzing your health data...",
-            icon: <HeartPulse size={48} />
-          };
-          break;
-        default:
-          splashInfo = {
-            name: "Home",
-            description: "Welcome to Reflectify",
-            icon: <Home size={48} />
-          };
+      // Clear the override if it exists
+      if (overrideType === 'feature') {
+        localStorage.removeItem('overrideSplashType');
       }
-      
-      setFeatureSplashInfo(splashInfo);
-      setShowFeatureSplash(true);
     }
   }, [location]);
+  
+  const showFeatureSplashForId = (featureId: string) => {
+    let splashInfo = {
+      name: "Welcome",
+      description: "Loading your content...",
+      icon: <Home size={48} />
+    };
+    
+    // Set splash info based on feature
+    switch (featureId) {
+      case 'analytics':
+        splashInfo = {
+          name: "Analytics",
+          description: "Analyzing your data and insights...",
+          icon: <BarChart2 size={48} />
+        };
+        break;
+      case 'content':
+      case 'chat':
+      case 'rant':
+        splashInfo = {
+          name: "Content",
+          description: "Loading your content workspace...",
+          icon: <Shield size={48} />
+        };
+        break;
+      case 'mindfulness':
+        splashInfo = {
+          name: "Mindfulness",
+          description: "Preparing your mindfulness session...",
+          icon: <Sparkles size={48} />
+        };
+        break;
+      case 'journal':
+        splashInfo = {
+          name: "Journal",
+          description: "Opening your journal...",
+          icon: <MessageCircle size={48} />
+        };
+        break;
+      case 'health':
+        splashInfo = {
+          name: "Health",
+          description: "Analyzing your health data...",
+          icon: <HeartPulse size={48} />
+        };
+        break;
+      default:
+        splashInfo = {
+          name: "Home",
+          description: "Welcome to Reflectify",
+          icon: <Home size={48} />
+        };
+    }
+    
+    setFeatureSplashInfo(splashInfo);
+    setShowFeatureSplash(true);
+  };
   
   return (
     <>
@@ -111,6 +138,22 @@ const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   
   useEffect(() => {
+    // Check for developer overrides
+    const overrideType = localStorage.getItem('overrideSplashType');
+    
+    // Skip splash if override type is set to feature
+    if (overrideType === 'feature') {
+      setShowSplash(false);
+      sessionStorage.setItem('initialLoadComplete', 'true');
+      return;
+    }
+    
+    // Regular behavior - show initial splash unless disabled
+    const shouldSkipSplash = sessionStorage.getItem('initialLoadComplete') === 'true' && 
+                           !overrideType;
+                           
+    setShowSplash(!shouldSkipSplash);
+    
     // Set initial load complete after the first splash screen
     return () => {
       sessionStorage.setItem('initialLoadComplete', 'true');
@@ -128,6 +171,7 @@ const App = () => {
         ) : (
           <BrowserRouter>
             <FeatureRouter />
+            <DevControls />
           </BrowserRouter>
         )}
       </TooltipProvider>

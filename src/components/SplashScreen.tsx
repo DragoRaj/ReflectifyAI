@@ -22,14 +22,18 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
     // Check user experience level
     checkUserExperience();
     
+    // Dev override for quicker testing
+    const devDuration = localStorage.getItem('devSplashDuration');
+    const actualDuration = devDuration ? parseInt(devDuration) : duration;
+    
     const animationTimer = setTimeout(() => {
       setAnimateOut(true);
-    }, duration - 800);
+    }, actualDuration - 800);
     
     const timer = setTimeout(() => {
       setVisible(false);
       if (onComplete) onComplete();
-    }, duration);
+    }, actualDuration);
     
     return () => {
       clearTimeout(animationTimer);
@@ -55,7 +59,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   const currentTheme = localStorage.getItem('colorTheme') || 'blue';
   
   // Determine if dark mode is active
-  const isDarkMode = document.documentElement.classList.contains('dark');
+  const isDarkMode = document.documentElement.classList.contains('dark') ||
+                    localStorage.getItem('darkMode') === 'true';
   
   // Render appropriate splash screen based on experience level
   return (
@@ -152,6 +157,13 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] border border-white/20 dark:border-white/10 rounded-full animate-[ping_3s_infinite]"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-white/10 dark:border-white/5 rounded-full animate-[ping_4s_infinite_1s]"></div>
           </div>
+        </div>
+      )}
+
+      {/* Dev mode indicator */}
+      {localStorage.getItem('devMode') === 'true' && (
+        <div className="absolute bottom-4 left-4 bg-black/50 text-white text-xs px-2 py-1 rounded">
+          Dev Mode: {isExperienced ? 'Advanced' : 'Standard'} Splash
         </div>
       )}
     </div>

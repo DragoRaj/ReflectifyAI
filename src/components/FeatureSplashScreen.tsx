@@ -24,14 +24,18 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
     // Check user experience level
     checkUserExperience();
     
+    // Dev override for quicker testing
+    const devDuration = localStorage.getItem('devFeatureSplashDuration');
+    const actualDuration = devDuration ? parseInt(devDuration) : duration;
+    
     const animationTimer = setTimeout(() => {
       setAnimateOut(true);
-    }, duration - 500);
+    }, actualDuration - 500);
     
     const visibilityTimer = setTimeout(() => {
       setVisible(false);
       if (onComplete) onComplete();
-    }, duration);
+    }, actualDuration);
     
     return () => {
       clearTimeout(animationTimer);
@@ -59,6 +63,10 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
   };
   
   if (!visible) return null;
+  
+  // Determine if dark mode is active
+  const isDarkMode = document.documentElement.classList.contains('dark') || 
+                    localStorage.getItem('darkMode') === 'true';
   
   return (
     <div className={`fixed inset-0 z-40 flex items-center justify-center backdrop-blur-lg transition-all duration-500 ${animateOut ? 'opacity-0' : 'opacity-100'}`}>
@@ -150,6 +158,13 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
               ></div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Dev mode indicator */}
+      {localStorage.getItem('devMode') === 'true' && (
+        <div className="absolute bottom-4 left-4 bg-black/50 text-white text-xs px-2 py-1 rounded">
+          Dev Mode: {isExperienced ? 'Advanced' : 'Standard'} Feature Splash
         </div>
       )}
     </div>

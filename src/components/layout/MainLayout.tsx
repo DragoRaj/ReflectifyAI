@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { BarChart2, Home, Shield, Sparkles } from "lucide-react";
@@ -12,13 +11,13 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import DevControls from "@/components/DevControls";
 
 interface MainLayoutProps {
   children: React.ReactNode;
   className?: string;
 }
 
-// Simplified function groups for the app - reduced to 4 main groups
 const featureGroups = [
   {
     name: "Home",
@@ -56,18 +55,15 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Check for system preference or saved preference
     const isDark = localStorage.getItem("darkMode") === "true" || 
                   window.matchMedia("(prefers-color-scheme: dark)").matches;
     setIsDarkMode(isDark);
     updateTheme(isDark);
     
-    // Add animation delay
     setTimeout(() => {
       setIsLoaded(true);
     }, 300);
     
-    // Check URL hash for active tab
     const hash = window.location.hash.replace('#', '');
     if (hash) {
       setActiveTab(hash);
@@ -91,10 +87,8 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
-    // Update URL hash for better navigation
     window.location.hash = tab;
     
-    // Add animation effect for tab change
     const mainContent = document.querySelector("main");
     if (mainContent) {
       mainContent.classList.add("fade-transition");
@@ -103,13 +97,11 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
       }, 300);
     }
     
-    // Scroll to the feature section
     const featuresSection = document.getElementById('features-section');
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: 'smooth' });
     }
     
-    // Custom event for tab change (to be used in Index.tsx)
     const tabChangeEvent = new CustomEvent('tabChange', { detail: { tab } });
     window.dispatchEvent(tabChangeEvent);
   };
@@ -119,7 +111,7 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
       <header className="fixed top-0 left-0 right-0 z-50 py-3 px-6 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-border transition-all duration-500 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="font-display font-semibold text-xl text-primary dark:text-primary drop-shadow-sm">
+            <span className="font-display font-semibold text-xl text-foreground dark:text-foreground">
               Reflectify
             </span>
           </div>
@@ -219,6 +211,8 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
           </div>
         </div>
       </footer>
+      
+      <DevControls />
     </div>
   );
 };
