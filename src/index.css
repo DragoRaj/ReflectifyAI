@@ -44,11 +44,13 @@
     --theme-color-darker: 221 83% 40%;
     --theme-text: 221 83% 53%;
     --theme-icon: 221 83% 53%;
+    --theme-color-lighter: 221 83% 65%;
   }
 
   [data-theme="blue"] {
     --theme-color: 221 83% 53%;
     --theme-color-darker: 221 83% 40%;
+    --theme-color-lighter: 221 83% 65%;
     --theme-text: 221 83% 53%;
     --theme-icon: 221 83% 53%;
     --primary: 221 83% 53%;
@@ -58,6 +60,7 @@
   [data-theme="purple"] {
     --theme-color: 250 83% 53%;
     --theme-color-darker: 250 83% 40%;
+    --theme-color-lighter: 250 83% 65%;
     --theme-text: 250 83% 53%;
     --theme-icon: 250 83% 53%;
     --primary: 250 83% 53%;
@@ -67,6 +70,7 @@
   [data-theme="teal"] {
     --theme-color: 171 83% 45%;
     --theme-color-darker: 171 83% 35%;
+    --theme-color-lighter: 171 83% 55%;
     --theme-text: 171 83% 45%;
     --theme-icon: 171 83% 45%;
     --primary: 171 83% 45%;
@@ -76,6 +80,7 @@
   [data-theme="pink"] {
     --theme-color: 330 80% 60%;
     --theme-color-darker: 330 80% 50%;
+    --theme-color-lighter: 330 80% 70%;
     --theme-text: 330 80% 60%;
     --theme-icon: 330 80% 60%;
     --primary: 330 80% 60%;
@@ -85,6 +90,7 @@
   [data-theme="amber"] {
     --theme-color: 43 96% 58%;
     --theme-color-darker: 43 96% 48%;
+    --theme-color-lighter: 43 96% 68%;
     --theme-text: 43 96% 58%;
     --theme-icon: 43 96% 58%;
     --primary: 43 96% 58%;
@@ -94,10 +100,71 @@
   [data-theme="green"] {
     --theme-color: 142 72% 50%;
     --theme-color-darker: 142 72% 40%;
+    --theme-color-lighter: 142 72% 60%;
     --theme-text: 142 72% 50%;
     --theme-icon: 142 72% 50%;
     --primary: 142 72% 50%;
     --ring: 142 72% 50%;
+  }
+  
+  [data-theme="crimson"] {
+    --theme-color: 348 83% 47%;
+    --theme-color-darker: 348 83% 37%;
+    --theme-color-lighter: 348 83% 57%;
+    --theme-text: 348 83% 47%;
+    --theme-icon: 348 83% 47%;
+    --primary: 348 83% 47%;
+    --ring: 348 83% 47%;
+  }
+  
+  [data-theme="indigo"] {
+    --theme-color: 263 70% 50%;
+    --theme-color-darker: 263 70% 40%;
+    --theme-color-lighter: 263 70% 60%;
+    --theme-text: 263 70% 50%;
+    --theme-icon: 263 70% 50%;
+    --primary: 263 70% 50%;
+    --ring: 263 70% 50%;
+  }
+  
+  [data-theme="emerald"] {
+    --theme-color: 152 69% 40%;
+    --theme-color-darker: 152 69% 30%;
+    --theme-color-lighter: 152 69% 50%;
+    --theme-text: 152 69% 40%;
+    --theme-icon: 152 69% 40%;
+    --primary: 152 69% 40%;
+    --ring: 152 69% 40%;
+  }
+  
+  [data-theme="violet"] {
+    --theme-color: 270 76% 60%;
+    --theme-color-darker: 270 76% 50%;
+    --theme-color-lighter: 270 76% 70%;
+    --theme-text: 270 76% 60%;
+    --theme-icon: 270 76% 60%;
+    --primary: 270 76% 60%;
+    --ring: 270 76% 60%;
+  }
+  
+  [data-theme="coral"] {
+    --theme-color: 16 85% 64%;
+    --theme-color-darker: 16 85% 54%;
+    --theme-color-lighter: 16 85% 74%;
+    --theme-text: 16 85% 64%;
+    --theme-icon: 16 85% 64%;
+    --primary: 16 85% 64%;
+    --ring: 16 85% 64%;
+  }
+  
+  [data-theme="cyan"] {
+    --theme-color: 187 72% 47%;
+    --theme-color-darker: 187 72% 37%;
+    --theme-color-lighter: 187 72% 57%;
+    --theme-text: 187 72% 47%;
+    --theme-icon: 187 72% 47%;
+    --primary: 187 72% 47%;
+    --ring: 187 72% 47%;
   }
 
   .dark {
@@ -123,6 +190,7 @@
   .dark[data-theme="blue"] {
     --theme-color: 217 91% 60%;
     --theme-color-darker: 217 91% 50%;
+    --theme-color-lighter: 217 91% 70%;
     --theme-text: 217 91% 60%;
     --theme-icon: 217 91% 60%;
     --primary: 217 91% 60%;
@@ -132,6 +200,7 @@
   .dark[data-theme="purple"] {
     --theme-color: 257 91% 65%;
     --theme-color-darker: 257 91% 55%;
+    --theme-color-lighter: 257 91% 75%;
     --theme-text: 257 91% 65%;
     --theme-icon: 257 91% 65%;
     --primary: 257 91% 65%;
@@ -141,6 +210,7 @@
   .dark[data-theme="teal"] {
     --theme-color: 177 91% 50%;
     --theme-color-darker: 177 91% 40%;
+    --theme-color-lighter: 177 91% 60%;
     --theme-text: 177 91% 50%;
     --theme-icon: 177 91% 50%;
     --primary: 177 91% 50%;
@@ -150,6 +220,7 @@
   .dark[data-theme="pink"] {
     --theme-color: 327 91% 65%;
     --theme-color-darker: 327 91% 55%;
+    --theme-color-lighter: 327 91% 75%;
     --theme-text: 327 91% 65%;
     --theme-icon: 327 91% 65%;
     --primary: 327 91% 65%;
@@ -159,6 +230,7 @@
   .dark[data-theme="amber"] {
     --theme-color: 43 91% 65%;
     --theme-color-darker: 43 91% 55%;
+    --theme-color-lighter: 43 91% 75%;
     --theme-text: 43 91% 65%;
     --theme-icon: 43 91% 65%;
     --primary: 43 91% 65%;
@@ -168,10 +240,71 @@
   .dark[data-theme="green"] {
     --theme-color: 142 71% 55%;
     --theme-color-darker: 142 71% 45%;
+    --theme-color-lighter: 142 71% 65%;
     --theme-text: 142 71% 55%;
     --theme-icon: 142 71% 55%;
     --primary: 142 71% 55%;
     --ring: 142 76% 44%;
+  }
+  
+  .dark[data-theme="crimson"] {
+    --theme-color: 348 83% 57%;
+    --theme-color-darker: 348 83% 47%;
+    --theme-color-lighter: 348 83% 67%;
+    --theme-text: 348 83% 57%;
+    --theme-icon: 348 83% 57%;
+    --primary: 348 83% 57%;
+    --ring: 348 83% 47%;
+  }
+  
+  .dark[data-theme="indigo"] {
+    --theme-color: 263 76% 60%;
+    --theme-color-darker: 263 76% 50%;
+    --theme-color-lighter: 263 76% 70%;
+    --theme-text: 263 76% 60%;
+    --theme-icon: 263 76% 60%;
+    --primary: 263 76% 60%;
+    --ring: 263 76% 50%;
+  }
+  
+  .dark[data-theme="emerald"] {
+    --theme-color: 152 69% 50%;
+    --theme-color-darker: 152 69% 40%;
+    --theme-color-lighter: 152 69% 60%;
+    --theme-text: 152 69% 50%;
+    --theme-icon: 152 69% 50%;
+    --primary: 152 69% 50%;
+    --ring: 152 69% 40%;
+  }
+  
+  .dark[data-theme="violet"] {
+    --theme-color: 270 76% 70%;
+    --theme-color-darker: 270 76% 60%;
+    --theme-color-lighter: 270 76% 80%;
+    --theme-text: 270 76% 70%;
+    --theme-icon: 270 76% 70%;
+    --primary: 270 76% 70%;
+    --ring: 270 76% 60%;
+  }
+  
+  .dark[data-theme="coral"] {
+    --theme-color: 16 85% 69%;
+    --theme-color-darker: 16 85% 59%;
+    --theme-color-lighter: 16 85% 79%;
+    --theme-text: 16 85% 69%;
+    --theme-icon: 16 85% 69%;
+    --primary: 16 85% 69%;
+    --ring: 16 85% 59%;
+  }
+  
+  .dark[data-theme="cyan"] {
+    --theme-color: 187 72% 57%;
+    --theme-color-darker: 187 72% 47%;
+    --theme-color-lighter: 187 72% 67%;
+    --theme-text: 187 72% 57%;
+    --theme-icon: 187 72% 57%;
+    --primary: 187 72% 57%;
+    --ring: 187 72% 47%;
   }
 }
 
@@ -392,4 +525,97 @@
 .dark .recharts-default-tooltip {
   background-color: rgba(30, 41, 59, 0.95) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.splash-advanced {
+  @apply relative z-10;
+}
+
+.splash-advanced-particle {
+  @apply absolute rounded-full bg-white/40 blur-sm;
+  animation: advancedFloat 8s infinite ease-in-out;
+}
+
+.splash-swirl {
+  @apply absolute blur-2xl opacity-30;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    hsla(var(--theme-color), 0.7) 0%,
+    hsla(var(--theme-color-darker), 0.6) 25%, 
+    hsla(var(--theme-color-lighter), 0.5) 50%,
+    hsla(var(--theme-color), 0.4) 75%, 
+    hsla(var(--theme-color-darker), 0.7) 100%
+  );
+  animation: spin 15s linear infinite;
+}
+
+.splash-glow {
+  @apply absolute rounded-full blur-3xl;
+  background: radial-gradient(
+    circle at center,
+    hsla(var(--theme-color-lighter), 0.6) 0%,
+    hsla(var(--theme-color), 0.3) 50%,
+    transparent 80%
+  );
+  animation: pulsate 6s ease-in-out infinite alternate;
+}
+
+@keyframes fadeTransition {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 10px 15px rgba(59, 130, 246, 0.3));
+  }
+  50% {
+    transform: translateY(-15px) scale(1.05);
+    filter: drop-shadow(0 20px 25px rgba(59, 130, 246, 0.5));
+  }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  to { transform: translateX(200%); }
+}
+
+@keyframes advancedFloat {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 0.4;
+  }
+  25% {
+    transform: translate(15px, -20px) rotate(5deg) scale(1.1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(30px, 0) rotate(0deg) scale(1);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(15px, 20px) rotate(-5deg) scale(0.9);
+    opacity: 0.3;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulsate {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.3); opacity: 0.6; }
 }

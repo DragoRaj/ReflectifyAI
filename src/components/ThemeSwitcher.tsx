@@ -10,7 +10,7 @@ interface ThemeSwitcherProps {
   onDarkModeChange: (isDark: boolean) => void;
 }
 
-// Pre-defined color themes - simplified to focus on text and icon colors
+// Expanded pre-defined color themes
 const PRESET_THEMES = [
   { 
     name: 'Blue', 
@@ -41,6 +41,37 @@ const PRESET_THEMES = [
     name: 'Green', 
     value: 'green', 
     primary: { h: 142, s: 72, l: 50 },
+  },
+  // New color themes
+  { 
+    name: 'Crimson', 
+    value: 'crimson', 
+    primary: { h: 348, s: 83, l: 47 },
+  },
+  { 
+    name: 'Indigo', 
+    value: 'indigo', 
+    primary: { h: 263, s: 70, l: 50 },
+  },
+  { 
+    name: 'Emerald', 
+    value: 'emerald', 
+    primary: { h: 152, s: 69, l: 40 },
+  },
+  { 
+    name: 'Violet', 
+    value: 'violet', 
+    primary: { h: 270, s: 76, l: 60 },
+  },
+  { 
+    name: 'Coral', 
+    value: 'coral', 
+    primary: { h: 16, s: 85, l: 64 },
+  },
+  { 
+    name: 'Cyan', 
+    value: 'cyan', 
+    primary: { h: 187, s: 72, l: 47 },
   }
 ];
 
@@ -110,7 +141,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
             <div className="flex justify-between items-center p-4 border-b">
               <h4 className="text-sm font-medium">Choose a theme color</h4>
             </div>
-            <div className="p-2 grid grid-cols-2 gap-2">
+            <div className="p-2 grid grid-cols-3 gap-2">
               {PRESET_THEMES.map((theme) => {
                 // Generate consistent color preview
                 const themeColor = hslToHex(theme.primary.h, theme.primary.s, theme.primary.l);
@@ -119,18 +150,18 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
                 return (
                   <button
                     key={theme.value}
-                    className={`flex flex-col items-center rounded-md p-3 transition-colors ${
+                    className={`flex flex-col items-center rounded-md p-2.5 transition-colors ${
                       currentTheme === theme.value 
                         ? 'bg-gray-100 dark:bg-gray-800 text-[hsl(var(--theme-color))]' 
                         : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
                     onClick={() => handleThemeChange(theme.value)}
                   >
-                    <div className="w-full h-12 rounded-md mb-2" style={{ 
+                    <div className="w-full h-10 rounded-md mb-2" style={{ 
                       background: `linear-gradient(to right, ${themeColor}, ${darkerColor})` 
                     }}></div>
                     <div className="flex items-center justify-between w-full">
-                      <span className="text-sm">{theme.name}</span>
+                      <span className="text-xs font-medium">{theme.name}</span>
                       {currentTheme === theme.value && <Check className="h-4 w-4" />}
                     </div>
                   </button>
