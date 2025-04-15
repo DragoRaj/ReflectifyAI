@@ -39,8 +39,8 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
   
   return (
     <div className={`fixed inset-0 z-40 flex items-center justify-center backdrop-blur-lg transition-all duration-500 ${animateOut ? 'opacity-0' : 'opacity-100'}`}>
-      {/* Dynamic background with radial gradient using theme colors */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--theme-color))] via-transparent to-[hsl(var(--theme-color-lighter))]/10"></div>
+      {/* Background gradient that respects dark/light mode but uses theme color */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--theme-color))/50] via-transparent to-[hsl(var(--theme-color))/30] dark:from-[hsl(var(--theme-color))/30] dark:to-[hsl(var(--theme-color))/10]"></div>
       
       {/* Animated content */}
       <div className={`transform transition-all duration-500 relative z-10 ${animateOut ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`}>

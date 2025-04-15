@@ -7,38 +7,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&display=swap');
 
 @layer base {
-  :root,
-  [data-theme="blue"] {
+  :root {
     --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
-
+    
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
+    
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 217 91% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
+    
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 213 94% 95%;
+    
+    --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
+    
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 221 83% 53%;
-
+    
     --radius: 0.75rem;
-
+    
     --sidebar-background: 213 100% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 221 83% 53%;
@@ -50,376 +42,136 @@
     
     --theme-color: 221 83% 53%;
     --theme-color-darker: 221 83% 40%;
-    --theme-color-lighter: 213 94% 95%;
     --theme-text: 221 83% 53%;
     --theme-icon: 221 83% 53%;
   }
 
+  [data-theme="blue"] {
+    --theme-color: 221 83% 53%;
+    --theme-color-darker: 221 83% 40%;
+    --theme-text: 221 83% 53%;
+    --theme-icon: 221 83% 53%;
+    --primary: 221 83% 53%;
+    --ring: 221 83% 53%;
+  }
+
   [data-theme="purple"] {
-    --background: 250 40% 98%;
-    --foreground: 252 84% 4.9%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 252 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 252 84% 4.9%;
-
-    --primary: 250 83% 53%;
-    --primary-foreground: 250 40% 98%;
-
-    --secondary: 250 91% 96%;
-    --secondary-foreground: 252 47.4% 11.2%;
-
-    --muted: 250 40% 96.1%;
-    --muted-foreground: 255 16.3% 46.9%;
-
-    --accent: 253 94% 95%;
-    --accent-foreground: 252 47.4% 11.2%;
-
-    --ring: 250 83% 53%;
-    
     --theme-color: 250 83% 53%;
-    --theme-color-darker: 250 83% 40%; 
-    --theme-color-lighter: 253 94% 95%;
+    --theme-color-darker: 250 83% 40%;
     --theme-text: 250 83% 53%;
     --theme-icon: 250 83% 53%;
+    --primary: 250 83% 53%;
+    --ring: 250 83% 53%;
   }
 
   [data-theme="teal"] {
-    --background: 170 40% 98%;
-    --foreground: 182 84% 4.9%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 182 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 182 84% 4.9%;
-
-    --primary: 171 83% 45%;
-    --primary-foreground: 170 40% 98%;
-
-    --secondary: 177 91% 96%;
-    --secondary-foreground: 182 47.4% 11.2%;
-
-    --muted: 170 40% 96.1%;
-    --muted-foreground: 175 16.3% 46.9%;
-
-    --accent: 173 94% 95%;
-    --accent-foreground: 182 47.4% 11.2%;
-
-    --ring: 171 83% 45%;
-    
     --theme-color: 171 83% 45%;
     --theme-color-darker: 171 83% 35%;
-    --theme-color-lighter: 173 94% 95%;
     --theme-text: 171 83% 45%;
     --theme-icon: 171 83% 45%;
+    --primary: 171 83% 45%;
+    --ring: 171 83% 45%;
   }
   
   [data-theme="pink"] {
-    --background: 335 40% 98%;
-    --foreground: 332 84% 4.9%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 332 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 332 84% 4.9%;
-
-    --primary: 330 80% 60%;
-    --primary-foreground: 335 40% 98%;
-
-    --secondary: 327 91% 96%;
-    --secondary-foreground: 332 47.4% 11.2%;
-
-    --muted: 335 40% 96.1%;
-    --muted-foreground: 330 16.3% 46.9%;
-
-    --accent: 327 87% 95%;
-    --accent-foreground: 332 47.4% 11.2%;
-
-    --ring: 330 80% 60%;
-    
     --theme-color: 330 80% 60%;
     --theme-color-darker: 330 80% 50%;
-    --theme-color-lighter: 327 87% 95%;
     --theme-text: 330 80% 60%;
     --theme-icon: 330 80% 60%;
+    --primary: 330 80% 60%;
+    --ring: 330 80% 60%;
   }
   
   [data-theme="amber"] {
-    --background: 38 40% 98%;
-    --foreground: 40 84% 4.9%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 40 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 40 84% 4.9%;
-
-    --primary: 43 96% 58%;
-    --primary-foreground: 38 40% 98%;
-
-    --secondary: 48 91% 96%;
-    --secondary-foreground: 40 47.4% 11.2%;
-
-    --muted: 38 40% 96.1%;
-    --muted-foreground: 43 16.3% 46.9%;
-
-    --accent: 48 96% 95%;
-    --accent-foreground: 40 47.4% 11.2%;
-
-    --ring: 43 96% 58%;
-    
     --theme-color: 43 96% 58%;
     --theme-color-darker: 43 96% 48%;
-    --theme-color-lighter: 48 96% 95%;
     --theme-text: 43 96% 58%;
     --theme-icon: 43 96% 58%;
+    --primary: 43 96% 58%;
+    --ring: 43 96% 58%;
   }
   
   [data-theme="green"] {
-    --background: 138 40% 98%;
-    --foreground: 140 84% 4.9%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 140 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 140 84% 4.9%;
-
-    --primary: 142 72% 50%;
-    --primary-foreground: 138 40% 98%;
-
-    --secondary: 141 91% 96%;
-    --secondary-foreground: 140 47.4% 11.2%;
-
-    --muted: 138 40% 96.1%;
-    --muted-foreground: 142 16.3% 46.9%;
-
-    --accent: 141 84% 95%;
-    --accent-foreground: 140 47.4% 11.2%;
-
-    --ring: 142 72% 50%;
-    
     --theme-color: 142 72% 50%;
     --theme-color-darker: 142 72% 40%;
-    --theme-color-lighter: 141 84% 95%;
     --theme-text: 142 72% 50%;
     --theme-icon: 142 72% 50%;
-  }
-  
-  [data-theme="custom"] {
-    /* Custom theme uses variables set directly on the :root through JS */
+    --primary: 142 72% 50%;
+    --ring: 142 72% 50%;
   }
 
-  .dark[data-theme="blue"] {
+  .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
     
     --card: 222 47% 11%;
     --card-foreground: 210 40% 98%;
-
+    
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
+    
     --muted: 217 33% 17%;
     --muted-foreground: 215 20.2% 65.1%;
-
+    
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
-
-    --ring: 224 76% 48%;
     
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+  }
+  
+  .dark[data-theme="blue"] {
     --theme-color: 217 91% 60%;
     --theme-color-darker: 217 91% 50%;
-    --theme-color-lighter: 217 33% 17%;
     --theme-text: 217 91% 60%;
     --theme-icon: 217 91% 60%;
+    --primary: 217 91% 60%;
+    --ring: 224 76% 48%;
   }
 
   .dark[data-theme="purple"] {
-    --background: 262 47% 11%;
-    --foreground: 250 40% 98%;
-    
-    --card: 262 47% 11%;
-    --card-foreground: 250 40% 98%;
-
-    --popover: 262 47% 11%;
-    --popover-foreground: 250 40% 98%;
-
-    --primary: 257 91% 65%;
-    --primary-foreground: 262 47.4% 11.2%;
-
-    --secondary: 257 33% 17%;
-    --secondary-foreground: 250 40% 98%;
-
-    --muted: 257 33% 17%;
-    --muted-foreground: 255 20.2% 65.1%;
-
-    --accent: 257 33% 17%;
-    --accent-foreground: 250 40% 98%;
-
-    --ring: 264 76% 54%;
-    
     --theme-color: 257 91% 65%;
     --theme-color-darker: 257 91% 55%;
-    --theme-color-lighter: 257 33% 17%;
     --theme-text: 257 91% 65%;
     --theme-icon: 257 91% 65%;
+    --primary: 257 91% 65%;
+    --ring: 264 76% 54%;
   }
 
   .dark[data-theme="teal"] {
-    --background: 182 47% 12%;
-    --foreground: 170 40% 98%;
-    
-    --card: 182 47% 12%;
-    --card-foreground: 170 40% 98%;
-
-    --popover: 182 47% 12%;
-    --popover-foreground: 170 40% 98%;
-
-    --primary: 177 91% 50%;
-    --primary-foreground: 182 47.4% 11.2%;
-
-    --secondary: 177 33% 17%;
-    --secondary-foreground: 170 40% 98%;
-
-    --muted: 177 33% 17%;
-    --muted-foreground: 175 20.2% 65.1%;
-
-    --accent: 177 33% 17%;
-    --accent-foreground: 170 40% 98%;
-
-    --ring: 176 76% 42%;
-    
     --theme-color: 177 91% 50%;
     --theme-color-darker: 177 91% 40%;
-    --theme-color-lighter: 177 33% 17%;
     --theme-text: 177 91% 50%;
     --theme-icon: 177 91% 50%;
+    --primary: 177 91% 50%;
+    --ring: 176 76% 42%;
   }
   
   .dark[data-theme="pink"] {
-    --background: 335 47% 11%;
-    --foreground: 335 40% 98%;
-    
-    --card: 335 47% 11%;
-    --card-foreground: 335 40% 98%;
-
-    --popover: 335 47% 11%;
-    --popover-foreground: 335 40% 98%;
-
-    --primary: 327 91% 65%;
-    --primary-foreground: 335 47.4% 11.2%;
-
-    --secondary: 327 33% 17%;
-    --secondary-foreground: 335 40% 98%;
-
-    --muted: 327 33% 17%;
-    --muted-foreground: 330 20.2% 65.1%;
-
-    --accent: 327 33% 17%;
-    --accent-foreground: 335 40% 98%;
-
-    --ring: 330 76% 54%;
-    
     --theme-color: 327 91% 65%;
     --theme-color-darker: 327 91% 55%;
-    --theme-color-lighter: 327 33% 17%;
     --theme-text: 327 91% 65%;
     --theme-icon: 327 91% 65%;
+    --primary: 327 91% 65%;
+    --ring: 330 76% 54%;
   }
   
   .dark[data-theme="amber"] {
-    --background: 35 47% 11%;
-    --foreground: 38 40% 98%;
-    
-    --card: 35 47% 11%;
-    --card-foreground: 38 40% 98%;
-
-    --popover: 35 47% 11%;
-    --popover-foreground: 38 40% 98%;
-
-    --primary: 43 91% 65%;
-    --primary-foreground: 35 47.4% 11.2%;
-
-    --secondary: 43 33% 17%;
-    --secondary-foreground: 38 40% 98%;
-
-    --muted: 43 33% 17%;
-    --muted-foreground: 43 20.2% 65.1%;
-
-    --accent: 43 33% 17%;
-    --accent-foreground: 38 40% 98%;
-
-    --ring: 43 76% 54%;
-    
     --theme-color: 43 91% 65%;
     --theme-color-darker: 43 91% 55%;
-    --theme-color-lighter: 43 33% 17%;
     --theme-text: 43 91% 65%;
     --theme-icon: 43 91% 65%;
+    --primary: 43 91% 65%;
+    --ring: 43 76% 54%;
   }
   
   .dark[data-theme="green"] {
-    --background: 145 47% 11%;
-    --foreground: 142 40% 98%;
-    
-    --card: 145 47% 11%;
-    --card-foreground: 142 40% 98%;
-
-    --popover: 145 47% 11%;
-    --popover-foreground: 142 40% 98%;
-
-    --primary: 142 71% 55%;
-    --primary-foreground: 145 47.4% 11.2%;
-
-    --secondary: 142 33% 17%;
-    --secondary-foreground: 142 40% 98%;
-
-    --muted: 142 33% 17%;
-    --muted-foreground: 142 20.2% 65.1%;
-
-    --accent: 142 33% 17%;
-    --accent-foreground: 142 40% 98%;
-
-    --ring: 142 76% 44%;
-    
     --theme-color: 142 71% 55%;
     --theme-color-darker: 142 71% 45%;
-    --theme-color-lighter: 142 33% 17%;
     --theme-text: 142 71% 55%;
     --theme-icon: 142 71% 55%;
-  }
-  
-  .dark[data-theme="custom"] {
-    /* Custom theme uses variables set directly through JS */
-    /* We adjust the background and card colors here */
-    --background: 220 47% 11%;
-    --foreground: 210 40% 98%;
-    
-    --card: 220 47% 11%;
-    --card-foreground: 210 40% 98%;
-    
-    --popover: 220 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20.2% 65.1%;
-    
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --primary: 142 71% 55%;
+    --ring: 142 76% 44%;
   }
 }
 
