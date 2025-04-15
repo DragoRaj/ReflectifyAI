@@ -119,7 +119,7 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
       <header className="fixed top-0 left-0 right-0 z-50 py-3 px-6 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-border transition-all duration-500 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="font-display font-semibold text-xl bg-gradient-to-r from-primary to-primary-foreground/20 bg-clip-text text-transparent">
+            <span className="font-display font-semibold text-xl text-primary dark:text-primary drop-shadow-sm">
               Reflectify
             </span>
           </div>

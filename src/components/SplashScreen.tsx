@@ -38,7 +38,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden">
       {/* Dynamic gradient background with animation */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/70 to-accent/50 dark:from-primary/70 dark:via-primary/50 dark:to-accent/30 animate-pulse-subtle"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--theme-color))] via-[hsl(var(--theme-color))]/70 to-[hsl(var(--theme-color-lighter))]/50 dark:from-[hsl(var(--theme-color))]/70 dark:via-[hsl(var(--theme-color))]/50 dark:to-[hsl(var(--theme-color-lighter))]/30 animate-pulse-subtle"></div>
       
       {/* Central content with enhanced animation */}
       <div className={`splash-content relative z-10 transition-all duration-700 ${animateOut ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
