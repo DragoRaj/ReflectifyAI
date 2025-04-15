@@ -38,23 +38,47 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
   if (!visible) return null;
   
   return (
-    <div className={`fixed inset-0 z-40 flex items-center justify-center bg-white/90 dark:bg-gray-900/90 backdrop-blur-md transition-all duration-500 ${animateOut ? 'opacity-0' : 'opacity-100'}`}>
-      <div className={`transform transition-all duration-500 ${animateOut ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`}>
+    <div className={`fixed inset-0 z-40 flex items-center justify-center backdrop-blur-lg transition-all duration-500 ${animateOut ? 'opacity-0' : 'opacity-100'}`}>
+      {/* Dynamic background with radial gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--theme-color))] via-transparent to-accent/10"></div>
+      
+      {/* Animated content */}
+      <div className={`transform transition-all duration-500 relative z-10 ${animateOut ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`}>
         <div className="flex flex-col items-center text-center p-8">
           {icon && (
-            <div className="text-5xl mb-4 text-blue-500 dark:text-blue-400 animate-pulse">
+            <div className="text-5xl mb-4 text-white animate-float drop-shadow-lg">
               {icon}
             </div>
           )}
-          <h2 className="text-3xl font-display font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400 mb-2">
+          <h2 className="text-3xl font-display font-bold text-white mb-2 drop-shadow-md">
             {featureName}
           </h2>
           {featureDescription && (
-            <p className="text-slate-600 dark:text-slate-300 max-w-md">
+            <p className="text-white/90 max-w-md">
               {featureDescription}
             </p>
           )}
+          
+          {/* Animated rings */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[200px] h-[200px] border border-white/20 rounded-full animate-[ping_2s_infinite]"></div>
         </div>
+      </div>
+      
+      {/* Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array(10).fill(0).map((_, i) => (
+          <div 
+            key={i} 
+            className="absolute bg-white/20 rounded-full blur-sm"
+            style={{
+              width: `${Math.random() * 20 + 5}px`,
+              height: `${Math.random() * 20 + 5}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `float ${Math.random() * 8 + 5}s infinite ease-in-out ${i * 0.3}s`,
+            }}
+          ></div>
+        ))}
       </div>
     </div>
   );

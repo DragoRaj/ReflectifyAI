@@ -219,7 +219,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    transition: color 0.5s ease;
+    transition: color 0.5s ease, background-color 0.5s ease;
     font-family: 'Inter', sans-serif;
   }
 
@@ -285,24 +285,32 @@
     @apply content-[''] absolute top-0 -left-[100%] w-[100%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer;
   }
   
-  .splash-screen {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-seafoam-50 dark:bg-indigo-950 transition-all duration-700;
+  .theme-switch {
+    @apply relative h-[24px] w-[44px] cursor-pointer rounded-full bg-slate-200 transition-colors duration-300 ease-in-out data-[state=checked]:bg-slate-700 outline-none;
+  }
+  
+  .theme-switch[data-state="checked"] > span {
+    @apply translate-x-5;
+  }
+  
+  .theme-switch > span {
+    @apply block h-[20px] w-[20px] translate-x-0.5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-300 will-change-transform data-[state=checked]:translate-x-[22px];
   }
   
   .splash-content {
-    @apply relative flex flex-col items-center justify-center;
+    @apply relative flex flex-col items-center justify-center z-10;
   }
   
   .splash-logo {
-    @apply relative z-10 mb-8;
+    @apply relative z-10 text-center;
   }
   
   .splash-particles {
-    @apply absolute inset-0 z-0;
+    @apply absolute inset-0 z-0 overflow-hidden;
   }
   
   .particle {
-    @apply absolute rounded-full bg-gradient-to-r from-[hsl(var(--theme-color))] to-[hsl(var(--theme-color-darker))] opacity-70;
+    @apply absolute rounded-full bg-white bg-opacity-30 blur-sm;
     width: var(--size);
     height: var(--size);
     animation: float var(--speed) infinite ease-in-out var(--delay);
@@ -312,104 +320,67 @@
     animation: fadeTransition 0.3s ease-in-out;
   }
   
+  .theme-gradient {
+    @apply from-[hsl(var(--theme-color))] via-[hsl(var(--theme-color-darker))] to-accent;
+  }
+  
+  .theme-text-gradient {
+    @apply from-[hsl(var(--theme-color))] to-[hsl(var(--theme-color-darker))];
+  }
+  
+  .theme-glow {
+    @apply bg-[hsl(var(--theme-color))]/30;
+  }
+  
+  .theme-bottom-gradient {
+    @apply bg-gradient-to-t from-[hsl(var(--theme-color))]/30 to-transparent;
+  }
+
+  .animate-breathe {
+    animation: breathe 6s ease-in-out infinite alternate;
+  }
+  
+  .animate-pulse-subtle {
+    animation: pulseSubtle 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-float {
+    animation: float 6s infinite ease-in-out;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+  }
+  
   @keyframes fadeTransition {
-    0% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-    100% {
-      opacity: 1;
-    }
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
   }
   
   @keyframes float {
     0%, 100% {
-      transform: translateY(0) translateX(0) scale(1) rotate(0deg);
-      opacity: 0.7;
-    }
-    25% {
-      transform: translateY(-30px) translateX(15px) scale(1.1) rotate(90deg);
-      opacity: 0.9;
+      transform: translateY(0) scale(1);
+      filter: drop-shadow(0 10px 15px rgba(59, 130, 246, 0.3));
     }
     50% {
-      transform: translateY(10px) translateX(30px) scale(0.9) rotate(180deg);
-      opacity: 0.6;
-    }
-    75% {
-      transform: translateY(-15px) translateX(-20px) scale(1.05) rotate(270deg);
-      opacity: 0.8;
+      transform: translateY(-15px) scale(1.05);
+      filter: drop-shadow(0 20px 25px rgba(59, 130, 246, 0.5));
     }
   }
   
-  .animate-float {
-    animation: textFloat 3s infinite ease-in-out;
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.2); opacity: 0.7; }
   }
   
-  @keyframes textFloat {
-    0%, 100% {
-      transform: translateY(0);
-      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
-    }
-    50% {
-      transform: translateY(-10px);
-      filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.5));
-    }
+  @keyframes pulseSubtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
   }
   
-  .hover-scale {
-    @apply transition-transform duration-300 hover:scale-105;
-  }
-  
-  .hover-lift {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-md;
-  }
-  
-  .hover-glow {
-    @apply transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 dark:hover:shadow-indigo-400/20;
-  }
-  
-  .pulse-subtle {
-    @apply animate-[pulse_3s_ease-in-out_infinite];
-  }
-  
-  .card-enter {
-    animation: cardEnter 0.5s ease-out forwards;
-  }
-  
-  @keyframes cardEnter {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .staggered-item {
-    opacity: 0;
-    animation: fadeIn 0.5s ease-out forwards;
-  }
-  
-  .staggered-item:nth-child(1) { animation-delay: 0.1s; }
-  .staggered-item:nth-child(2) { animation-delay: 0.2s; }
-  .staggered-item:nth-child(3) { animation-delay: 0.3s; }
-  .staggered-item:nth-child(4) { animation-delay: 0.4s; }
-  .staggered-item:nth-child(5) { animation-delay: 0.5s; }
-  .staggered-item:nth-child(6) { animation-delay: 0.6s; }
-  
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  @keyframes shimmer {
+    to { transform: translateX(200%); }
   }
 }
 

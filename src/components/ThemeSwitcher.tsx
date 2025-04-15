@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Moon, Sun, Palette, Check } from "lucide-react";
-import { Toggle } from "@/components/ui/toggle";
+import { Switch } from "@/components/ui/switch";
 
 interface ThemeSwitcherProps {
   isDarkMode: boolean;
@@ -90,33 +90,38 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
   const selectedTheme = THEMES.find(theme => theme.value === currentTheme) || THEMES[0];
   
   return (
-    <div className="flex items-center space-x-2">
-      <div className="flex items-center space-x-2 mr-2">
-        <Sun className="h-4 w-4 text-amber-500 dark:text-amber-300" />
-        <Toggle 
-          pressed={isDarkMode} 
-          onPressedChange={onDarkModeChange}
-          aria-label="Toggle dark mode"
+    <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
+        <Sun className="h-5 w-5 text-amber-500 dark:text-amber-400 transition-transform" 
+          style={{ opacity: isDarkMode ? 0.5 : 1, transform: isDarkMode ? 'scale(0.9)' : 'scale(1)' }}
         />
-        <Moon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+        <Switch 
+          checked={isDarkMode} 
+          onCheckedChange={onDarkModeChange}
+          className="theme-switch data-[state=checked]:bg-slate-700 data-[state=unchecked]:bg-amber-400"
+        />
+        <Moon className="h-5 w-5 text-slate-800 dark:text-slate-200 transition-transform" 
+          style={{ opacity: isDarkMode ? 1 : 0.5, transform: isDarkMode ? 'scale(1)' : 'scale(0.9)' }}
+        />
       </div>
       
       <Popover>
         <PopoverTrigger asChild>
           <button 
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
             aria-label="Change color theme"
           >
             <Palette className={`h-5 w-5 ${selectedTheme.iconColor}`} />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[hsl(var(--theme-color))] to-[hsl(var(--theme-color-darker))]"></span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-56 p-2">
+        <PopoverContent className="w-56 p-2 shadow-xl animate-in zoom-in-90">
           <div className="space-y-1">
             <h4 className="text-sm font-medium mb-2 px-2">Choose a theme</h4>
             {THEMES.map((theme) => (
               <button
                 key={theme.value}
-                className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm ${
+                className={`w-full flex items-center justify-between rounded-md px-3 py-2.5 text-sm transition-colors ${
                   currentTheme === theme.value 
                     ? `bg-${theme.value}-50 dark:bg-${theme.value}-900/20 ${theme.accent}` 
                     : 'hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -124,7 +129,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
                 onClick={() => handleThemeChange(theme.value)}
               >
                 <div className="flex items-center">
-                  <div className={`w-4 h-4 rounded-full mr-2 bg-gradient-to-r ${theme.primaryLight} dark:${theme.primaryDark}`} />
+                  <div className={`w-5 h-5 rounded-full mr-2 bg-gradient-to-r ${theme.primaryLight} dark:${theme.primaryDark} shadow-sm`} />
                   {theme.name}
                 </div>
                 {currentTheme === theme.value && <Check className="h-4 w-4" />}
