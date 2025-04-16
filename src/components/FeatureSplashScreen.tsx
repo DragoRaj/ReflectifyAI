@@ -123,23 +123,16 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
   
   if (!visible) return null;
   
-  // Determine if dark mode is active
-  const isDarkMode = document.documentElement.classList.contains('dark') || 
-                    localStorage.getItem('darkMode') === 'true';
-  
-  // Get the current theme
-  const currentTheme = localStorage.getItem('colorTheme') || 'blue';
-  
   return (
     <div className={`fixed inset-0 z-40 flex items-center justify-center transition-all duration-500 ${animateOut ? 'opacity-0' : 'opacity-100'}`}>
-      {/* Dynamic background gradient that respects theme color and dark/light mode */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--theme-color))/60] via-[hsl(var(--theme-color))/30] to-[hsl(var(--theme-color-lighter))/10] backdrop-blur-xl"></div>
+      {/* Enhanced dynamic background gradient that respects theme color and dark/light mode */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--theme-gradient-start))/60] via-[hsl(var(--theme-color))/30] to-[hsl(var(--theme-gradient-end))/10] backdrop-blur-xl"></div>
       
       {isExperienced ? (
-        // Advanced feature splash for experienced users
+        // Enhanced advanced feature splash for experienced users
         <div className={`transform transition-all duration-500 relative z-10 ${animateOut ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`}>
           <div className="flex flex-col items-center text-center p-8">
-            {/* Advanced icon animation */}
+            {/* Enhanced icon animation with orbit particles */}
             {icon && (
               <div className="relative mb-6">
                 {/* Dynamic glow effect based on theme */}
@@ -149,6 +142,21 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
                 <div className="text-5xl relative z-10 text-white drop-shadow-lg animate-float p-4">
                   <div className="absolute -inset-3 rounded-full border border-white/20 animate-[spin_15s_linear_infinite]"></div>
                   <div className="absolute -inset-6 rounded-full border border-white/10 animate-[spin_25s_linear_infinite_reverse]"></div>
+                  
+                  {/* Orbit particles */}
+                  {Array(5).fill(0).map((_, i) => (
+                    <div 
+                      key={i}
+                      className="absolute rounded-full bg-white/40 w-2 h-2"
+                      style={{
+                        top: '50%',
+                        left: '50%',
+                        transform: `rotate(${i * 72}deg) translateX(50px) rotate(${i * 72 * -1}deg)`,
+                        animation: `orbit ${5 + i}s linear infinite`
+                      }}
+                    ></div>
+                  ))}
+                  
                   {icon}
                 </div>
               </div>
@@ -164,9 +172,9 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
               </p>
             )}
             
-            {/* Enhanced particles for experienced users */}
+            {/* Enhanced particles with theme colors */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-              {Array(20).fill(0).map((_, i) => (
+              {Array(30).fill(0).map((_, i) => (
                 <div 
                   key={i} 
                   className="absolute rounded-full blur-md"
@@ -175,32 +183,50 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
                     height: `${Math.random() * 30 + 5}px`,
                     top: `${Math.random() * 100}%`,
                     left: `${Math.random() * 100}%`,
-                    background: `hsla(var(--theme-color), ${Math.random() * 0.3 + 0.1})`,
+                    background: i % 3 === 0 
+                      ? `hsla(var(--theme-gradient-start), ${Math.random() * 0.3 + 0.1})` 
+                      : i % 3 === 1
+                        ? `hsla(var(--theme-color), ${Math.random() * 0.3 + 0.1})`
+                        : `hsla(var(--theme-gradient-end), ${Math.random() * 0.3 + 0.1})`,
                     animation: `advancedFloat ${Math.random() * 8 + 5}s infinite ease-in-out ${i * 0.2}s`,
                   }}
                 ></div>
               ))}
               
+              {/* Animated geometric shapes */}
+              <div className="absolute top-1/4 left-1/5 w-16 h-16 rounded-lg rotate-12 bg-white/10 backdrop-blur-sm border border-white/20 
+                           animate-[float_10s_infinite_ease-in-out_0.3s]"></div>
+              <div className="absolute bottom-1/4 right-1/5 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 
+                           animate-[float_8s_infinite_ease-in-out_0.7s]"></div>
+              
               {/* Pulsating center glow */}
               <div 
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-3xl animate-pulsate"
-                style={{ background: `radial-gradient(circle, hsla(var(--theme-color), 0.3) 0%, transparent 70%)` }}
+                style={{ background: `radial-gradient(circle, hsla(var(--theme-gradient-start), 0.3) 0%, hsla(var(--theme-color), 0.2) 50%, transparent 70%)` }}
               ></div>
             </div>
           </div>
         </div>
       ) : (
-        // Standard feature splash for newer users
+        // Enhanced feature splash for newer users
         <div className={`transform transition-all duration-500 relative z-10 ${animateOut ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`}>
           <div className="flex flex-col items-center text-center p-8">
             {icon && (
-              <div className="text-5xl mb-4 text-white animate-float drop-shadow-lg p-4">
-                {icon}
+              <div className="relative mb-4">
+                {/* Add glow behind the icon */}
+                <div className="absolute inset-0 rounded-full blur-xl bg-[hsl(var(--theme-color))/30] animate-pulse"></div>
+                <div className="text-5xl relative z-10 text-white animate-float drop-shadow-lg p-4">
+                  {icon}
+                </div>
               </div>
             )}
             <h2 className="text-3xl font-display font-bold text-white mb-2 drop-shadow-md">
               {featureName}
             </h2>
+            
+            {/* Add a decorative line under the title */}
+            <div className="w-16 h-1 bg-white/50 rounded-full mb-4"></div>
+            
             {featureDescription && (
               <p className="text-white/90 max-w-md">
                 {featureDescription}
@@ -209,11 +235,12 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
             
             {/* Animated rings */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[200px] h-[200px] border border-white/20 rounded-full animate-[ping_2s_infinite]"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[250px] h-[250px] border border-white/10 rounded-full animate-[ping_3s_infinite_0.5s]"></div>
           </div>
           
-          {/* Standard particles */}
+          {/* Enhanced particles with theme colors */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {Array(10).fill(0).map((_, i) => (
+            {Array(20).fill(0).map((_, i) => (
               <div 
                 key={i} 
                 className="absolute rounded-full blur-sm"
@@ -222,11 +249,21 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
                   height: `${Math.random() * 20 + 5}px`,
                   top: `${Math.random() * 100}%`,
                   left: `${Math.random() * 100}%`,
-                  background: `hsla(var(--theme-color), ${Math.random() * 0.3 + 0.1})`,
+                  background: i % 3 === 0 
+                    ? `hsla(var(--theme-gradient-start), ${Math.random() * 0.3 + 0.1})` 
+                    : i % 3 === 1
+                      ? `hsla(var(--theme-color), ${Math.random() * 0.3 + 0.1})`
+                      : `hsla(var(--theme-gradient-end), ${Math.random() * 0.3 + 0.1})`,
                   animation: `float ${Math.random() * 8 + 5}s infinite ease-in-out ${i * 0.3}s`,
                 }}
               ></div>
             ))}
+            
+            {/* Add a few geometric shapes */}
+            <div className="absolute top-1/4 right-1/4 w-10 h-10 rounded-lg rotate-12 bg-white/10 backdrop-blur-sm border border-white/20 
+                         animate-[float_7s_infinite_ease-in-out_0.2s]"></div>
+            <div className="absolute bottom-1/4 left-1/4 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 
+                         animate-[float_9s_infinite_ease-in-out_1s]"></div>
           </div>
         </div>
       )}

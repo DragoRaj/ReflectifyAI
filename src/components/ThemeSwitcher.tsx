@@ -10,68 +10,115 @@ interface ThemeSwitcherProps {
   onDarkModeChange: (isDark: boolean) => void;
 }
 
-// Expanded pre-defined color themes
+// Expanded pre-defined color themes with gradients
 const PRESET_THEMES = [
   { 
     name: 'Blue', 
     value: 'blue', 
     primary: { h: 221, s: 83, l: 53 },
+    gradient: {
+      start: { h: 217, s: 91, l: 60 },
+      end: { h: 224, s: 76, l: 48 }
+    }
   },
   { 
     name: 'Purple', 
     value: 'purple', 
     primary: { h: 250, s: 83, l: 53 },
+    gradient: {
+      start: { h: 245, s: 85, l: 65 },
+      end: { h: 255, s: 80, l: 45 }
+    }
   },
   { 
     name: 'Teal', 
     value: 'teal', 
     primary: { h: 171, s: 83, l: 45 },
+    gradient: {
+      start: { h: 166, s: 85, l: 55 },
+      end: { h: 176, s: 80, l: 40 }
+    }
   },
   { 
     name: 'Pink', 
     value: 'pink', 
     primary: { h: 330, s: 80, l: 60 },
+    gradient: {
+      start: { h: 325, s: 85, l: 70 },
+      end: { h: 335, s: 75, l: 50 }
+    }
   },
   { 
     name: 'Amber', 
     value: 'amber', 
     primary: { h: 43, s: 96, l: 58 },
+    gradient: {
+      start: { h: 38, s: 95, l: 65 },
+      end: { h: 48, s: 97, l: 51 }
+    }
   },
   { 
     name: 'Green', 
     value: 'green', 
     primary: { h: 142, s: 72, l: 50 },
+    gradient: {
+      start: { h: 137, s: 75, l: 60 },
+      end: { h: 147, s: 68, l: 42 }
+    }
   },
-  // Color themes
   { 
     name: 'Crimson', 
     value: 'crimson', 
     primary: { h: 348, s: 83, l: 47 },
+    gradient: {
+      start: { h: 343, s: 85, l: 57 },
+      end: { h: 353, s: 80, l: 40 }
+    }
   },
   { 
     name: 'Indigo', 
     value: 'indigo', 
     primary: { h: 263, s: 70, l: 50 },
+    gradient: {
+      start: { h: 258, s: 75, l: 60 },
+      end: { h: 268, s: 65, l: 40 }
+    }
   },
   { 
     name: 'Emerald', 
     value: 'emerald', 
     primary: { h: 152, s: 69, l: 40 },
+    gradient: {
+      start: { h: 147, s: 72, l: 50 },
+      end: { h: 157, s: 65, l: 35 }
+    }
   },
   { 
     name: 'Violet', 
     value: 'violet', 
     primary: { h: 270, s: 76, l: 60 },
+    gradient: {
+      start: { h: 265, s: 80, l: 70 },
+      end: { h: 275, s: 72, l: 50 }
+    }
   },
   { 
     name: 'Coral', 
     value: 'coral', 
     primary: { h: 16, s: 85, l: 64 },
+    gradient: {
+      start: { h: 11, s: 90, l: 70 },
+      end: { h: 21, s: 80, l: 58 }
+    }
   },
   { 
     name: 'Cyan', 
     value: 'cyan', 
     primary: { h: 187, s: 72, l: 47 },
+    gradient: {
+      start: { h: 182, s: 75, l: 57 },
+      end: { h: 192, s: 68, l: 40 }
+    }
   }
 ];
 
@@ -100,6 +147,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
   const applyThemeColors = (theme: string) => {
     const themeObj = PRESET_THEMES.find(t => t.value === theme) || PRESET_THEMES[0];
     const primary = themeObj.primary;
+    const gradient = themeObj.gradient;
     
     // Apply text and icon colors
     document.documentElement.style.setProperty('--theme-text', `${primary.h} ${primary.s}% ${primary.l}%`);
@@ -109,6 +157,10 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
     document.documentElement.style.setProperty('--theme-color', `${primary.h} ${primary.s}% ${primary.l}%`);
     document.documentElement.style.setProperty('--theme-color-darker', `${primary.h} ${primary.s}% ${Math.max(primary.l - 10, 5)}%`);
     document.documentElement.style.setProperty('--theme-color-lighter', `${primary.h} ${primary.s}% ${Math.min(primary.l + 10, 95)}%`);
+    
+    // Set gradient colors
+    document.documentElement.style.setProperty('--theme-gradient-start', `${gradient.start.h} ${gradient.start.s}% ${gradient.start.l}%`);
+    document.documentElement.style.setProperty('--theme-gradient-end', `${gradient.end.h} ${gradient.end.s}% ${gradient.end.l}%`);
   };
   
   return (
@@ -134,7 +186,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
             aria-label="Change color theme"
           >
             <Palette className={`h-5 w-5 text-[hsl(var(--theme-icon))]`} />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[hsl(var(--theme-color))] to-[hsl(var(--theme-color-darker))]"></span>
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[hsl(var(--theme-gradient-start))] to-[hsl(var(--theme-gradient-end))]"></span>
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0 shadow-xl animate-in zoom-in-90">
@@ -144,10 +196,10 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
             </div>
             <div className="p-2 grid grid-cols-3 gap-2">
               {PRESET_THEMES.map((theme) => {
-                // Generate consistent color preview
+                // Get theme colors for preview
                 const themeColor = hslToHex(theme.primary.h, theme.primary.s, theme.primary.l);
-                const darkerColor = hslToHex(theme.primary.h, theme.primary.s, Math.max(theme.primary.l - 15, 5));
-                const lighterColor = hslToHex(theme.primary.h, theme.primary.s, Math.min(theme.primary.l + 10, 95));
+                const startColor = hslToHex(theme.gradient.start.h, theme.gradient.start.s, theme.gradient.start.l);
+                const endColor = hslToHex(theme.gradient.end.h, theme.gradient.end.s, theme.gradient.end.l);
                 
                 return (
                   <button
@@ -159,11 +211,18 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
                     }`}
                     onClick={() => handleThemeChange(theme.value)}
                   >
-                    <div className="w-full h-10 rounded-md mb-2 overflow-hidden">
-                      <div className="w-full h-full" style={{ 
-                        background: `linear-gradient(135deg, ${lighterColor}, ${themeColor}, ${darkerColor})`,
+                    <div className="w-full h-12 rounded-md mb-2 overflow-hidden">
+                      <div className="w-full h-full relative" style={{ 
+                        background: `linear-gradient(135deg, ${startColor}, ${endColor})`,
                         boxShadow: currentTheme === theme.value ? `0 0 12px ${themeColor}40` : 'none'
-                      }}></div>
+                      }}>
+                        {/* Add a shine effect */}
+                        <div className="absolute inset-0 opacity-30" 
+                          style={{ 
+                            backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0) 100%)'
+                          }} 
+                        />
+                      </div>
                     </div>
                     <div className="flex items-center justify-between w-full">
                       <span className="text-xs font-medium">{theme.name}</span>
