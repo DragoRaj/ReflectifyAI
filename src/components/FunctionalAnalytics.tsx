@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, differenceInDays, formatDistanceToNow } from 'date-fns';
 import {
@@ -94,40 +93,46 @@ const FunctionalAnalytics = () => {
       // Calculate days active
       const daysActive = differenceInDays(new Date(), startDate) + 1;
       
-      // Get journal entries count
+      // Get journal entries count - using both generic count and actual entries
       const journalCount = parseInt(localStorage.getItem('journalEntryCount') || '0');
-
-      // Get real journal entries
-      const journalEntries = localStorage.getItem('journalEntries');
-      const journalEntriesCount = journalEntries ? JSON.parse(journalEntries).length : 0;
-
-      // Use the real count if available, otherwise use the tracked count
+      const journalEntriesStr = localStorage.getItem('journalEntries');
+      const journalEntriesCount = journalEntriesStr ? JSON.parse(journalEntriesStr).length : 0;
       const actualJournalCount = Math.max(journalCount, journalEntriesCount);
       
       // Get mindfulness minutes
       const mindfulnessMinutes = parseInt(localStorage.getItem('mindfulnessMinutes') || '0');
+      const mindfulnessVisitCount = parseInt(localStorage.getItem('mindfulnessVisitCount') || '0');
+      const calculatedMindfulnessMinutes = Math.max(mindfulnessMinutes, mindfulnessVisitCount * 5); // Estimate 5 min per visit
       
       // Get chat interactions
       const chatInteractions = parseInt(localStorage.getItem('chatInteractionCount') || '0');
+      const chatVisitCount = parseInt(localStorage.getItem('chatVisitCount') || '0');
+      const actualChatInteractions = Math.max(chatInteractions, chatVisitCount);
       
       // Get express interactions
       const expressInteractions = parseInt(localStorage.getItem('expressInteractionCount') || '0');
+      const rantVisitCount = parseInt(localStorage.getItem('rantVisitCount') || '0');
+      const actualExpressInteractions = Math.max(expressInteractions, rantVisitCount);
       
       // Get health checks
       const healthChecks = parseInt(localStorage.getItem('healthCheckCount') || '0');
+      const healthVisitCount = parseInt(localStorage.getItem('healthVisitCount') || '0');
+      const actualHealthChecks = Math.max(healthChecks, healthVisitCount);
       
       // Get content analysis count
       const contentAnalysis = parseInt(localStorage.getItem('contentAnalysisCount') || '0');
+      const contentVisitCount = parseInt(localStorage.getItem('contentVisitCount') || '0');
+      const actualContentAnalysis = Math.max(contentAnalysis, contentVisitCount);
       
       // Calculate milestones
       const milestones = calculateMilestones({
         daysActive,
         journalEntries: actualJournalCount,
-        mindfulnessMinutes,
-        chatInteractions,
-        expressInteractions,
-        healthChecks,
-        contentAnalysis
+        mindfulnessMinutes: calculatedMindfulnessMinutes,
+        chatInteractions: actualChatInteractions,
+        expressInteractions: actualExpressInteractions,
+        healthChecks: actualHealthChecks,
+        contentAnalysis: actualContentAnalysis
       });
 
       return {
@@ -135,11 +140,11 @@ const FunctionalAnalytics = () => {
         daysActive,
         moodEntries,
         journalEntries: actualJournalCount,
-        mindfulnessMinutes,
-        chatInteractions,
-        expressInteractions,
-        healthChecks,
-        contentAnalysis,
+        mindfulnessMinutes: calculatedMindfulnessMinutes,
+        chatInteractions: actualChatInteractions,
+        expressInteractions: actualExpressInteractions,
+        healthChecks: actualHealthChecks,
+        contentAnalysis: actualContentAnalysis,
         milestones
       };
     };
@@ -238,13 +243,14 @@ const FunctionalAnalytics = () => {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const formattedDate = format(date, 'MMM dd');
+      const dateKey = format(date, 'yyyy-MM-dd');
       
       // Count journal entries for this day
       const journalEntriesStr = localStorage.getItem('journalEntries');
       const journalEntries = journalEntriesStr ? JSON.parse(journalEntriesStr) : [];
       const journalEntriesForDay = journalEntries.filter((entry: any) => {
         const entryDate = new Date(entry.date);
-        return format(entryDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+        return format(entryDate, 'yyyy-MM-dd') === dateKey;
       }).length;
       
       // Count mood entries for this day
@@ -254,17 +260,49 @@ const FunctionalAnalytics = () => {
         return entry.date === format(date, 'M/d/yyyy');
       }).length;
       
+      // Calculate feature interactions for this day based on visit tracking
+      const featureInteractions = calculateDailyFeatureInteractions(date);
+      
       const dayData = {
         date: formattedDate,
         journalEntries: journalEntriesForDay,
-        mindfulnessMinutes: i === 0 ? stats.mindfulnessMinutes : Math.floor(Math.random() * 5),
-        interactions: moodEntriesForDay + (i === 0 ? (stats.chatInteractions + stats.expressInteractions) / 7 : Math.floor(Math.random() * 2))
+        mindfulnessMinutes: featureInteractions.mindfulness * 5, // Estimate 5 minutes per session
+        interactions: featureInteractions.chat + featureInteractions.express + moodEntriesForDay
       };
       
       data.push(dayData);
     }
     
     return data;
+  };
+  
+  const calculateDailyFeatureInteractions = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const interactionLogs = localStorage.getItem('featureInteractionLogs');
+    let logs: Record<string, any>[] = [];
+    
+    if (interactionLogs) {
+      try {
+        logs = JSON.parse(interactionLogs);
+      } catch (e) {
+        console.error('Error parsing feature interaction logs', e);
+      }
+    }
+    
+    // Filter interactions for the given date
+    const dayInteractions = logs.filter(log => 
+      log.date === dateStr
+    );
+    
+    // Count interactions by feature
+    return {
+      chat: dayInteractions.filter(log => log.feature === 'chat').length,
+      express: dayInteractions.filter(log => log.feature === 'rant').length,
+      mindfulness: dayInteractions.filter(log => log.feature === 'mindfulness').length,
+      journal: dayInteractions.filter(log => log.feature === 'journal').length,
+      health: dayInteractions.filter(log => log.feature === 'health').length,
+      content: dayInteractions.filter(log => log.feature === 'content').length
+    };
   };
 
   const generateActivityBreakdown = () => {

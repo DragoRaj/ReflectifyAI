@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 interface SplashScreenProps {
@@ -22,6 +21,9 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
     // Check user experience level
     checkUserExperience();
     
+    // Log this session in feature interaction tracking
+    logFeatureInteraction('app_start');
+    
     // Dev override for quicker testing
     const devDuration = localStorage.getItem('devSplashDuration');
     const actualDuration = devDuration ? parseInt(devDuration) : duration;
@@ -44,15 +46,68 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   const checkUserExperience = () => {
     // Check app usage data from localStorage
     const appStartDate = localStorage.getItem('appStartDate');
-    const totalUsage = parseInt(localStorage.getItem('expressInteractionCount') || '0') + 
-                      parseInt(localStorage.getItem('chatInteractionCount') || '0') + 
-                      parseInt(localStorage.getItem('contentAnalysisCount') || '0') +
-                      parseInt(localStorage.getItem('journalVisitCount') || '0');
+    
+    // Calculate total feature interactions
+    const featureInteractions = [
+      'chatVisitCount', 
+      'rantVisitCount', 
+      'mindfulnessVisitCount', 
+      'journalVisitCount', 
+      'healthVisitCount', 
+      'contentVisitCount',
+      'analyticsVisitCount'
+    ].reduce((total, key) => total + parseInt(localStorage.getItem(key) || '0'), 0);
                       
     if (appStartDate) {
       const daysSinceStart = Math.floor((Date.now() - new Date(appStartDate).getTime()) / (1000 * 60 * 60 * 24));
-      setIsExperienced(daysSinceStart > 7 || totalUsage > 20);
+      setIsExperienced(daysSinceStart > 7 || featureInteractions > 20);
     }
+  };
+  
+  const logFeatureInteraction = (feature: string) => {
+    const now = new Date();
+    const dateStr = format(now, 'yyyy-MM-dd');
+    const timeStr = format(now, 'HH:mm:ss');
+    
+    // Get existing logs
+    const interactionLogsStr = localStorage.getItem('featureInteractionLogs');
+    let logs: Record<string, any>[] = [];
+    
+    if (interactionLogsStr) {
+      try {
+        logs = JSON.parse(interactionLogsStr);
+      } catch (e) {
+        console.error('Error parsing feature interaction logs', e);
+      }
+    }
+    
+    // Add new log
+    logs.push({
+      feature,
+      date: dateStr,
+      time: timeStr
+    });
+    
+    // Keep only last 100 interactions to avoid localStorage size issues
+    if (logs.length > 100) {
+      logs = logs.slice(logs.length - 100);
+    }
+    
+    // Save updated logs
+    localStorage.setItem('featureInteractionLogs', JSON.stringify(logs));
+  };
+  
+  const format = (date: Date, formatStr: string) => {
+    // Simple date formatting
+    if (formatStr === 'yyyy-MM-dd') {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+    if (formatStr === 'HH:mm:ss') {
+      return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+    }
+    
+    // Fallback to the format function from date-fns if available
+    return String(date);
   };
   
   // Get the current theme color from localStorage or default to blue

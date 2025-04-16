@@ -35,24 +35,32 @@ const FeatureRouter = () => {
       showFeatureSplashForId(featureId);
       
       // Clear the override to prevent loops
-      localStorage.removeItem('overrideFeatureType');
+      localStorage.removeItem('overrideSplashType');
       localStorage.removeItem('overrideFeatureSplash');
       return;
     }
     
-    // Regular behavior - get feature from URL hash
+    // Get feature from URL hash
     const featureId = location.hash.replace('#', '') || 'home';
-    
+
     // Only show splash screen when hash changes and it's not the initial load
-    // Also respect developer override if set
-    if ((location.hash && sessionStorage.getItem('initialLoadComplete') === 'true') || 
-        overrideType === 'feature') {
-      showFeatureSplashForId(featureId);
+    // or if the user specifically navigated to a feature using the hash
+    const isInitialLoad = sessionStorage.getItem('initialLoadComplete') !== 'true';
+    const hashChanged = location.hash && !isInitialLoad;
+    
+    // Show splash screen for direct feature navigation or hash changes
+    if (hashChanged || (location.hash && isInitialLoad)) {
+      // Track this feature visit in localStorage for analytics
+      const featureKey = `${featureId}VisitCount`;
+      const currentCount = parseInt(localStorage.getItem(featureKey) || '0');
+      localStorage.setItem(featureKey, (currentCount + 1).toString());
       
-      // Clear the override if it exists
-      if (overrideType === 'feature') {
-        localStorage.removeItem('overrideSplashType');
-      }
+      showFeatureSplashForId(featureId);
+    }
+    
+    // Mark initial load as complete if it hasn't been marked already
+    if (isInitialLoad) {
+      sessionStorage.setItem('initialLoadComplete', 'true');
     }
   }, [location]);
   
@@ -73,12 +81,24 @@ const FeatureRouter = () => {
         };
         break;
       case 'content':
-      case 'chat':
-      case 'rant':
         splashInfo = {
           name: "Content",
           description: "Loading your content workspace...",
           icon: <Shield size={48} />
+        };
+        break;
+      case 'chat':
+        splashInfo = {
+          name: "Chat",
+          description: "Starting your wellbeing conversation...",
+          icon: <MessageCircle size={48} />
+        };
+        break;
+      case 'rant':
+        splashInfo = {
+          name: "Express",
+          description: "Creating your expression space...",
+          icon: <MessageCircle size={48} />
         };
         break;
       case 'mindfulness':
