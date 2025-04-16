@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 
 interface SplashScreenProps {
@@ -24,18 +25,14 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
     // Log this session in feature interaction tracking
     logFeatureInteraction('app_start');
     
-    // Dev override for quicker testing
-    const devDuration = localStorage.getItem('devSplashDuration');
-    const actualDuration = devDuration ? parseInt(devDuration) : duration;
-    
     const animationTimer = setTimeout(() => {
       setAnimateOut(true);
-    }, actualDuration - 800);
+    }, duration - 800);
     
     const timer = setTimeout(() => {
       setVisible(false);
       if (onComplete) onComplete();
-    }, actualDuration);
+    }, duration);
     
     return () => {
       clearTimeout(animationTimer);
@@ -61,6 +58,9 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
     if (appStartDate) {
       const daysSinceStart = Math.floor((Date.now() - new Date(appStartDate).getTime()) / (1000 * 60 * 60 * 24));
       setIsExperienced(daysSinceStart > 7 || featureInteractions > 20);
+    } else {
+      // First visit - set start date
+      localStorage.setItem('appStartDate', new Date().toISOString());
     }
   };
   
@@ -110,8 +110,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
     return String(date);
   };
   
-  // Get the current theme color from localStorage or default to blue
-  const currentTheme = localStorage.getItem('colorTheme') || 'blue';
+  if (!visible) return null;
   
   // Determine if dark mode is active
   const isDarkMode = document.documentElement.classList.contains('dark') ||
@@ -127,8 +126,25 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
         // Advanced splash screen for experienced users
         <div className={`splash-advanced relative z-10 transition-all duration-700 ${animateOut ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
           {/* Advanced animated background elements */}
-          <div className="splash-swirl w-[500px] h-[500px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="splash-glow w-[400px] h-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] blur-2xl opacity-30 animate-[spin_15s_linear_infinite]" style={{
+            background: `conic-gradient(
+              from 0deg at 50% 50%,
+              hsla(var(--theme-color), 0.7) 0%,
+              hsla(var(--theme-color-darker), 0.6) 25%, 
+              hsla(var(--theme-color-lighter), 0.5) 50%,
+              hsla(var(--theme-color), 0.4) 75%, 
+              hsla(var(--theme-color-darker), 0.7) 100%
+            )`
+          }}></div>
+          
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-3xl animate-[pulsate_6s_ease-in-out_infinite_alternate]" style={{
+            background: `radial-gradient(
+              circle at center,
+              hsla(var(--theme-color-lighter), 0.6) 0%,
+              hsla(var(--theme-color), 0.3) 50%,
+              transparent 80%
+            )`
+          }}></div>
           
           {/* Central content */}
           <div className="splash-logo relative z-10">
@@ -147,13 +163,13 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
             {Array(30).fill(0).map((_, i) => (
               <div 
                 key={i} 
-                className="splash-advanced-particle"
+                className="absolute rounded-full bg-white/40 blur-sm"
                 style={{
                   width: `${Math.random() * 60 + 10}px`,
                   height: `${Math.random() * 60 + 10}px`,
                   top: `${Math.random() * 100}%`,
                   left: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 5}s`,
+                  animation: `advancedFloat ${Math.random() * 8 + 5}s infinite ease-in-out ${Math.random() * 5}s`,
                   opacity: Math.random() * 0.6 + 0.2,
                 }}
               ></div>
@@ -212,13 +228,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] border border-white/20 dark:border-white/10 rounded-full animate-[ping_3s_infinite]"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-white/10 dark:border-white/5 rounded-full animate-[ping_4s_infinite_1s]"></div>
           </div>
-        </div>
-      )}
-
-      {/* Dev mode indicator */}
-      {localStorage.getItem('devMode') === 'true' && (
-        <div className="absolute bottom-4 left-4 bg-black/50 text-white text-xs px-2 py-1 rounded">
-          Dev Mode: {isExperienced ? 'Advanced' : 'Standard'} Splash
         </div>
       )}
     </div>

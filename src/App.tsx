@@ -10,7 +10,6 @@ import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 import FeatureSplashScreen from "@/components/FeatureSplashScreen";
 import { BarChart2, MessageCircle, Shield, HeartPulse, Sparkles, Home } from "lucide-react";
-import DevControls from "@/components/DevControls";
 
 const queryClient = new QueryClient();
 
@@ -25,21 +24,6 @@ const FeatureRouter = () => {
   });
   
   useEffect(() => {
-    // Check for developer overrides
-    const overrideType = localStorage.getItem('overrideSplashType');
-    const overrideFeature = localStorage.getItem('overrideFeatureSplash');
-    
-    if (overrideType === 'feature' && overrideFeature) {
-      // Override with specific feature splash
-      const featureId = overrideFeature;
-      showFeatureSplashForId(featureId);
-      
-      // Clear the override to prevent loops
-      localStorage.removeItem('overrideSplashType');
-      localStorage.removeItem('overrideFeatureSplash');
-      return;
-    }
-    
     // Get feature from URL hash
     const featureId = location.hash.replace('#', '') || 'home';
 
@@ -158,19 +142,8 @@ const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   
   useEffect(() => {
-    // Check for developer overrides
-    const overrideType = localStorage.getItem('overrideSplashType');
-    
-    // Skip splash if override type is set to feature
-    if (overrideType === 'feature') {
-      setShowSplash(false);
-      sessionStorage.setItem('initialLoadComplete', 'true');
-      return;
-    }
-    
-    // Regular behavior - show initial splash unless disabled
-    const shouldSkipSplash = sessionStorage.getItem('initialLoadComplete') === 'true' && 
-                           !overrideType;
+    // Regular behavior - show initial splash unless it's been shown already
+    const shouldSkipSplash = sessionStorage.getItem('initialLoadComplete') === 'true';
                            
     setShowSplash(!shouldSkipSplash);
     
@@ -191,7 +164,6 @@ const App = () => {
         ) : (
           <BrowserRouter>
             <FeatureRouter />
-            <DevControls />
           </BrowserRouter>
         )}
       </TooltipProvider>

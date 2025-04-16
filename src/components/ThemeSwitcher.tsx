@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Moon, Sun, Palette, Check, Settings } from "lucide-react";
+import { Moon, Sun, Palette, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { hexToHsl, hslToHex } from '@/utils/colorUtils';
 
@@ -42,7 +42,7 @@ const PRESET_THEMES = [
     value: 'green', 
     primary: { h: 142, s: 72, l: 50 },
   },
-  // New color themes
+  // Color themes
   { 
     name: 'Crimson', 
     value: 'crimson', 
@@ -101,13 +101,14 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
     const themeObj = PRESET_THEMES.find(t => t.value === theme) || PRESET_THEMES[0];
     const primary = themeObj.primary;
     
-    // Apply only text and icon colors, not background
+    // Apply text and icon colors
     document.documentElement.style.setProperty('--theme-text', `${primary.h} ${primary.s}% ${primary.l}%`);
     document.documentElement.style.setProperty('--theme-icon', `${primary.h} ${primary.s}% ${primary.l}%`);
     
     // Set primary color for buttons and accents
     document.documentElement.style.setProperty('--theme-color', `${primary.h} ${primary.s}% ${primary.l}%`);
     document.documentElement.style.setProperty('--theme-color-darker', `${primary.h} ${primary.s}% ${Math.max(primary.l - 10, 5)}%`);
+    document.documentElement.style.setProperty('--theme-color-lighter', `${primary.h} ${primary.s}% ${Math.min(primary.l + 10, 95)}%`);
   };
   
   return (
@@ -146,6 +147,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
                 // Generate consistent color preview
                 const themeColor = hslToHex(theme.primary.h, theme.primary.s, theme.primary.l);
                 const darkerColor = hslToHex(theme.primary.h, theme.primary.s, Math.max(theme.primary.l - 15, 5));
+                const lighterColor = hslToHex(theme.primary.h, theme.primary.s, Math.min(theme.primary.l + 10, 95));
                 
                 return (
                   <button
@@ -157,9 +159,12 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
                     }`}
                     onClick={() => handleThemeChange(theme.value)}
                   >
-                    <div className="w-full h-10 rounded-md mb-2" style={{ 
-                      background: `linear-gradient(to right, ${themeColor}, ${darkerColor})` 
-                    }}></div>
+                    <div className="w-full h-10 rounded-md mb-2 overflow-hidden">
+                      <div className="w-full h-full" style={{ 
+                        background: `linear-gradient(135deg, ${lighterColor}, ${themeColor}, ${darkerColor})`,
+                        boxShadow: currentTheme === theme.value ? `0 0 12px ${themeColor}40` : 'none'
+                      }}></div>
+                    </div>
                     <div className="flex items-center justify-between w-full">
                       <span className="text-xs font-medium">{theme.name}</span>
                       {currentTheme === theme.value && <Check className="h-4 w-4" />}
@@ -167,9 +172,6 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, onDarkModeCha
                   </button>
                 );
               })}
-            </div>
-            <div className="p-2 text-xs text-muted-foreground border-t">
-              <p>Theme colors only affect text and icons. Background colors are controlled by light/dark mode.</p>
             </div>
           </div>
         </PopoverContent>

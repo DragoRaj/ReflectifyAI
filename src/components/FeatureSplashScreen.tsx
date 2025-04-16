@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 
 interface FeatureSplashScreenProps {
@@ -26,18 +27,14 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
     // Log this feature visit
     logFeatureInteraction(featureName.toLowerCase());
     
-    // Dev override for quicker testing
-    const devDuration = localStorage.getItem('devFeatureSplashDuration');
-    const actualDuration = devDuration ? parseInt(devDuration) : duration;
-    
     const animationTimer = setTimeout(() => {
       setAnimateOut(true);
-    }, actualDuration - 500);
+    }, duration - 500);
     
     const visibilityTimer = setTimeout(() => {
       setVisible(false);
       if (onComplete) onComplete();
-    }, actualDuration);
+    }, duration);
     
     return () => {
       clearTimeout(animationTimer);
@@ -130,55 +127,65 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
   const isDarkMode = document.documentElement.classList.contains('dark') || 
                     localStorage.getItem('darkMode') === 'true';
   
+  // Get the current theme
+  const currentTheme = localStorage.getItem('colorTheme') || 'blue';
+  
   return (
-    <div className={`fixed inset-0 z-40 flex items-center justify-center backdrop-blur-lg transition-all duration-500 ${animateOut ? 'opacity-0' : 'opacity-100'}`}>
-      {/* Background gradient that respects dark/light mode and theme color */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--theme-color))/50] via-transparent to-[hsl(var(--theme-color))/30] dark:from-[hsl(var(--theme-color))/30] dark:to-[hsl(var(--theme-color))/10]"></div>
+    <div className={`fixed inset-0 z-40 flex items-center justify-center transition-all duration-500 ${animateOut ? 'opacity-0' : 'opacity-100'}`}>
+      {/* Dynamic background gradient that respects theme color and dark/light mode */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--theme-color))/60] via-[hsl(var(--theme-color))/30] to-[hsl(var(--theme-color-lighter))/10] backdrop-blur-xl"></div>
       
       {isExperienced ? (
         // Advanced feature splash for experienced users
         <div className={`transform transition-all duration-500 relative z-10 ${animateOut ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`}>
-          <div className="flex flex-col items-center text-center p-6">
+          <div className="flex flex-col items-center text-center p-8">
             {/* Advanced icon animation */}
             {icon && (
-              <div className="relative mb-4">
-                <div className="absolute inset-0 bg-white/10 rounded-full blur-xl animate-pulse"></div>
-                <div className="text-5xl relative z-10 text-white drop-shadow-lg animate-float">
+              <div className="relative mb-6">
+                {/* Dynamic glow effect based on theme */}
+                <div className="absolute inset-0 rounded-full blur-2xl bg-[hsl(var(--theme-color))/20] animate-pulse"></div>
+                
+                {/* Icon with animated ring */}
+                <div className="text-5xl relative z-10 text-white drop-shadow-lg animate-float p-4">
+                  <div className="absolute -inset-3 rounded-full border border-white/20 animate-[spin_15s_linear_infinite]"></div>
+                  <div className="absolute -inset-6 rounded-full border border-white/10 animate-[spin_25s_linear_infinite_reverse]"></div>
                   {icon}
                 </div>
-                {/* Rotating ring around icon */}
-                <div className="absolute -inset-4 border border-white/20 rounded-full animate-spin" style={{ animationDuration: '10s' }}></div>
               </div>
             )}
             
-            <h2 className="text-3xl font-display font-bold text-white mb-2 drop-shadow-md bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+            <h2 className="text-4xl font-display font-bold mb-3 bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent drop-shadow-md">
               {featureName}
             </h2>
             
             {featureDescription && (
-              <p className="text-white/90 max-w-md">
+              <p className="text-white/90 max-w-md text-lg">
                 {featureDescription}
               </p>
             )}
             
             {/* Enhanced particles for experienced users */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-              {Array(15).fill(0).map((_, i) => (
+              {Array(20).fill(0).map((_, i) => (
                 <div 
                   key={i} 
-                  className="absolute bg-white/20 rounded-full blur-sm"
+                  className="absolute rounded-full blur-md"
                   style={{
-                    width: `${Math.random() * 20 + 5}px`,
-                    height: `${Math.random() * 20 + 5}px`,
+                    width: `${Math.random() * 30 + 5}px`,
+                    height: `${Math.random() * 30 + 5}px`,
                     top: `${Math.random() * 100}%`,
                     left: `${Math.random() * 100}%`,
+                    background: `hsla(var(--theme-color), ${Math.random() * 0.3 + 0.1})`,
                     animation: `advancedFloat ${Math.random() * 8 + 5}s infinite ease-in-out ${i * 0.2}s`,
                   }}
                 ></div>
               ))}
               
               {/* Pulsating center glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-white/5 blur-3xl animate-pulsate"></div>
+              <div 
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-3xl animate-pulsate"
+                style={{ background: `radial-gradient(circle, hsla(var(--theme-color), 0.3) 0%, transparent 70%)` }}
+              ></div>
             </div>
           </div>
         </div>
@@ -187,7 +194,7 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
         <div className={`transform transition-all duration-500 relative z-10 ${animateOut ? 'scale-110 opacity-0' : 'scale-100 opacity-100'}`}>
           <div className="flex flex-col items-center text-center p-8">
             {icon && (
-              <div className="text-5xl mb-4 text-white animate-float drop-shadow-lg">
+              <div className="text-5xl mb-4 text-white animate-float drop-shadow-lg p-4">
                 {icon}
               </div>
             )}
@@ -209,24 +216,18 @@ const FeatureSplashScreen: React.FC<FeatureSplashScreenProps> = ({
             {Array(10).fill(0).map((_, i) => (
               <div 
                 key={i} 
-                className="absolute bg-white/20 rounded-full blur-sm"
+                className="absolute rounded-full blur-sm"
                 style={{
                   width: `${Math.random() * 20 + 5}px`,
                   height: `${Math.random() * 20 + 5}px`,
                   top: `${Math.random() * 100}%`,
                   left: `${Math.random() * 100}%`,
+                  background: `hsla(var(--theme-color), ${Math.random() * 0.3 + 0.1})`,
                   animation: `float ${Math.random() * 8 + 5}s infinite ease-in-out ${i * 0.3}s`,
                 }}
               ></div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Dev mode indicator */}
-      {localStorage.getItem('devMode') === 'true' && (
-        <div className="absolute bottom-4 left-4 bg-black/50 text-white text-xs px-2 py-1 rounded">
-          Dev Mode: {isExperienced ? 'Advanced' : 'Standard'} Feature Splash
         </div>
       )}
     </div>
