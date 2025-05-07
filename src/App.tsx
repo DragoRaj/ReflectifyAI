@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./components/dashboard/Dashboard";
 import StudentDashboard from "./components/student/StudentDashboard";
 import OnboardingSurvey from "./components/OnboardingSurvey";
+import DevConsole from "./components/DevConsole";
 import { supabase } from "@/integrations/supabase/client";
 
 const queryClient = new QueryClient();
@@ -223,6 +225,16 @@ const FeatureRouter = () => {
   const DashboardComponent = () => {
     if (!profile) return null;
     
+    // Special case for the hybrid account
+    if (profile.email === "teketirajnish@gmail.com") {
+      // For hybrid users (teacher with student access), default to student view
+      return (
+        <OnboardingCheck>
+          <StudentDashboard />
+        </OnboardingCheck>
+      );
+    }
+    
     return (
       <OnboardingCheck>
         {profile.role === 'student' ? (
@@ -258,6 +270,9 @@ const FeatureRouter = () => {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      
+      {/* Add the DevConsole component */}
+      <DevConsole />
     </>
   );
 };

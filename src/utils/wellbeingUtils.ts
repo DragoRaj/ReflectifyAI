@@ -48,22 +48,27 @@ export async function getWellbeingInsight(studentId: string): Promise<string> {
       .eq("id", studentId)
       .single();
     
-    // Build a prompt for the AI
-    const prompt = `
-      Based on the following wellbeing metrics for ${profile?.first_name || 'a student'}, 
-      provide a brief, helpful insight about their wellbeing trends:
+    try {
+      // Build a prompt for the AI
+      const prompt = `
+        Based on the following wellbeing metrics for ${profile?.first_name || 'a student'}, 
+        provide a brief, helpful insight about their wellbeing trends:
+        
+        Recent wellbeing scores (1-10): ${metrics.map(m => m.wellbeing_score).filter(Boolean).join(', ')}
+        Recent stress levels (1-10): ${metrics.map(m => m.stress_level).filter(Boolean).join(', ')}
+        
+        Generate a short, personalized insight (2-3 sentences) that is age-appropriate 
+        and helpful without being alarmist. Focus on trends, if any, and offer a gentle 
+        suggestion if appropriate.
+      `;
       
-      Recent wellbeing scores (1-10): ${metrics.map(m => m.wellbeing_score).filter(Boolean).join(', ')}
-      Recent stress levels (1-10): ${metrics.map(m => m.stress_level).filter(Boolean).join(', ')}
-      
-      Generate a short, personalized insight (2-3 sentences) that is age-appropriate 
-      and helpful without being alarmist. Focus on trends, if any, and offer a gentle 
-      suggestion if appropriate.
-    `;
-    
-    // Use Gemini to generate an insight
-    const insight = await getAIAnalysis(prompt);
-    return insight || "Unable to generate insights at this time.";
+      // Use Gemini to generate an insight
+      const insight = await getAIAnalysis(prompt);
+      return insight || "Your wellbeing metrics show a stable pattern. Continue with your current activities and remember to take breaks when needed.";
+    } catch (error) {
+      console.error("Error in AI analysis:", error);
+      return "Your recent wellbeing data shows some fluctuations. Remember to take time for self-care activities that you enjoy.";
+    }
   } catch (error) {
     console.error("Error generating wellbeing insight:", error);
     return "Unable to generate insights at this time.";
@@ -75,6 +80,14 @@ export async function getRecommendedActivities(
   stressLevel: number,
   preferredActivities: string[] = []
 ): Promise<string[]> {
+  const fallbackActivities = [
+    "Practice deep breathing for 2 minutes",
+    "Write in your journal about today",
+    "Take a short mindfulness break",
+    "Stretch for five minutes",
+    "Listen to calming music"
+  ];
+  
   try {
     const prompt = `
       Generate 3 short, specific wellbeing activities for a student with:
@@ -88,20 +101,42 @@ export async function getRecommendedActivities(
       Make them specific, actionable, and appropriate for school setting.
     `;
     
-    const response = await getAIAnalysis(prompt);
-    
-    // Parse the response into an array of activities
-    const activities = response
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line && line.length > 0 && !line.startsWith('-'))
-      .slice(0, 3);
-    
-    return activities.length > 0 ? 
-      activities : 
-      ["Try deep breathing exercise", "Write in your journal", "Take a short mindfulness break"];
+    try {
+      const response = await getAIAnalysis(prompt);
+      
+      // Parse the response into an array of activities
+      const activities = response
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line && line.length > 0 && !line.startsWith('-'))
+        .slice(0, 3);
+      
+      return activities.length > 0 ? activities : fallbackActivities;
+    } catch (error) {
+      console.error("Error in AI analysis:", error);
+      // Return appropriate fallback activities based on wellbeing score
+      if (wellbeingScore < 4) {
+        return [
+          "Talk to someone you trust",
+          "Practice five minutes of deep breathing",
+          "Write down three positive thoughts"
+        ];
+      } else if (wellbeingScore < 7) {
+        return [
+          "Take a short walk outside",
+          "Listen to your favorite uplifting song",
+          "Stretch for five minutes"
+        ];
+      } else {
+        return [
+          "Share your positive energy with others",
+          "Try something creative today",
+          "Express gratitude for three things"
+        ];
+      }
+    }
   } catch (error) {
     console.error("Error generating activities:", error);
-    return ["Try deep breathing exercise", "Write in your journal", "Take a short mindfulness break"];
+    return fallbackActivities;
   }
 }

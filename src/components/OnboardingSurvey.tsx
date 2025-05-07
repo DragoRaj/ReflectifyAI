@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,25 +88,27 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
       
       let error;
       
+      const surveyData = {
+        grade_level: formData.grade_level!,
+        baseline_wellbeing_score: formData.baseline_wellbeing_score!,
+        existing_conditions: formData.existing_conditions || null,
+        preferred_coping_mechanisms: formData.preferred_coping_mechanisms || [],
+        gender: formData.gender || null,
+        class_section: formData.class_section || null,
+        mood_today: formData.mood_today || 5,
+        sleep_hours: formData.sleep_hours || null,
+        stress_level: formData.stress_level || null,
+        social_support_level: formData.social_support_level || null,
+        physical_activity_level: formData.physical_activity_level || null,
+        screen_time_hours: formData.screen_time_hours || null,
+        completed: true
+      };
+      
       if (existingSurvey) {
         // Update existing survey
         const { error: updateError } = await supabase
           .from("onboarding_surveys")
-          .update({
-            grade_level: formData.grade_level!,
-            baseline_wellbeing_score: formData.baseline_wellbeing_score!,
-            existing_conditions: formData.existing_conditions || null,
-            preferred_coping_mechanisms: formData.preferred_coping_mechanisms || [],
-            gender: formData.gender || null,
-            class_section: formData.class_section || null,
-            mood_today: formData.mood_today || 5,
-            sleep_hours: formData.sleep_hours || null,
-            stress_level: formData.stress_level || null,
-            social_support_level: formData.social_support_level || null,
-            physical_activity_level: formData.physical_activity_level || null,
-            screen_time_hours: formData.screen_time_hours || null,
-            completed: true
-          })
+          .update(surveyData)
           .eq("id", existingSurvey.id);
           
         error = updateError;
@@ -113,19 +116,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
         // Create new survey
         const { error: insertError } = await supabase.from("onboarding_surveys").insert({
           student_id: user.id,
-          grade_level: formData.grade_level!,
-          baseline_wellbeing_score: formData.baseline_wellbeing_score!,
-          existing_conditions: formData.existing_conditions || null,
-          preferred_coping_mechanisms: formData.preferred_coping_mechanisms || [],
-          gender: formData.gender || null,
-          class_section: formData.class_section || null,
-          mood_today: formData.mood_today || 5,
-          sleep_hours: formData.sleep_hours || null,
-          stress_level: formData.stress_level || null,
-          social_support_level: formData.social_support_level || null,
-          physical_activity_level: formData.physical_activity_level || null,
-          screen_time_hours: formData.screen_time_hours || null,
-          completed: true
+          ...surveyData
         });
         
         error = insertError;
@@ -134,12 +125,14 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
       if (error) throw error;
 
       // Also create/update wellbeing metric
-      await supabase.from("wellbeing_metrics").insert({
+      const { error: metricError } = await supabase.from("wellbeing_metrics").upsert({
         student_id: user.id,
         wellbeing_score: formData.baseline_wellbeing_score,
         sentiment_score: 0,
         stress_level: formData.stress_level
-      });
+      }, { onConflict: 'student_id' });
+      
+      if (metricError) throw metricError;
 
       // Refresh user profile to get any updates
       await refreshProfile();
@@ -216,14 +209,31 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="student_name">Your Name</Label>
+                    <Label htmlFor="student_name">Your Full Name</Label>
                     <Input
                       id="student_name"
                       value={formData.student_name || ""}
                       onChange={(e) => handleChange("student_name", e.target.value)}
-                      placeholder="Enter your name"
+                      placeholder="Enter your full name"
                       className="border-indigo-200 focus:border-indigo-400"
                     />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Your Age</Label>
+                    <RadioGroup 
+                      id="age"
+                      value={formData.age?.toString() || ""}
+                      onValueChange={(value) => handleChange("age", parseInt(value))}
+                      className="grid grid-cols-4 gap-2"
+                    >
+                      {[10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((age) => (
+                        <div key={age} className="flex items-center space-x-2">
+                          <RadioGroupItem value={age.toString()} id={`age-${age}`} />
+                          <Label htmlFor={`age-${age}`}>{age} years</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
                   </div>
                   
                   <div className="space-y-2">
@@ -289,12 +299,23 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="class_section">Class Section (Optional)</Label>
+                    <Label htmlFor="class_section">Class Section</Label>
                     <Input
                       id="class_section"
                       value={formData.class_section || ""}
                       onChange={(e) => handleChange("class_section", e.target.value)}
                       placeholder="e.g. A, B, Science, etc."
+                      className="border-indigo-200 focus:border-indigo-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="school_name">School Name</Label>
+                    <Input
+                      id="school_name"
+                      value={formData.school_name || ""}
+                      onChange={(e) => handleChange("school_name", e.target.value)}
+                      placeholder="Enter your school name"
                       className="border-indigo-200 focus:border-indigo-400"
                     />
                   </div>
@@ -431,6 +452,31 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                   </div>
                   
                   <div className="space-y-3">
+                    <Label htmlFor="diet_quality">
+                      How would you rate the quality of your diet?
+                    </Label>
+                    <RadioGroup 
+                      id="diet_quality"
+                      value={formData.diet_quality || ""}
+                      onValueChange={(value) => handleChange("diet_quality", value)}
+                      className="grid grid-cols-1 gap-2"
+                    >
+                      {["poor", "fair", "good", "very_good", "excellent"].map((level) => (
+                        <div key={level} className="flex items-center space-x-2">
+                          <RadioGroupItem value={level} id={`diet-${level}`} />
+                          <Label htmlFor={`diet-${level}`}>
+                            {level === "poor" ? "Poor (mostly processed foods, irregular meals)" : 
+                             level === "fair" ? "Fair (some healthy foods, somewhat balanced)" :
+                             level === "good" ? "Good (mostly balanced, regular meals)" :
+                             level === "very_good" ? "Very Good (well-balanced, nutritious)" :
+                             "Excellent (optimal nutrition, very well balanced)"}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-3">
                     <Label htmlFor="screen_time">
                       How many hours do you spend on screens daily (outside of school work)?
                     </Label>
@@ -520,6 +566,31 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                   </div>
                   
                   <div className="space-y-2">
+                    <Label htmlFor="academic_pressure">
+                      How would you rate your current level of academic pressure?
+                    </Label>
+                    <RadioGroup 
+                      id="academic_pressure"
+                      value={formData.academic_pressure?.toString() || ""}
+                      onValueChange={(value) => handleChange("academic_pressure", parseInt(value))}
+                      className="grid grid-cols-5 gap-2"
+                    >
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <div key={level} className="flex items-center space-x-2">
+                          <RadioGroupItem value={level.toString()} id={`academic-${level}`} />
+                          <Label htmlFor={`academic-${level}`}>
+                            {level === 1 ? "Very Low" : 
+                             level === 2 ? "Low" :
+                             level === 3 ? "Moderate" :
+                             level === 4 ? "High" :
+                             "Very High"}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
                     <Label htmlFor="existing_conditions">
                       Do you have any conditions that might affect your wellbeing at school?
                     </Label>
@@ -557,7 +628,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                     className="grid grid-cols-1 md:grid-cols-2 gap-2"
                   >
                     {copingMechanisms.map((mechanism) => (
-                      <div key={mechanism} className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-50">
+                      <div key={mechanism} className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-50 transition-colors duration-300">
                         <CheckboxItem value={mechanism} id={`mechanism-${mechanism}`} />
                         <Label htmlFor={`mechanism-${mechanism}`} className="cursor-pointer w-full">
                           {mechanism}
@@ -566,7 +637,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                     ))}
                   </CheckboxGroup>
                   
-                  <div className="bg-blue-50 p-4 rounded-md mt-4 border border-blue-100">
+                  <div className="bg-blue-50 p-4 rounded-md mt-4 border border-blue-100 transition-all duration-300 transform hover:scale-[1.01]">
                     <p className="text-sm text-blue-800">
                       Thank you for completing this survey! Your responses will help us personalize your Reflectify experience.
                     </p>
@@ -593,7 +664,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
             {step < totalSteps ? (
               <Button 
                 onClick={handleNext}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 transform hover:scale-[1.02]"
                 disabled={isSubmitting}
               >
                 Continue
@@ -601,7 +672,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
             ) : (
               <Button 
                 onClick={handleSubmit}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 transform hover:scale-[1.02]"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
