@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +14,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./components/dashboard/Dashboard";
 import StudentDashboard from "./components/student/StudentDashboard";
 import OnboardingSurvey from "./components/OnboardingSurvey";
+import { supabase } from "@/integrations/supabase/client";
 
 const queryClient = new QueryClient();
 
@@ -65,17 +65,23 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
       if (!user) return;
       
       try {
-        const { data, error } = await supabase
-          .from("onboarding_surveys")
-          .select("*")
-          .eq("student_id", user.id)
-          .single();
-          
-        if (error || !data) {
-          // No survey found, needs onboarding
-          setNeedsOnboarding(true);
+        // Only check for student onboarding
+        if (profile?.role === 'student') {
+          const { data, error } = await supabase
+            .from("onboarding_surveys")
+            .select("*")
+            .eq("student_id", user.id)
+            .single();
+            
+          if (error || !data) {
+            // No survey found, needs onboarding
+            setNeedsOnboarding(true);
+          } else {
+            // Survey exists, no onboarding needed
+            setNeedsOnboarding(false);
+          }
         } else {
-          // Survey exists, no onboarding needed
+          // Non-students (teachers, admins) don't need onboarding survey
           setNeedsOnboarding(false);
         }
       } catch (error) {
@@ -85,10 +91,9 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
       }
     }
     
-    if (profile?.role === 'student') {
+    if (profile) {
       checkOnboardingStatus();
     } else {
-      setNeedsOnboarding(false);
       setLoading(false);
     }
   }, [user, profile]);

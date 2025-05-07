@@ -44,6 +44,17 @@ export interface OnboardingSurvey {
   preferred_coping_mechanisms: string[] | null;
   completed: boolean;
   created_at: string;
+  
+  // Additional fields
+  student_name?: string; // Used only for form, not stored in DB
+  gender?: string;
+  class_section?: string;
+  mood_today?: number;
+  sleep_hours?: number;
+  stress_level?: number;
+  social_support_level?: number;
+  physical_activity_level?: string;
+  screen_time_hours?: number;
 }
 
 export interface WellbeingMetric {

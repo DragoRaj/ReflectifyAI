@@ -36,22 +36,26 @@ const CheckboxGroup = ({
   children,
   className,
   ...props
-}: CheckboxGroupProps) => {
+}: CheckboxGroupProps & Omit<React.HTMLAttributes<HTMLDivElement>, 'onValueChange'>) => {
   return (
     <div className={cn("", className)} {...props}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, {
+          const itemValue = child.props.value as string;
+          
+          // Create valid props for the checkbox item
+          const checkboxProps = {
+            checked: value.includes(itemValue),
             onCheckedChange: (checked: boolean) => {
-              const itemValue = child.props.value;
               if (checked) {
                 onValueChange([...value, itemValue]);
               } else {
                 onValueChange(value.filter((v) => v !== itemValue));
               }
             },
-            checked: value.includes(child.props.value),
-          });
+          };
+          
+          return React.cloneElement(child, checkboxProps);
         }
         return child;
       })}

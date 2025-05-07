@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,23 +8,35 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckboxGroup, CheckboxItem } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { OnboardingSurvey as OnboardingSurveyType } from "@/types/school-types";
+import { motion } from "framer-motion";
 
 interface OnboardingSurveyProps {
   onComplete: () => void;
 }
 
 export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [step, setStep] = useState(1);
+  const totalSteps = 6;
   const [formData, setFormData] = useState<Partial<OnboardingSurveyType>>({
     grade_level: 9,
     baseline_wellbeing_score: 5,
     existing_conditions: "",
     preferred_coping_mechanisms: [],
+    student_name: profile?.first_name || "",
+    gender: "",
+    class_section: "",
+    mood_today: 5,
+    sleep_hours: 7,
+    stress_level: 5,
+    social_support_level: 5,
+    physical_activity_level: "moderate",
+    screen_time_hours: 3
   });
 
   const handleChange = (name: string, value: any) => {
@@ -35,10 +47,12 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
   };
 
   const handleNext = () => {
+    window.scrollTo(0, 0);
     setStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
+    window.scrollTo(0, 0);
     setStep((prev) => Math.max(1, prev - 1));
   };
 
@@ -49,16 +63,43 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
         return;
       }
 
+      // First, update the user's profile with name if provided
+      if (formData.student_name) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ first_name: formData.student_name })
+          .eq("id", user.id);
+          
+        if (profileError) throw profileError;
+      }
+
+      // Then save the survey data
       const { error } = await supabase.from("onboarding_surveys").insert({
         student_id: user.id,
         grade_level: formData.grade_level!,
         baseline_wellbeing_score: formData.baseline_wellbeing_score!,
         existing_conditions: formData.existing_conditions || null,
         preferred_coping_mechanisms: formData.preferred_coping_mechanisms || [],
+        gender: formData.gender || null,
+        class_section: formData.class_section || null,
+        mood_today: formData.mood_today || 5,
+        sleep_hours: formData.sleep_hours || null,
+        stress_level: formData.stress_level || null,
+        social_support_level: formData.social_support_level || null,
+        physical_activity_level: formData.physical_activity_level || null,
+        screen_time_hours: formData.screen_time_hours || null,
         completed: true
       });
 
       if (error) throw error;
+
+      // Also create initial wellbeing metric
+      await supabase.from("wellbeing_metrics").insert({
+        student_id: user.id,
+        wellbeing_score: formData.baseline_wellbeing_score,
+        sentiment_score: 0,
+        stress_level: formData.stress_level
+      });
 
       toast.success("Survey completed successfully");
       onComplete();
@@ -77,160 +118,449 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
     "Meditation",
     "Time in nature",
     "Reading",
+    "Mindfulness apps",
+    "Talking to a counselor",
+    "Sports",
+    "Cooking/baking",
+    "Playing with pets",
     "Other activities"
   ];
 
+  const fadeVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <Card className="shadow-lg border-indigo-100">
-        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
-          <CardTitle className="text-2xl">Welcome to Reflectify</CardTitle>
-          <p className="text-indigo-100">
-            Help us get to know you better - Step {step} of 4
-          </p>
-        </CardHeader>
-        <CardContent className="p-6">
-          {step === 1 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-3">About You</h2>
-                <p className="text-slate-600 mb-4">
-                  Let's start with some basic information to personalize your experience.
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="grade_level">What grade are you in?</Label>
-                  <RadioGroup 
-                    id="grade_level"
-                    value={formData.grade_level?.toString()}
-                    onValueChange={(value) => handleChange("grade_level", parseInt(value))}
-                    className="grid grid-cols-3 gap-2"
+    <div className="max-w-2xl mx-auto p-4 min-h-screen flex items-center justify-center">
+      <motion.div 
+        initial="hidden"
+        animate="visible"
+        variants={fadeVariants}
+        className="w-full"
+      >
+        <Card className="shadow-xl border-indigo-100 overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
+            <CardTitle className="text-2xl font-bold">Welcome to Reflectify</CardTitle>
+            <div className="flex flex-col gap-2">
+              <p className="text-indigo-100">
+                Help us personalize your experience - Step {step} of {totalSteps}
+              </p>
+              <Progress 
+                value={(step / totalSteps) * 100} 
+                className="h-2 bg-indigo-200/30"
+              />
+            </div>
+          </CardHeader>
+          
+          <CardContent className="p-6">
+            {step === 1 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">About You</h2>
+                  <p className="text-slate-600 mb-6">
+                    Let's start with some basic information about you.
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="student_name">Your Name</Label>
+                    <Input
+                      id="student_name"
+                      value={formData.student_name || ""}
+                      onChange={(e) => handleChange("student_name", e.target.value)}
+                      placeholder="Enter your name"
+                      className="border-indigo-200 focus:border-indigo-400"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <RadioGroup 
+                      id="gender"
+                      value={formData.gender || ""}
+                      onValueChange={(value) => handleChange("gender", value)}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="male" id="gender-male" />
+                        <Label htmlFor="gender-male">Male</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="female" id="gender-female" />
+                        <Label htmlFor="gender-female">Female</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="other" id="gender-other" />
+                        <Label htmlFor="gender-other">Other</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="prefer_not_to_say" id="gender-prefer" />
+                        <Label htmlFor="gender-prefer">Prefer not to say</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">School Information</h2>
+                  <p className="text-slate-600 mb-6">
+                    Tell us about your grade and class.
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="grade_level">What grade are you in?</Label>
+                    <RadioGroup 
+                      id="grade_level"
+                      value={formData.grade_level?.toString() || ""}
+                      onValueChange={(value) => handleChange("grade_level", parseInt(value))}
+                      className="grid grid-cols-2 md:grid-cols-4 gap-2"
+                    >
+                      {[6, 7, 8, 9, 10, 11, 12].map((grade) => (
+                        <div key={grade} className="flex items-center space-x-2">
+                          <RadioGroupItem value={grade.toString()} id={`grade-${grade}`} />
+                          <Label htmlFor={`grade-${grade}`}>Grade {grade}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="class_section">Class Section (Optional)</Label>
+                    <Input
+                      id="class_section"
+                      value={formData.class_section || ""}
+                      onChange={(e) => handleChange("class_section", e.target.value)}
+                      placeholder="e.g. A, B, Science, etc."
+                      className="border-indigo-200 focus:border-indigo-400"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 3 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">Your Wellbeing</h2>
+                  <p className="text-slate-600 mb-6">
+                    How would you rate your overall wellbeing?
+                  </p>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <Label>
+                      On a scale from 1-10, how would you rate your overall wellbeing?
+                    </Label>
+                    
+                    <Slider
+                      id="wellbeing"
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={[formData.baseline_wellbeing_score || 5]}
+                      onValueChange={(values) => handleChange("baseline_wellbeing_score", values[0])}
+                      className="py-4"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>1 - Not so great</span>
+                      <span>5 - Okay</span>
+                      <span>10 - Excellent</span>
+                    </div>
+                    
+                    <div className="text-center font-semibold text-xl mt-4 text-indigo-600">
+                      {formData.baseline_wellbeing_score || 5}
+                    </div>
+                  </div>
+                
+                  <div className="space-y-4">
+                    <Label>
+                      How would you describe your mood today?
+                    </Label>
+                    
+                    <Slider
+                      id="mood_today"
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={[formData.mood_today || 5]}
+                      onValueChange={(values) => handleChange("mood_today", values[0])}
+                      className="py-4"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>1 - Very Low</span>
+                      <span>10 - Very High</span>
+                    </div>
+                    
+                    <div className="text-center font-semibold text-xl mt-4 text-indigo-600">
+                      {formData.mood_today || 5}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 4 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">Lifestyle Information</h2>
+                  <p className="text-slate-600 mb-6">
+                    These questions help us understand your daily habits.
+                  </p>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="sleep_hours">
+                      How many hours do you typically sleep each night?
+                    </Label>
+                    <RadioGroup 
+                      id="sleep_hours"
+                      value={formData.sleep_hours?.toString() || ""}
+                      onValueChange={(value) => handleChange("sleep_hours", parseInt(value))}
+                      className="grid grid-cols-2 md:grid-cols-4 gap-2"
+                    >
+                      {[5, 6, 7, 8, 9, 10].map((hours) => (
+                        <div key={hours} className="flex items-center space-x-2">
+                          <RadioGroupItem value={hours.toString()} id={`sleep-${hours}`} />
+                          <Label htmlFor={`sleep-${hours}`}>{hours} hours</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label htmlFor="physical_activity">
+                      How would you describe your physical activity level?
+                    </Label>
+                    <RadioGroup 
+                      id="physical_activity"
+                      value={formData.physical_activity_level || ""}
+                      onValueChange={(value) => handleChange("physical_activity_level", value)}
+                      className="grid grid-cols-1 gap-2"
+                    >
+                      {["sedentary", "light", "moderate", "active", "very active"].map((level) => (
+                        <div key={level} className="flex items-center space-x-2">
+                          <RadioGroupItem value={level} id={`activity-${level}`} />
+                          <Label htmlFor={`activity-${level}`}>
+                            {level === "sedentary" ? "Sedentary (very little exercise)" : 
+                             level === "light" ? "Light (light exercise 1-2 days/week)" :
+                             level === "moderate" ? "Moderate (moderate exercise 2-3 days/week)" :
+                             level === "active" ? "Active (intense exercise 3-5 days/week)" :
+                             "Very Active (intense exercise 6-7 days/week)"}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label htmlFor="screen_time">
+                      How many hours do you spend on screens daily (outside of school work)?
+                    </Label>
+                    <RadioGroup 
+                      id="screen_time"
+                      value={formData.screen_time_hours?.toString() || ""}
+                      onValueChange={(value) => handleChange("screen_time_hours", parseInt(value))}
+                      className="grid grid-cols-2 md:grid-cols-3 gap-2"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
+                        <div key={hours} className="flex items-center space-x-2">
+                          <RadioGroupItem value={hours.toString()} id={`screen-${hours}`} />
+                          <Label htmlFor={`screen-${hours}`}>
+                            {hours < 8 ? `${hours} hours` : "8+ hours"}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 5 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">Mental Health and Support</h2>
+                  <p className="text-slate-600 mb-6">
+                    This helps us understand your support systems and challenges.
+                  </p>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <Label>
+                      On a scale from 1-10, what is your current stress level?
+                    </Label>
+                    
+                    <Slider
+                      id="stress_level"
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={[formData.stress_level || 5]}
+                      onValueChange={(values) => handleChange("stress_level", values[0])}
+                      className="py-4"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>1 - Very Low Stress</span>
+                      <span>10 - Very High Stress</span>
+                    </div>
+                    
+                    <div className="text-center font-semibold text-xl mt-4 text-indigo-600">
+                      {formData.stress_level || 5}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <Label>
+                      How strong is your social support network?
+                    </Label>
+                    
+                    <Slider
+                      id="social_support"
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={[formData.social_support_level || 5]}
+                      onValueChange={(values) => handleChange("social_support_level", values[0])}
+                      className="py-4"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>1 - Limited Support</span>
+                      <span>10 - Strong Support</span>
+                    </div>
+                    
+                    <div className="text-center font-semibold text-xl mt-4 text-indigo-600">
+                      {formData.social_support_level || 5}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="existing_conditions">
+                      Do you have any conditions that might affect your wellbeing at school?
+                    </Label>
+                    <Textarea
+                      id="existing_conditions"
+                      placeholder="For example: anxiety, ADHD, depression, etc."
+                      value={formData.existing_conditions || ""}
+                      onChange={(e) => handleChange("existing_conditions", e.target.value)}
+                      className="min-h-[100px] border-indigo-200 focus:border-indigo-400"
+                    />
+                    <p className="text-xs text-slate-500">This information is kept confidential and helps us support you better.</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 6 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">Your Coping Strategies</h2>
+                  <p className="text-slate-600 mb-6">
+                    What activities help you feel better when you're stressed or upset?
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <CheckboxGroup 
+                    value={formData.preferred_coping_mechanisms || []}
+                    onValueChange={(value) => handleChange("preferred_coping_mechanisms", value)}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-2"
                   >
-                    {[6, 7, 8, 9, 10, 11, 12].map((grade) => (
-                      <div key={grade} className="flex items-center space-x-2">
-                        <RadioGroupItem value={grade.toString()} id={`grade-${grade}`} />
-                        <Label htmlFor={`grade-${grade}`}>Grade {grade}</Label>
+                    {copingMechanisms.map((mechanism) => (
+                      <div key={mechanism} className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-50">
+                        <CheckboxItem value={mechanism} id={`mechanism-${mechanism}`} />
+                        <Label htmlFor={`mechanism-${mechanism}`} className="cursor-pointer w-full">
+                          {mechanism}
+                        </Label>
                       </div>
                     ))}
-                  </RadioGroup>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-3">Your Wellbeing</h2>
-                <p className="text-slate-600 mb-4">
-                  How would you rate your overall wellbeing right now?
-                </p>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <Label>
-                    On a scale from 1-10, how would you rate your wellbeing today?
-                  </Label>
+                  </CheckboxGroup>
                   
-                  <Slider
-                    id="wellbeing"
-                    min={1}
-                    max={10}
-                    step={1}
-                    value={[formData.baseline_wellbeing_score || 5]}
-                    onValueChange={(values) => handleChange("baseline_wellbeing_score", values[0])}
-                    className="py-4"
-                  />
-                  
-                  <div className="flex justify-between text-xs text-slate-500">
-                    <span>1 - Not so great</span>
-                    <span>5 - Okay</span>
-                    <span>10 - Excellent</span>
-                  </div>
-                  
-                  <div className="text-center font-semibold text-xl mt-4">
-                    {formData.baseline_wellbeing_score || 5}
+                  <div className="bg-blue-50 p-4 rounded-md mt-4 border border-blue-100">
+                    <p className="text-sm text-blue-800">
+                      Thank you for completing this survey! Your responses will help us personalize your Reflectify experience.
+                    </p>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-3">Health Information</h2>
-                <p className="text-slate-600 mb-4">
-                  This information is kept confidential and helps us support you better.
-                </p>
-                <p className="text-xs text-slate-500 mb-4">
-                  Note: This is optional. Only share what you're comfortable with.
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="existing_conditions">
-                    Do you have any conditions that might affect your wellbeing at school?
-                  </Label>
-                  <Textarea
-                    id="existing_conditions"
-                    placeholder="For example: anxiety, ADHD, depression, etc."
-                    value={formData.existing_conditions || ""}
-                    onChange={(e) => handleChange("existing_conditions", e.target.value)}
-                    className="min-h-[100px]"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-3">Your Coping Mechanisms</h2>
-                <p className="text-slate-600 mb-4">
-                  What activities help you feel better when you're stressed or upset?
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                <CheckboxGroup 
-                  value={formData.preferred_coping_mechanisms || []}
-                  onValueChange={(value) => handleChange("preferred_coping_mechanisms", value)}
-                  className="grid grid-cols-2 gap-2"
-                >
-                  {copingMechanisms.map((mechanism) => (
-                    <div key={mechanism} className="flex items-center space-x-2">
-                      <CheckboxItem value={mechanism} id={`mechanism-${mechanism}`} />
-                      <Label htmlFor={`mechanism-${mechanism}`}>{mechanism}</Label>
-                    </div>
-                  ))}
-                </CheckboxGroup>
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-between mt-8">
+              </motion.div>
+            )}
+          </CardContent>
+          
+          <CardFooter className="px-6 py-4 bg-slate-50 flex justify-between">
             {step > 1 ? (
-              <Button variant="outline" onClick={handleBack}>
+              <Button 
+                variant="outline" 
+                onClick={handleBack}
+                className="border-indigo-300 hover:bg-indigo-50 transition-all duration-300"
+              >
                 Back
               </Button>
             ) : (
               <div></div>
             )}
             
-            {step < 4 ? (
-              <Button onClick={handleNext}>Next</Button>
+            {step < totalSteps ? (
+              <Button 
+                onClick={handleNext}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300"
+              >
+                Continue
+              </Button>
             ) : (
-              <Button onClick={handleSubmit}>Complete</Button>
+              <Button 
+                onClick={handleSubmit}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300"
+              >
+                Complete Survey
+              </Button>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 }
