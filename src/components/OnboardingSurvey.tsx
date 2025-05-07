@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,15 +13,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { OnboardingSurvey as OnboardingSurveyType } from "@/types/school-types";
 import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 
 interface OnboardingSurveyProps {
   onComplete: () => void;
 }
 
 export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [step, setStep] = useState(1);
   const totalSteps = 6;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Partial<OnboardingSurveyType>>({
     grade_level: 9,
     baseline_wellbeing_score: 5,
@@ -63,6 +64,8 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
         return;
       }
 
+      setIsSubmitting(true);
+
       // First, update the user's profile with name if provided
       if (formData.student_name) {
         const { error: profileError } = await supabase
@@ -73,27 +76,64 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
         if (profileError) throw profileError;
       }
 
-      // Then save the survey data
-      const { error } = await supabase.from("onboarding_surveys").insert({
-        student_id: user.id,
-        grade_level: formData.grade_level!,
-        baseline_wellbeing_score: formData.baseline_wellbeing_score!,
-        existing_conditions: formData.existing_conditions || null,
-        preferred_coping_mechanisms: formData.preferred_coping_mechanisms || [],
-        gender: formData.gender || null,
-        class_section: formData.class_section || null,
-        mood_today: formData.mood_today || 5,
-        sleep_hours: formData.sleep_hours || null,
-        stress_level: formData.stress_level || null,
-        social_support_level: formData.social_support_level || null,
-        physical_activity_level: formData.physical_activity_level || null,
-        screen_time_hours: formData.screen_time_hours || null,
-        completed: true
-      });
+      // Check if a survey already exists for this user
+      const { data: existingSurvey, error: checkError } = await supabase
+        .from("onboarding_surveys")
+        .select("id")
+        .eq("student_id", user.id)
+        .maybeSingle();
+      
+      if (checkError) throw checkError;
+      
+      let error;
+      
+      if (existingSurvey) {
+        // Update existing survey
+        const { error: updateError } = await supabase
+          .from("onboarding_surveys")
+          .update({
+            grade_level: formData.grade_level!,
+            baseline_wellbeing_score: formData.baseline_wellbeing_score!,
+            existing_conditions: formData.existing_conditions || null,
+            preferred_coping_mechanisms: formData.preferred_coping_mechanisms || [],
+            gender: formData.gender || null,
+            class_section: formData.class_section || null,
+            mood_today: formData.mood_today || 5,
+            sleep_hours: formData.sleep_hours || null,
+            stress_level: formData.stress_level || null,
+            social_support_level: formData.social_support_level || null,
+            physical_activity_level: formData.physical_activity_level || null,
+            screen_time_hours: formData.screen_time_hours || null,
+            completed: true
+          })
+          .eq("id", existingSurvey.id);
+          
+        error = updateError;
+      } else {
+        // Create new survey
+        const { error: insertError } = await supabase.from("onboarding_surveys").insert({
+          student_id: user.id,
+          grade_level: formData.grade_level!,
+          baseline_wellbeing_score: formData.baseline_wellbeing_score!,
+          existing_conditions: formData.existing_conditions || null,
+          preferred_coping_mechanisms: formData.preferred_coping_mechanisms || [],
+          gender: formData.gender || null,
+          class_section: formData.class_section || null,
+          mood_today: formData.mood_today || 5,
+          sleep_hours: formData.sleep_hours || null,
+          stress_level: formData.stress_level || null,
+          social_support_level: formData.social_support_level || null,
+          physical_activity_level: formData.physical_activity_level || null,
+          screen_time_hours: formData.screen_time_hours || null,
+          completed: true
+        });
+        
+        error = insertError;
+      }
 
       if (error) throw error;
 
-      // Also create initial wellbeing metric
+      // Also create/update wellbeing metric
       await supabase.from("wellbeing_metrics").insert({
         student_id: user.id,
         wellbeing_score: formData.baseline_wellbeing_score,
@@ -101,10 +141,16 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
         stress_level: formData.stress_level
       });
 
+      // Refresh user profile to get any updates
+      await refreshProfile();
+
       toast.success("Survey completed successfully");
       onComplete();
     } catch (error: any) {
+      console.error("Survey submission error:", error);
       toast.error(error.message || "Error submitting survey");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -536,6 +582,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                 variant="outline" 
                 onClick={handleBack}
                 className="border-indigo-300 hover:bg-indigo-50 transition-all duration-300"
+                disabled={isSubmitting}
               >
                 Back
               </Button>
@@ -547,6 +594,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
               <Button 
                 onClick={handleNext}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300"
+                disabled={isSubmitting}
               >
                 Continue
               </Button>
@@ -554,8 +602,16 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
               <Button 
                 onClick={handleSubmit}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300"
+                disabled={isSubmitting}
               >
-                Complete Survey
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Complete Survey"
+                )}
               </Button>
             )}
           </CardFooter>

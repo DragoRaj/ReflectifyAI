@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Sparkles, MessageSquare, BookOpen, HeartPulse, ExternalLink } from "luc
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { saveWellbeingMetric } from "@/utils/wellbeingUtils";
+import { saveWellbeingMetric, getRecommendedActivities } from "@/utils/wellbeingUtils";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,15 +16,15 @@ export default function StudentDashboard() {
   const [wellbeingScore, setWellbeingScore] = useState<number>(7);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [studentData, setStudentData] = useState({
-    streakDays: 5,
-    journalEntries: 12,
-    chatInteractions: 23,
-    lastAssessmentDate: "3 days ago",
-    recentSentiment: "mostly positive",
+    streakDays: 0,
+    journalEntries: 0,
+    chatInteractions: 0,
+    lastAssessmentDate: "Never",
+    recentSentiment: "unknown",
     suggestedActivities: [
-      "5-minute breathing exercise",
-      "Quick mindfulness check-in",
-      "Express yourself in the journal"
+      "Loading your suggestions...",
+      "Please wait...",
+      "Analyzing your data..."
     ]
   });
 
@@ -35,6 +34,8 @@ export default function StudentDashboard() {
       if (!user) return;
       
       try {
+        setIsLoading(true);
+        
         // Get wellbeing metrics
         const { data: metrics } = await supabase
           .from("wellbeing_metrics")
@@ -42,6 +43,13 @@ export default function StudentDashboard() {
           .eq("student_id", user.id)
           .order("measured_at", { ascending: false })
           .limit(10);
+
+        // Get onboarding survey for preferences
+        const { data: survey } = await supabase
+          .from("onboarding_surveys")
+          .select("*")
+          .eq("student_id", user.id)
+          .maybeSingle();
 
         if (metrics && metrics.length > 0) {
           // Set most recent wellbeing score
@@ -55,15 +63,36 @@ export default function StudentDashboard() {
             uniqueDays.add(date);
           });
           
+          // Get AI-recommended activities
+          const activitiesList = await getRecommendedActivities(
+            metrics[0].wellbeing_score || 5,
+            metrics[0].stress_level || 5,
+            survey?.preferred_coping_mechanisms || []
+          );
+          
           setStudentData(prev => ({
             ...prev,
             streakDays: uniqueDays.size,
             chatInteractions: metrics.length,
-            lastAssessmentDate: new Date(metrics[0].measured_at).toLocaleDateString()
+            lastAssessmentDate: new Date(metrics[0].measured_at).toLocaleDateString(),
+            suggestedActivities: activitiesList
+          }));
+        } else if (survey) {
+          // If no metrics yet but we have survey data
+          const activitiesList = await getRecommendedActivities(
+            survey.baseline_wellbeing_score || 5,
+            survey.baseline_wellbeing_score || 5,
+            survey.preferred_coping_mechanisms || []
+          );
+          
+          setStudentData(prev => ({
+            ...prev,
+            suggestedActivities: activitiesList
           }));
         }
       } catch (error) {
         console.error("Error fetching student data:", error);
+        toast.error("Could not load your data");
       } finally {
         setIsLoading(false);
       }
@@ -86,6 +115,13 @@ export default function StudentDashboard() {
       const saved = await saveWellbeingMetric(user.id, score);
       if (saved) {
         toast.success("Thanks for checking in today!");
+        
+        // Refresh suggested activities
+        const activitiesList = await getRecommendedActivities(score, 5);
+        setStudentData(prev => ({
+          ...prev,
+          suggestedActivities: activitiesList
+        }));
       }
     } catch (error) {
       console.error("Error saving wellbeing check:", error);

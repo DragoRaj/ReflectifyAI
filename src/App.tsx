@@ -71,9 +71,13 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
             .from("onboarding_surveys")
             .select("*")
             .eq("student_id", user.id)
-            .single();
+            .maybeSingle();
             
-          if (error || !data) {
+          if (error) {
+            console.error("Error checking onboarding:", error);
+          }
+            
+          if (!data) {
             // No survey found, needs onboarding
             setNeedsOnboarding(true);
           } else {

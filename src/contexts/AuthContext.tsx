@@ -157,6 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         updateProfile,
+        refreshProfile: user ? () => fetchProfile(user.id) : () => Promise.resolve(null)
       }}
     >
       {children}

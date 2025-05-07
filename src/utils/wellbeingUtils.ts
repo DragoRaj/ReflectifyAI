@@ -1,83 +1,107 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeContent } from "./aiUtils";
 import { toast } from "sonner";
+import { getAIAnalysis } from "./aiUtils";
 
-// Function to save a new wellbeing metric from user input
 export async function saveWellbeingMetric(
   studentId: string, 
   wellbeingScore: number, 
-  text?: string
-) {
+  sentimentScore?: number,
+  stressLevel?: number
+): Promise<boolean> {
   try {
-    // Start with basic metrics
-    const metricData: any = {
+    const { error } = await supabase.from("wellbeing_metrics").insert({
       student_id: studentId,
       wellbeing_score: wellbeingScore,
-      interaction_count: 1
-    };
-    
-    // If text provided, analyze sentiment
-    if (text && text.length > 5) {
-      try {
-        const analysis = await analyzeContent(text);
-        
-        if (analysis) {
-          // Add sentiment analysis scores
-          metricData.sentiment_score = (1 - analysis.toxicity) * 2 - 1; // Convert to -1 to 1 range
-          metricData.stress_level = Math.round((analysis.toxicity * 5) + 1); // Convert to 1-10 range
-          
-          // If severe negative sentiment detected, create a concern flag
-          if (analysis.toxicity > 0.7 || analysis.identity_attack > 0.5 || analysis.threat > 0.5) {
-            const concernLevel = analysis.toxicity > 0.8 ? 'critical' : 'moderate';
-            
-            await supabase.from("concern_flags").insert({
-              student_id: studentId,
-              concern_level: concernLevel,
-              reason: `AI detected concerning content: ${analysis.summary}`,
-              resolved: false
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error analyzing content:", error);
-        // Continue without sentiment analysis if it fails
-      }
-    }
-    
-    // Save the metric
-    const { error } = await supabase.from("wellbeing_metrics").insert(metricData);
-    
+      sentiment_score: sentimentScore || null,
+      stress_level: stressLevel || null
+    });
+
     if (error) throw error;
-    
     return true;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error saving wellbeing metric:", error);
-    toast.error("Unable to save your response. Please try again later.");
     return false;
   }
 }
 
-// Function to calculate wellbeing trend
-export function calculateTrend(metrics: any[]): 'improving' | 'declining' | 'stable' {
-  if (!metrics || metrics.length < 2) return 'stable';
-  
-  // Sort by date
-  const sortedMetrics = [...metrics].sort(
-    (a, b) => new Date(a.measured_at).getTime() - new Date(b.measured_at).getTime()
-  );
-  
-  // Get the average of first half and second half
-  const halfIndex = Math.floor(sortedMetrics.length / 2);
-  const firstHalf = sortedMetrics.slice(0, halfIndex);
-  const secondHalf = sortedMetrics.slice(halfIndex);
-  
-  const firstAvg = firstHalf.reduce((sum, m) => sum + m.wellbeing_score, 0) / firstHalf.length;
-  const secondAvg = secondHalf.reduce((sum, m) => sum + m.wellbeing_score, 0) / secondHalf.length;
-  
-  const difference = secondAvg - firstAvg;
-  
-  if (difference > 0.5) return 'improving';
-  if (difference < -0.5) return 'declining';
-  return 'stable';
+export async function getWellbeingInsight(studentId: string): Promise<string> {
+  try {
+    // Get recent wellbeing metrics
+    const { data: metrics, error } = await supabase
+      .from("wellbeing_metrics")
+      .select("*")
+      .eq("student_id", studentId)
+      .order("measured_at", { ascending: false })
+      .limit(10);
+    
+    if (error) throw error;
+    
+    if (!metrics || metrics.length === 0) {
+      return "Not enough data to generate insights yet.";
+    }
+    
+    // Get profile data
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, role")
+      .eq("id", studentId)
+      .single();
+    
+    // Build a prompt for the AI
+    const prompt = `
+      Based on the following wellbeing metrics for ${profile?.first_name || 'a student'}, 
+      provide a brief, helpful insight about their wellbeing trends:
+      
+      Recent wellbeing scores (1-10): ${metrics.map(m => m.wellbeing_score).filter(Boolean).join(', ')}
+      Recent stress levels (1-10): ${metrics.map(m => m.stress_level).filter(Boolean).join(', ')}
+      
+      Generate a short, personalized insight (2-3 sentences) that is age-appropriate 
+      and helpful without being alarmist. Focus on trends, if any, and offer a gentle 
+      suggestion if appropriate.
+    `;
+    
+    // Use Gemini to generate an insight
+    const insight = await getAIAnalysis(prompt);
+    return insight || "Unable to generate insights at this time.";
+  } catch (error) {
+    console.error("Error generating wellbeing insight:", error);
+    return "Unable to generate insights at this time.";
+  }
+}
+
+export async function getRecommendedActivities(
+  wellbeingScore: number,
+  stressLevel: number,
+  preferredActivities: string[] = []
+): Promise<string[]> {
+  try {
+    const prompt = `
+      Generate 3 short, specific wellbeing activities for a student with:
+      - Current wellbeing score: ${wellbeingScore}/10
+      - Current stress level: ${stressLevel}/10
+      ${preferredActivities.length > 0 ? 
+        `- Preferred coping mechanisms: ${preferredActivities.join(', ')}` : 
+        '- No specific preferences provided'}
+      
+      Format each activity as a single, brief sentence (under 10 words) that starts with an action verb.
+      Make them specific, actionable, and appropriate for school setting.
+    `;
+    
+    const response = await getAIAnalysis(prompt);
+    
+    // Parse the response into an array of activities
+    const activities = response
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line && line.length > 0 && !line.startsWith('-'))
+      .slice(0, 3);
+    
+    return activities.length > 0 ? 
+      activities : 
+      ["Try deep breathing exercise", "Write in your journal", "Take a short mindfulness break"];
+  } catch (error) {
+    console.error("Error generating activities:", error);
+    return ["Try deep breathing exercise", "Write in your journal", "Take a short mindfulness break"];
+  }
 }
