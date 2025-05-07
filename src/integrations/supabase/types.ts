@@ -9,7 +9,304 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      class_memberships: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_memberships_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_memberships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          created_at: string | null
+          grade_level: number
+          id: string
+          name: string
+          school_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          grade_level: number
+          id?: string
+          name: string
+          school_id: string
+        }
+        Update: {
+          created_at?: string | null
+          grade_level?: number
+          id?: string
+          name?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concern_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          concern_id: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          scheduled_for: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          concern_id: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_for?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          concern_id?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_for?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concern_actions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concern_actions_concern_id_fkey"
+            columns: ["concern_id"]
+            isOneToOne: false
+            referencedRelation: "concern_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concern_flags: {
+        Row: {
+          concern_level: Database["public"]["Enums"]["concern_level"]
+          created_at: string | null
+          id: string
+          notes: string | null
+          reason: string
+          resolved: boolean | null
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          concern_level: Database["public"]["Enums"]["concern_level"]
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          reason: string
+          resolved?: boolean | null
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          concern_level?: Database["public"]["Enums"]["concern_level"]
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string
+          resolved?: boolean | null
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concern_flags_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_surveys: {
+        Row: {
+          baseline_wellbeing_score: number
+          completed: boolean | null
+          created_at: string | null
+          existing_conditions: string | null
+          grade_level: number
+          id: string
+          preferred_coping_mechanisms: string[] | null
+          student_id: string
+        }
+        Insert: {
+          baseline_wellbeing_score: number
+          completed?: boolean | null
+          created_at?: string | null
+          existing_conditions?: string | null
+          grade_level: number
+          id?: string
+          preferred_coping_mechanisms?: string[] | null
+          student_id: string
+        }
+        Update: {
+          baseline_wellbeing_score?: number
+          completed?: boolean | null
+          created_at?: string | null
+          existing_conditions?: string | null
+          grade_level?: number
+          id?: string
+          preferred_coping_mechanisms?: string[] | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_surveys_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          school_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      wellbeing_metrics: {
+        Row: {
+          id: string
+          interaction_count: number | null
+          measured_at: string | null
+          sentiment_score: number | null
+          stress_level: number | null
+          student_id: string
+          wellbeing_score: number | null
+        }
+        Insert: {
+          id?: string
+          interaction_count?: number | null
+          measured_at?: string | null
+          sentiment_score?: number | null
+          stress_level?: number | null
+          student_id: string
+          wellbeing_score?: number | null
+        }
+        Update: {
+          id?: string
+          interaction_count?: number | null
+          measured_at?: string | null
+          sentiment_score?: number | null
+          stress_level?: number | null
+          student_id?: string
+          wellbeing_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wellbeing_metrics_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +315,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      concern_level: "mild" | "moderate" | "critical"
+      user_role: "student" | "teacher" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +431,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      concern_level: ["mild", "moderate", "critical"],
+      user_role: ["student", "teacher", "admin"],
+    },
   },
 } as const

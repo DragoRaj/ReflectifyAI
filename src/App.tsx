@@ -3,15 +3,106 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 import FeatureSplashScreen from "@/components/FeatureSplashScreen";
 import { BarChart2, MessageCircle, Shield, HeartPulse, Sparkles, Home } from "lucide-react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Auth from "./pages/Auth";
+import Dashboard from "./components/dashboard/Dashboard";
+import StudentDashboard from "./components/student/StudentDashboard";
+import OnboardingSurvey from "./components/OnboardingSurvey";
 
 const queryClient = new QueryClient();
+
+// Protected route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Role-based route component
+const RoleRoute = ({ 
+  allowedRoles, 
+  children 
+}: { 
+  allowedRoles: string[], 
+  children: React.ReactNode 
+}) => {
+  const { profile, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+  
+  if (!profile || !allowedRoles.includes(profile.role)) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Component to handle onboarding status
+const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
+  const { user, profile } = useAuth();
+  const [needsOnboarding, setNeedsOnboarding] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  
+  useEffect(() => {
+    async function checkOnboardingStatus() {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("onboarding_surveys")
+          .select("*")
+          .eq("student_id", user.id)
+          .single();
+          
+        if (error || !data) {
+          // No survey found, needs onboarding
+          setNeedsOnboarding(true);
+        } else {
+          // Survey exists, no onboarding needed
+          setNeedsOnboarding(false);
+        }
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    if (profile?.role === 'student') {
+      checkOnboardingStatus();
+    } else {
+      setNeedsOnboarding(false);
+      setLoading(false);
+    }
+  }, [user, profile]);
+  
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+  
+  if (needsOnboarding && profile?.role === 'student') {
+    return <OnboardingSurvey onComplete={() => setNeedsOnboarding(false)} />;
+  }
+  
+  return <>{children}</>;
+};
 
 // Component to handle feature-specific splash screens
 const FeatureRouter = () => {
@@ -22,6 +113,7 @@ const FeatureRouter = () => {
     description: "",
     icon: null as React.ReactNode
   });
+  const { profile } = useAuth();
   
   useEffect(() => {
     // Get feature from URL hash
@@ -117,6 +209,21 @@ const FeatureRouter = () => {
     setFeatureSplashInfo(splashInfo);
     setShowFeatureSplash(true);
   };
+
+  // Determine which dashboard to show based on user role
+  const DashboardComponent = () => {
+    if (!profile) return null;
+    
+    return (
+      <OnboardingCheck>
+        {profile.role === 'student' ? (
+          <StudentDashboard />
+        ) : (
+          <Dashboard />
+        )}
+      </OnboardingCheck>
+    );
+  };
   
   return (
     <>
@@ -130,11 +237,29 @@ const FeatureRouter = () => {
       )}
       
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <DashboardComponent />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="/auth" element={<Auth />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
+  );
+};
+
+const AuthenticatedApp = () => {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <FeatureRouter />
+      </AuthProvider>
+    </BrowserRouter>
   );
 };
 
@@ -144,7 +269,7 @@ const App = () => {
   useEffect(() => {
     // Regular behavior - show initial splash unless it's been shown already
     const shouldSkipSplash = sessionStorage.getItem('initialLoadComplete') === 'true';
-                           
+    
     setShowSplash(!shouldSkipSplash);
     
     // Set initial load complete after the first splash screen
@@ -162,9 +287,7 @@ const App = () => {
         {showSplash ? (
           <SplashScreen onComplete={() => setShowSplash(false)} />
         ) : (
-          <BrowserRouter>
-            <FeatureRouter />
-          </BrowserRouter>
+          <AuthenticatedApp />
         )}
       </TooltipProvider>
     </QueryClientProvider>

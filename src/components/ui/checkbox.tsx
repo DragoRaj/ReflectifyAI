@@ -1,10 +1,10 @@
-import * as React from "react"
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { Check } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const Checkbox = React.forwardRef<
+const CheckboxItem = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
 >(({ className, ...props }, ref) => (
@@ -16,13 +16,47 @@ const Checkbox = React.forwardRef<
     )}
     {...props}
   >
-    <CheckboxPrimitive.Indicator
-      className={cn("flex items-center justify-center text-current")}
-    >
+    <CheckboxPrimitive.Indicator className={cn("flex items-center justify-center text-current")}>
       <Check className="h-4 w-4" />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
-))
-Checkbox.displayName = CheckboxPrimitive.Root.displayName
+));
+CheckboxItem.displayName = CheckboxPrimitive.Root.displayName;
 
-export { Checkbox }
+interface CheckboxGroupProps {
+  value: string[];
+  onValueChange: (value: string[]) => void;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const CheckboxGroup = ({
+  value,
+  onValueChange,
+  children,
+  className,
+  ...props
+}: CheckboxGroupProps) => {
+  return (
+    <div className={cn("", className)} {...props}>
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child)) {
+          return React.cloneElement(child, {
+            onCheckedChange: (checked: boolean) => {
+              const itemValue = child.props.value;
+              if (checked) {
+                onValueChange([...value, itemValue]);
+              } else {
+                onValueChange(value.filter((v) => v !== itemValue));
+              }
+            },
+            checked: value.includes(child.props.value),
+          });
+        }
+        return child;
+      })}
+    </div>
+  );
+};
+
+export { CheckboxItem, CheckboxGroup };
