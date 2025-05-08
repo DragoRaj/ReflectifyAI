@@ -38,7 +38,11 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
     stress_level: 5,
     social_support_level: 5,
     physical_activity_level: "moderate",
-    screen_time_hours: 3
+    screen_time_hours: 3,
+    age: undefined,
+    school_name: "",
+    diet_quality: "",
+    academic_pressure: undefined
   });
 
   const handleChange = (name: string, value: any) => {
@@ -88,6 +92,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
       
       let error;
       
+      // Only store fields that are defined in the onboarding_surveys table
       const surveyData = {
         grade_level: formData.grade_level!,
         baseline_wellbeing_score: formData.baseline_wellbeing_score!,

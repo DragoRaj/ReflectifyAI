@@ -55,6 +55,12 @@ export interface OnboardingSurvey {
   social_support_level?: number;
   physical_activity_level?: string;
   screen_time_hours?: number;
+  
+  // Add the missing fields that were causing errors
+  age?: number;
+  school_name?: string;
+  diet_quality?: string;
+  academic_pressure?: number;
 }
 
 export interface WellbeingMetric {
