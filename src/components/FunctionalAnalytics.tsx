@@ -160,7 +160,9 @@ export default function FunctionalAnalytics() {
     const now = new Date();
     const filtered = data.filter(item => {
       const itemDate = new Date(item[dateField]);
-      const diffDays = Math.floor((now - itemDate) / (24 * 60 * 60 * 1000));
+      // Fix: Convert date strings to timestamps for proper numeric comparison
+      const diffInTime = now.getTime() - itemDate.getTime();
+      const diffDays = Math.floor(diffInTime / (24 * 60 * 60 * 1000));
       
       switch(timeframe) {
         case "week": return diffDays <= 7;
