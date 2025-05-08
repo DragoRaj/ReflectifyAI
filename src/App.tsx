@@ -9,14 +9,20 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 import FeatureSplashScreen from "@/components/FeatureSplashScreen";
-import { BarChart2, MessageCircle, Shield, HeartPulse, Sparkles, Home } from "lucide-react";
+import { BarChart2, MessageCircle, Shield, HeartPulse, Sparkles, Home, BookText, LogOut } from "lucide-react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Auth from "./pages/Auth";
 import Dashboard from "./components/dashboard/Dashboard";
 import StudentDashboard from "./components/student/StudentDashboard";
+import TeacherDashboard from "./components/teacher/TeacherDashboard";
+import JournalPage from "./components/JournalPage";
+import WellbeingChatPage from "./components/WellbeingChatPage";
+import MindfulnessPage from "./components/MindfulnessPage";
 import OnboardingSurvey from "./components/OnboardingSurvey";
 import DevConsole from "./components/DevConsole";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +53,11 @@ const RoleRoute = ({
   
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+  
+  // Special case for the hybrid account (teacher with student access)
+  if (profile?.email === "teketirajnish@gmail.com") {
+    return <>{children}</>;
   }
   
   if (!profile || !allowedRoles.includes(profile.role)) {
@@ -86,8 +97,27 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
             // Survey exists, no onboarding needed
             setNeedsOnboarding(false);
           }
+        } else if (profile?.role === 'teacher') {
+          // Check for teacher onboarding
+          const { data, error } = await supabase
+            .from("teacher_surveys")
+            .select("*")
+            .eq("teacher_id", user.id)
+            .maybeSingle();
+            
+          if (error) {
+            console.error("Error checking teacher onboarding:", error);
+          }
+            
+          if (!data) {
+            // No teacher survey found, needs onboarding
+            setNeedsOnboarding(true);
+          } else {
+            // Survey exists, no onboarding needed
+            setNeedsOnboarding(false);
+          }
         } else {
-          // Non-students (teachers, admins) don't need onboarding survey
+          // Admin doesn't need onboarding survey
           setNeedsOnboarding(false);
         }
       } catch (error) {
@@ -108,11 +138,34 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
   
-  if (needsOnboarding && profile?.role === 'student') {
+  if (needsOnboarding && (profile?.role === 'student' || profile?.role === 'teacher')) {
     return <OnboardingSurvey onComplete={() => setNeedsOnboarding(false)} />;
   }
   
   return <>{children}</>;
+};
+
+// SignOutButton component for navigation bar
+const SignOutButton = () => {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+  
+  return (
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      onClick={handleSignOut}
+      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+    >
+      <LogOut className="h-4 w-4" />
+      Sign Out
+    </Button>
+  );
 };
 
 // Component to handle feature-specific splash screens
@@ -181,11 +234,11 @@ const FeatureRouter = () => {
           icon: <MessageCircle size={48} />
         };
         break;
-      case 'rant':
+      case 'journal':
         splashInfo = {
-          name: "Express",
-          description: "Creating your expression space...",
-          icon: <MessageCircle size={48} />
+          name: "Journal",
+          description: "Opening your journal...",
+          icon: <BookText size={48} />
         };
         break;
       case 'mindfulness':
@@ -193,13 +246,6 @@ const FeatureRouter = () => {
           name: "Mindfulness",
           description: "Preparing your mindfulness session...",
           icon: <Sparkles size={48} />
-        };
-        break;
-      case 'journal':
-        splashInfo = {
-          name: "Journal",
-          description: "Opening your journal...",
-          icon: <MessageCircle size={48} />
         };
         break;
       case 'health':
@@ -239,6 +285,8 @@ const FeatureRouter = () => {
       <OnboardingCheck>
         {profile.role === 'student' ? (
           <StudentDashboard />
+        ) : profile.role === 'teacher' ? (
+          <TeacherDashboard />
         ) : (
           <Dashboard />
         )}
@@ -267,6 +315,43 @@ const FeatureRouter = () => {
           } 
         />
         <Route path="/auth" element={<Auth />} />
+        
+        {/* New feature routes */}
+        <Route 
+          path="/journal" 
+          element={
+            <ProtectedRoute>
+              <JournalPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/chat" 
+          element={
+            <ProtectedRoute>
+              <WellbeingChatPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/mindfulness" 
+          element={
+            <ProtectedRoute>
+              <MindfulnessPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/teacher-dashboard" 
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherDashboard />
+              </RoleRoute>
+            </ProtectedRoute>
+          } 
+        />
+        
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
