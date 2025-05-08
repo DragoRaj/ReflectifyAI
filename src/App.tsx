@@ -22,6 +22,8 @@ import OnboardingSurvey from "./components/OnboardingSurvey";
 import DevConsole from "./components/DevConsole";
 import { supabase } from "@/integrations/supabase/client";
 import { Role } from "@/types/school-types";
+import FunctionalAnalytics from "@/components/FunctionalAnalytics";
+import ThemeProvider from "@/components/ThemeProvider";
 
 const queryClient = new QueryClient();
 
@@ -227,17 +229,17 @@ const FeatureRouter = () => {
 
   // Determine which dashboard to show based on user role
   const DashboardRouter = () => {
+    const { profile, isLoading } = useAuth();
+    
+    if (isLoading) return <div className="flex justify-center items-center h-screen">Loading profile...</div>;
+    
     if (!profile) return <div className="flex justify-center items-center h-screen">Loading profile...</div>;
     
     return (
       <OnboardingCheck>
-        {profile.role === 'student' ? (
-          <StudentDashboard />
-        ) : profile.role === 'teacher' ? (
-          <TeacherDashboard />
-        ) : (
-          <Dashboard />
-        )}
+        {profile.role === 'student' && <StudentDashboard />}
+        {profile.role === 'teacher' && <TeacherDashboard />}
+        {profile.role === 'admin' && <Dashboard />}
       </OnboardingCheck>
     );
   };
@@ -305,6 +307,14 @@ const FeatureRouter = () => {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/analytics" 
+          element={
+            <ProtectedRoute>
+              <FunctionalAnalytics />
+            </ProtectedRoute>
+          } 
+        />
         
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -341,16 +351,18 @@ const App = () => {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        
-        {showSplash ? (
-          <SplashScreen onComplete={() => setShowSplash(false)} />
-        ) : (
-          <AuthenticatedApp />
-        )}
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          
+          {showSplash ? (
+            <SplashScreen onComplete={() => setShowSplash(false)} />
+          ) : (
+            <AuthenticatedApp />
+          )}
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

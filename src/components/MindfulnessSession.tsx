@@ -1,10 +1,16 @@
+
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, SkipForward, Moon, Sun, Clock, MessageCircle } from "lucide-react";
+import { Play, Pause, SkipForward, Moon, Sun, Clock, MessageCircle, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getAIAnalysis } from "@/utils/aiUtils";
+import { Slider } from "@/components/ui/slider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useTheme } from "@/components/ThemeProvider";
 
-type MeditationTheme = "calm" | "focus" | "sleep" | "gratitude";
+type MeditationTheme = "calm" | "focus" | "sleep" | "gratitude" | "custom";
 
 interface MeditationPreset {
   id: MeditationTheme;
@@ -53,6 +59,15 @@ const MEDITATION_PRESETS: MeditationPreset[] = [
     color: "from-teal-400 to-green-500",
     audioSrc: "https://cdn.pixabay.com/download/audio/2021/10/26/audio_fca7b3d63a.mp3?filename=meditation-soothing-music-for-yoga-and-self-affirmation-131543.mp3",
   },
+  {
+    id: "custom",
+    name: "Custom Meditation",
+    icon: <Settings className="h-5 w-5" />,
+    duration: 300, // 5 minutes default
+    description: "Personalized AI-powered meditation session",
+    color: "from-purple-400 to-pink-500",
+    audioSrc: "https://cdn.pixabay.com/download/audio/2021/10/26/audio_fca7b3d63a.mp3?filename=meditation-soothing-music-for-yoga-and-self-affirmation-131543.mp3",
+  }
 ];
 
 const prompts = {
@@ -84,6 +99,7 @@ const prompts = {
     "Appreciate your body and all it does for you, even the automatic processes that sustain your life.",
     "Reflect on the beauty that exists in your world – perhaps something in nature, art, or human connection.",
   ],
+  custom: [] // This will be populated by AI based on user input
 };
 
 const MindfulnessSession = () => {
@@ -92,7 +108,13 @@ const MindfulnessSession = () => {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [customDuration, setCustomDuration] = useState<number>(300); // Default 5 minutes
+  const [customPrompts, setCustomPrompts] = useState<string[]>([]);
+  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState<boolean>(false);
+  const [customIntention, setCustomIntention] = useState<string>("");
+  const [isGeneratingPrompts, setIsGeneratingPrompts] = useState<boolean>(false);
   
+  const { isDarkMode } = useTheme();
   const intervalRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -118,6 +140,11 @@ const MindfulnessSession = () => {
       audioRef.current.pause();
     }
     
+    if (preset.id === "custom") {
+      setIsCustomDialogOpen(true);
+      return;
+    }
+    
     audioRef.current = new Audio(preset.audioSrc);
     audioRef.current.loop = true;
     
@@ -127,6 +154,86 @@ const MindfulnessSession = () => {
     
     if (prompts[preset.id] && prompts[preset.id].length > 0) {
       setCurrentPrompt(prompts[preset.id][0]);
+    }
+  };
+
+  const generateCustomMeditation = async () => {
+    if (!customIntention.trim()) {
+      toast.error("Please enter your intention for this meditation");
+      return;
+    }
+
+    try {
+      setIsGeneratingPrompts(true);
+      
+      // Generate meditation prompts using AI
+      const aiPrompt = `Create 5 meditation prompts for a guided meditation with this intention: "${customIntention}". 
+        Each prompt should be 1-2 sentences that guide the meditator through their practice. 
+        Format as a simple array of strings, one for each moment in the meditation.`;
+      
+      const response = await getAIAnalysis(aiPrompt);
+      
+      try {
+        // Try to parse the response as JSON
+        let parsedPrompts: string[] = [];
+        // First try to extract JSON if it's wrapped in text
+        const jsonMatch = response.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          parsedPrompts = JSON.parse(jsonMatch[0]);
+        } else {
+          // If that fails, try to parse the whole response
+          parsedPrompts = JSON.parse(response);
+        }
+        
+        if (Array.isArray(parsedPrompts) && parsedPrompts.length > 0) {
+          setCustomPrompts(parsedPrompts);
+          prompts.custom = parsedPrompts;
+        } else {
+          throw new Error("Invalid format");
+        }
+      } catch (parseError) {
+        // If parsing fails, split by newlines and clean up
+        const fallbackPrompts = response
+          .split(/\d+\.|\n\n|\n/)
+          .map(line => line.trim())
+          .filter(line => line.length > 10 && line.length < 200)
+          .slice(0, 5);
+          
+        if (fallbackPrompts.length > 0) {
+          setCustomPrompts(fallbackPrompts);
+          prompts.custom = fallbackPrompts;
+        } else {
+          throw new Error("Could not parse meditation prompts");
+        }
+      }
+
+      // Create custom meditation preset
+      const customPreset = {
+        ...MEDITATION_PRESETS.find(p => p.id === "custom")!,
+        duration: customDuration,
+        name: `Custom: ${customIntention.slice(0, 20)}${customIntention.length > 20 ? '...' : ''}`,
+      };
+      
+      setSelectedPreset(customPreset);
+      setCurrentTime(0);
+      setFeedback(null);
+      setCurrentPrompt(prompts.custom[0] || "Begin your meditation with deep, mindful breaths.");
+      
+      // Create audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      audioRef.current = new Audio(customPreset.audioSrc);
+      audioRef.current.loop = true;
+      
+      setIsCustomDialogOpen(false);
+      toast.success("Your personalized meditation is ready");
+      
+    } catch (error) {
+      console.error("Failed to generate custom meditation:", error);
+      toast.error("Failed to create custom meditation. Please try again.");
+    } finally {
+      setIsGeneratingPrompts(false);
     }
   };
   
@@ -146,8 +253,13 @@ const MindfulnessSession = () => {
         const newTime = prevTime + 1;
         
         if (newTime % 60 === 0) {
-          const promptIndex = Math.floor(newTime / 60) % prompts[selectedPreset.id].length;
-          setCurrentPrompt(prompts[selectedPreset.id][promptIndex]);
+          let promptsToUse = prompts[selectedPreset.id];
+          if (!promptsToUse || promptsToUse.length === 0) {
+            promptsToUse = prompts.calm; // Fallback
+          }
+          
+          const promptIndex = Math.floor(newTime / 60) % promptsToUse.length;
+          setCurrentPrompt(promptsToUse[promptIndex]);
         }
         
         if (newTime >= selectedPreset.duration) {
@@ -189,8 +301,13 @@ const MindfulnessSession = () => {
         const newTime = prevTime + 1;
         
         if (newTime % 60 === 0) {
-          const promptIndex = Math.floor(newTime / 60) % prompts[selectedPreset.id].length;
-          setCurrentPrompt(prompts[selectedPreset.id][promptIndex]);
+          let promptsToUse = prompts[selectedPreset.id];
+          if (!promptsToUse || promptsToUse.length === 0) {
+            promptsToUse = prompts.calm; // Fallback
+          }
+          
+          const promptIndex = Math.floor(newTime / 60) % promptsToUse.length;
+          setCurrentPrompt(promptsToUse[promptIndex]);
         }
         
         if (newTime >= selectedPreset.duration) {
@@ -254,7 +371,12 @@ const MindfulnessSession = () => {
             <button
               key={preset.id}
               onClick={() => selectPreset(preset)}
-              className="glass-card rounded-xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border border-white/20 dark:border-gray-800/40 group"
+              className={`glass-card rounded-xl p-6 text-left transition-all duration-300 
+                hover:shadow-lg hover:scale-[1.02] border 
+                ${isDarkMode 
+                  ? 'border-gray-800/40 hover:border-gray-700' 
+                  : 'border-white/20 hover:border-white/40'
+                } group`}
             >
               <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${preset.color} flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300`}>
                 {preset.icon}
@@ -265,13 +387,21 @@ const MindfulnessSession = () => {
               
               <div className="flex items-center text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 mr-1" />
-                <span>{Math.floor(preset.duration / 60)} minutes</span>
+                {preset.id !== "custom" ? (
+                  <span>{Math.floor(preset.duration / 60)} minutes</span>
+                ) : (
+                  <span>Customizable duration</span>
+                )}
               </div>
             </button>
           ))}
         </div>
       ) : (
-        <div className="glass-card rounded-xl p-6 space-y-6 animate-scale-in border border-reflectify-purple/10 shadow-lg shadow-reflectify-purple/5">
+        <div className={`glass-card rounded-xl p-6 space-y-6 animate-scale-in border
+          ${isDarkMode 
+            ? 'border-violet-800/20 shadow-lg shadow-violet-900/10' 
+            : 'border-reflectify-purple/10 shadow-lg shadow-reflectify-purple/5'
+          }`}>
           {!feedback ? (
             <>
               <div className="flex items-center justify-between">
@@ -310,7 +440,7 @@ const MindfulnessSession = () => {
                 ></div>
               </div>
               
-              <div className="text-center animate-fade-in">
+              <div className="text-center animate-fade-in min-h-[60px] flex items-center justify-center">
                 <p className="italic text-foreground">{currentPrompt}</p>
               </div>
               
@@ -354,7 +484,11 @@ const MindfulnessSession = () => {
                 </p>
               </div>
               
-              <div className="p-5 rounded-lg bg-gradient-to-r from-reflectify-purple/5 to-reflectify-teal/5 border border-reflectify-purple/10">
+              <div className={`p-5 rounded-lg ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-violet-900/10 to-indigo-900/10 border border-violet-800/20' 
+                  : 'bg-gradient-to-r from-reflectify-purple/5 to-reflectify-teal/5 border border-reflectify-purple/10'
+              }`}>
                 <p className="text-foreground leading-relaxed">{feedback}</p>
               </div>
               
@@ -378,6 +512,58 @@ const MindfulnessSession = () => {
           )}
         </div>
       )}
+      
+      <Dialog open={isCustomDialogOpen} onOpenChange={setIsCustomDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create Custom Meditation</DialogTitle>
+            <DialogDescription>
+              Tell us your intention and we'll create a personalized meditation experience for you.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="intention">Meditation Intention</Label>
+              <Textarea
+                id="intention"
+                placeholder="Examples: Reduce anxiety before a presentation, Find clarity in a difficult decision, Release tension in my body..."
+                value={customIntention}
+                onChange={(e) => setCustomIntention(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label>Duration (minutes)</Label>
+                <span className="text-sm text-muted-foreground">{Math.floor(customDuration / 60)} minutes</span>
+              </div>
+              <Slider 
+                defaultValue={[customDuration / 60]} 
+                max={20} 
+                min={1} 
+                step={1}
+                onValueChange={(values) => setCustomDuration(values[0] * 60)}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCustomDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={generateCustomMeditation}
+              disabled={isGeneratingPrompts || !customIntention}
+              className="bg-gradient-to-r from-reflectify-blue to-reflectify-purple text-white"
+            >
+              {isGeneratingPrompts ? "Creating..." : "Create Meditation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

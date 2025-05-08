@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,6 +46,11 @@ export default function StudentDashboard() {
     "Stay hydrated throughout the day",
     "Try to get 8 hours of sleep tonight"
   ];
+
+  const navigateToAnalytics = () => {
+    // Create dedicated analytics path instead of using hash navigation
+    navigate("/analytics");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-indigo-50/30">
@@ -157,7 +163,7 @@ export default function StudentDashboard() {
               <Button 
                 variant="ghost" 
                 className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 -mr-2"
-                onClick={() => navigate("/#analytics")}
+                onClick={navigateToAnalytics}
               >
                 Full Report
                 <ArrowRight className="ml-2 h-4 w-4" />
