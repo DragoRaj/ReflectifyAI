@@ -21,8 +21,7 @@ import MindfulnessPage from "./components/MindfulnessPage";
 import OnboardingSurvey from "./components/OnboardingSurvey";
 import DevConsole from "./components/DevConsole";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Role } from "@/types/school-types";
 
 const queryClient = new QueryClient();
 
@@ -46,7 +45,7 @@ const RoleRoute = ({
   allowedRoles, 
   children 
 }: { 
-  allowedRoles: string[], 
+  allowedRoles: Role[], 
   children: React.ReactNode 
 }) => {
   const { profile, isLoading } = useAuth();
@@ -55,12 +54,8 @@ const RoleRoute = ({
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
   
-  // Special case for the hybrid account (teacher with student access)
-  if (profile?.email === "teketirajnish@gmail.com") {
-    return <>{children}</>;
-  }
-  
   if (!profile || !allowedRoles.includes(profile.role)) {
+    // If user doesn't have the correct role, redirect to their dashboard
     return <Navigate to="/" replace />;
   }
   
@@ -75,11 +70,10 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
   
   useEffect(() => {
     async function checkOnboardingStatus() {
-      if (!user) return;
+      if (!user || !profile) return;
       
       try {
-        // Only check for student onboarding
-        if (profile?.role === 'student') {
+        if (profile.role === 'student') {
           const { data, error } = await supabase
             .from("onboarding_surveys")
             .select("*")
@@ -90,40 +84,21 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
             console.error("Error checking onboarding:", error);
           }
             
-          if (!data) {
-            // No survey found, needs onboarding
-            setNeedsOnboarding(true);
-          } else {
-            // Survey exists, no onboarding needed
-            setNeedsOnboarding(false);
-          }
-        } else if (profile?.role === 'teacher') {
-          // Check for teacher onboarding - using the updated type-safe approach
-          try {
-            const { data, error } = await supabase
-              .from("teacher_surveys")
-              .select("*")
-              .eq("teacher_id", user.id)
-              .maybeSingle();
+          setNeedsOnboarding(!data);
+        } else if (profile.role === 'teacher') {
+          const { data, error } = await supabase
+            .from("teacher_surveys")
+            .select("*")
+            .eq("teacher_id", user.id)
+            .maybeSingle();
               
-            if (error) {
-              console.error("Error checking teacher onboarding:", error);
-            }
-              
-            if (!data) {
-              // No teacher survey found, needs onboarding
-              setNeedsOnboarding(true);
-            } else {
-              // Survey exists, no onboarding needed
-              setNeedsOnboarding(false);
-            }
-          } catch (e) {
-            console.error("Error in teacher onboarding check:", e);
-            // Default to not showing onboarding if there's an error
-            setNeedsOnboarding(false);
+          if (error) {
+            console.error("Error checking teacher onboarding:", error);
           }
+              
+          setNeedsOnboarding(!data);
         } else {
-          // Admin doesn't need onboarding survey
+          // Admin doesn't need onboarding
           setNeedsOnboarding(false);
         }
       } catch (error) {
@@ -144,7 +119,7 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
   
-  if (needsOnboarding && (profile?.role === 'student' || profile?.role === 'teacher')) {
+  if (needsOnboarding) {
     return <OnboardingSurvey onComplete={() => setNeedsOnboarding(false)} />;
   }
   
@@ -251,18 +226,8 @@ const FeatureRouter = () => {
   };
 
   // Determine which dashboard to show based on user role
-  const DashboardComponent = () => {
-    if (!profile) return null;
-    
-    // Special case for the hybrid account
-    if (profile.email === "teketirajnish@gmail.com") {
-      // For hybrid users (teacher with student access), default to student view
-      return (
-        <OnboardingCheck>
-          <StudentDashboard />
-        </OnboardingCheck>
-      );
-    }
+  const DashboardRouter = () => {
+    if (!profile) return <div className="flex justify-center items-center h-screen">Loading profile...</div>;
     
     return (
       <OnboardingCheck>
@@ -293,18 +258,20 @@ const FeatureRouter = () => {
           path="/" 
           element={
             <ProtectedRoute>
-              <DashboardComponent />
+              <DashboardRouter />
             </ProtectedRoute>
           } 
         />
         <Route path="/auth" element={<Auth />} />
         
-        {/* New feature routes */}
+        {/* Feature routes */}
         <Route 
           path="/journal" 
           element={
             <ProtectedRoute>
-              <JournalPage />
+              <RoleRoute allowedRoles={['student']}>
+                <JournalPage />
+              </RoleRoute>
             </ProtectedRoute>
           } 
         />
@@ -312,7 +279,9 @@ const FeatureRouter = () => {
           path="/chat" 
           element={
             <ProtectedRoute>
-              <WellbeingChatPage />
+              <RoleRoute allowedRoles={['student']}>
+                <WellbeingChatPage />
+              </RoleRoute>
             </ProtectedRoute>
           } 
         />
@@ -320,7 +289,9 @@ const FeatureRouter = () => {
           path="/mindfulness" 
           element={
             <ProtectedRoute>
-              <MindfulnessPage />
+              <RoleRoute allowedRoles={['student']}>
+                <MindfulnessPage />
+              </RoleRoute>
             </ProtectedRoute>
           } 
         />
@@ -335,11 +306,9 @@ const FeatureRouter = () => {
           } 
         />
         
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       
-      {/* Add the DevConsole component */}
       <DevConsole />
     </>
   );

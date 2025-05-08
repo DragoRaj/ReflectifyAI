@@ -1,20 +1,33 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
-import { CheckboxGroup, CheckboxItem } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { 
+  CheckCircle2, 
+  ChevronRight, 
+  ChevronLeft,
+  Loader2,
+  BookOpen,
+  School
+} from "lucide-react";
 import { toast } from "sonner";
-import { OnboardingSurvey as OnboardingSurveyType } from "@/types/school-types";
-import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Progress } from "@/components/ui/progress";
 
 interface OnboardingSurveyProps {
   onComplete: () => void;
@@ -22,677 +35,561 @@ interface OnboardingSurveyProps {
 
 export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) {
   const { user, profile, refreshProfile } = useAuth();
-  const [step, setStep] = useState(1);
-  const totalSteps = 6;
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Partial<OnboardingSurveyType>>({
-    grade_level: 9,
-    baseline_wellbeing_score: 5,
-    existing_conditions: "",
-    preferred_coping_mechanisms: [],
-    student_name: profile?.first_name || "",
-    gender: "",
-    class_section: "",
-    mood_today: 5,
-    sleep_hours: 7,
-    stress_level: 5,
-    social_support_level: 5,
-    physical_activity_level: "moderate",
-    screen_time_hours: 3,
-    age: undefined,
-    school_name: "",
-    diet_quality: "",
-    academic_pressure: undefined
-  });
+  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [progress, setProgress] = useState(25);
 
-  const handleChange = (name: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // Student survey fields
+  const [gradeLevel, setGradeLevel] = useState<number>(9);
+  const [baselineWellbeingScore, setBaselineWellbeingScore] = useState<number>(7);
+  const [existingConditions, setExistingConditions] = useState<string>("");
+  const [preferredCopingMechanisms, setPreferredCopingMechanisms] = useState<string[]>([]);
+  
+  // Teacher survey fields
+  const [schoolName, setSchoolName] = useState<string>("");
+  const [teacherGradeLevel, setTeacherGradeLevel] = useState<number>(9);
+  const [classSection, setClassSection] = useState<string>("");
+  const [observedStudentStress, setObservedStudentStress] = useState<number>(5);
+  const [classAtmosphere, setClassAtmosphere] = useState<string>("");
+  const [commonChallenges, setCommonChallenges] = useState<string[]>([]);
+  const [supportNeeded, setSupportNeeded] = useState<string>("");
+  const [interventions, setInterventions] = useState<string>("");
 
-  const handleNext = () => {
-    window.scrollTo(0, 0);
-    setStep((prev) => prev + 1);
-  };
+  const isStudent = profile?.role === 'student';
+  const isTeacher = profile?.role === 'teacher';
+  const totalSteps = isStudent ? 4 : 5;
 
-  const handleBack = () => {
-    window.scrollTo(0, 0);
-    setStep((prev) => Math.max(1, prev - 1));
-  };
+  useEffect(() => {
+    setProgress(Math.round((currentStep / totalSteps) * 100));
+  }, [currentStep, totalSteps]);
 
-  const handleSubmit = async () => {
-    try {
-      if (!user) {
-        toast.error("You must be logged in to complete the survey");
-        return;
-      }
-
-      setIsSubmitting(true);
-
-      // First, update the user's profile with name if provided
-      if (formData.student_name) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ first_name: formData.student_name })
-          .eq("id", user.id);
-          
-        if (profileError) throw profileError;
-      }
-
-      // Check if a survey already exists for this user
-      const { data: existingSurvey, error: checkError } = await supabase
-        .from("onboarding_surveys")
-        .select("id")
-        .eq("student_id", user.id)
-        .maybeSingle();
-      
-      if (checkError) throw checkError;
-      
-      let error;
-      
-      // Only store fields that are defined in the onboarding_surveys table
-      const surveyData = {
-        grade_level: formData.grade_level!,
-        baseline_wellbeing_score: formData.baseline_wellbeing_score!,
-        existing_conditions: formData.existing_conditions || null,
-        preferred_coping_mechanisms: formData.preferred_coping_mechanisms || [],
-        gender: formData.gender || null,
-        class_section: formData.class_section || null,
-        mood_today: formData.mood_today || 5,
-        sleep_hours: formData.sleep_hours || null,
-        stress_level: formData.stress_level || null,
-        social_support_level: formData.social_support_level || null,
-        physical_activity_level: formData.physical_activity_level || null,
-        screen_time_hours: formData.screen_time_hours || null,
-        completed: true
-      };
-      
-      if (existingSurvey) {
-        // Update existing survey
-        const { error: updateError } = await supabase
-          .from("onboarding_surveys")
-          .update(surveyData)
-          .eq("id", existingSurvey.id);
-          
-        error = updateError;
-      } else {
-        // Create new survey
-        const { error: insertError } = await supabase.from("onboarding_surveys").insert({
-          student_id: user.id,
-          ...surveyData
-        });
-        
-        error = insertError;
-      }
-
-      if (error) throw error;
-
-      // Also create/update wellbeing metric
-      const { error: metricError } = await supabase.from("wellbeing_metrics").upsert({
-        student_id: user.id,
-        wellbeing_score: formData.baseline_wellbeing_score,
-        sentiment_score: 0,
-        stress_level: formData.stress_level
-      }, { onConflict: 'student_id' });
-      
-      if (metricError) throw metricError;
-
-      // Refresh user profile to get any updates
-      await refreshProfile();
-
-      toast.success("Survey completed successfully");
-      onComplete();
-    } catch (error: any) {
-      console.error("Survey submission error:", error);
-      toast.error(error.message || "Error submitting survey");
-    } finally {
-      setIsSubmitting(false);
+  const handleNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+      window.scrollTo(0, 0);
     }
   };
 
-  const copingMechanisms = [
-    "Deep breathing",
-    "Physical exercise",
-    "Talking with friends",
-    "Journaling",
-    "Art and creativity",
-    "Music",
-    "Meditation",
-    "Time in nature",
-    "Reading",
-    "Mindfulness apps",
-    "Talking to a counselor",
-    "Sports",
-    "Cooking/baking",
-    "Playing with pets",
-    "Other activities"
-  ];
+  const handlePreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+      window.scrollTo(0, 0);
+    }
+  };
 
-  const fadeVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  const handleToggleCopingMechanism = (value: string) => {
+    setPreferredCopingMechanisms(prev => 
+      prev.includes(value) 
+        ? prev.filter(item => item !== value)
+        : [...prev, value]
+    );
+  };
+  
+  const handleToggleChallenge = (value: string) => {
+    setCommonChallenges(prev => 
+      prev.includes(value) 
+        ? prev.filter(item => item !== value)
+        : [...prev, value]
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      if (isStudent) {
+        // Submit student survey
+        const { error } = await supabase
+          .from('onboarding_surveys')
+          .insert({
+            student_id: user.id,
+            grade_level: gradeLevel,
+            baseline_wellbeing_score: baselineWellbeingScore,
+            existing_conditions: existingConditions || null,
+            preferred_coping_mechanisms: preferredCopingMechanisms,
+            completed: true
+          });
+          
+        if (error) throw error;
+      } else if (isTeacher) {
+        // Submit teacher survey
+        const { error } = await supabase
+          .from('teacher_surveys')
+          .insert({
+            teacher_id: user.id,
+            school_name: schoolName,
+            grade_level: teacherGradeLevel,
+            class_section: classSection,
+            observed_student_stress: observedStudentStress,
+            class_atmosphere: classAtmosphere,
+            common_challenges: commonChallenges,
+            support_resources_needed: supportNeeded,
+            intervention_suggestions: interventions || null
+          });
+          
+        if (error) throw error;
+      }
+      
+      // Refresh the profile to update any onboarding flags
+      await refreshProfile();
+      
+      toast.success(`${isStudent ? "Student" : "Teacher"} onboarding completed successfully!`);
+      onComplete();
+    } catch (error: any) {
+      console.error('Error submitting survey:', error);
+      toast.error(`Error saving your responses: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderStudentSurveyStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="grade-level">What grade are you in?</Label>
+              <div className="flex items-center gap-4">
+                <Input 
+                  type="number" 
+                  id="grade-level" 
+                  min={6} 
+                  max={12} 
+                  value={gradeLevel} 
+                  onChange={(e) => setGradeLevel(parseInt(e.target.value))} 
+                  className="w-24" 
+                />
+                <span className="text-sm text-slate-500">Grade {gradeLevel}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="wellbeing">How would you rate your overall wellbeing right now?</Label>
+              <div className="pt-2">
+                <Slider
+                  id="wellbeing"
+                  defaultValue={[baselineWellbeingScore]}
+                  max={10}
+                  step={1}
+                  onValueChange={(values) => setBaselineWellbeingScore(values[0])}
+                />
+                <div className="flex justify-between mt-2 text-sm text-slate-500">
+                  <span>1 - Struggling</span>
+                  <span>5 - Okay</span>
+                  <span>10 - Great</span>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                <Badge variant="outline" className="bg-slate-100 text-indigo-900">
+                  Your rating: {baselineWellbeingScore}/10
+                </Badge>
+              </div>
+            </div>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="conditions">
+                Do you have any existing conditions that might affect your wellbeing? (Optional)
+              </Label>
+              <Textarea
+                id="conditions"
+                placeholder="For example: anxiety, ADHD, etc."
+                value={existingConditions}
+                onChange={(e) => setExistingConditions(e.target.value)}
+                className="h-24"
+              />
+              <p className="text-xs text-slate-500">
+                This information is private and will only be used to personalize your experience.
+              </p>
+            </div>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label className="text-base">Which of these activities help you feel better when stressed?</Label>
+              <p className="text-sm text-slate-500 mb-4">
+                Select all that apply. This helps us recommend the most helpful activities for you.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                {[
+                  { value: 'meditation', label: 'Meditation/Mindfulness' },
+                  { value: 'exercise', label: 'Physical Exercise' },
+                  { value: 'music', label: 'Listening to Music' },
+                  { value: 'talking', label: 'Talking with Friends' },
+                  { value: 'journaling', label: 'Journaling' },
+                  { value: 'art', label: 'Art/Creative Expression' },
+                  { value: 'nature', label: 'Being in Nature' },
+                  { value: 'reading', label: 'Reading' }
+                ].map(item => (
+                  <div 
+                    key={item.value}
+                    className={`flex items-center space-x-2 rounded-md border p-3 cursor-pointer ${
+                      preferredCopingMechanisms.includes(item.value) 
+                        ? 'bg-indigo-50 border-indigo-300' 
+                        : 'hover:bg-slate-50'
+                    }`}
+                    onClick={() => handleToggleCopingMechanism(item.value)}
+                  >
+                    <Checkbox 
+                      id={item.value}
+                      checked={preferredCopingMechanisms.includes(item.value)} 
+                      onCheckedChange={() => handleToggleCopingMechanism(item.value)}
+                    />
+                    <label
+                      htmlFor={item.value}
+                      className="w-full cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {item.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-6 text-center">
+            <div className="flex flex-col items-center justify-center py-4">
+              <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-medium">You're all set!</h3>
+              <p className="text-slate-600 mt-2 max-w-md">
+                Thank you for completing your onboarding. Your responses will help us personalize your wellbeing journey.
+              </p>
+            </div>
+            
+            <div className="bg-slate-50 rounded-lg p-6 text-left">
+              <h4 className="font-medium mb-2">What happens next?</h4>
+              <ul className="space-y-2 text-sm text-slate-600">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <span>Access your personalized dashboard</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <span>Use the wellbeing tools like the journal and mindfulness activities</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <span>Get recommendations based on your preferences</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <span>Track your progress over time</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderTeacherSurveyStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="school-name">School Name</Label>
+              <Input 
+                id="school-name"
+                placeholder="Enter your school name"
+                value={schoolName}
+                onChange={(e) => setSchoolName(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="teacher-grade-level">Grade Level You Teach</Label>
+                <Input 
+                  type="number" 
+                  id="teacher-grade-level" 
+                  min={6} 
+                  max={12} 
+                  value={teacherGradeLevel} 
+                  onChange={(e) => setTeacherGradeLevel(parseInt(e.target.value))} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="class-section">Class/Section</Label>
+                <Input 
+                  id="class-section"
+                  placeholder="e.g. 9A, Science"
+                  value={classSection}
+                  onChange={(e) => setClassSection(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label>How would you rate the overall stress level of students in your class?</Label>
+              <div className="pt-2">
+                <Slider
+                  defaultValue={[observedStudentStress]}
+                  max={10}
+                  step={1}
+                  onValueChange={(values) => setObservedStudentStress(values[0])}
+                />
+                <div className="flex justify-between mt-2 text-sm text-slate-500">
+                  <span>1 - Low Stress</span>
+                  <span>5 - Moderate</span>
+                  <span>10 - High Stress</span>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                <Badge variant="outline" className="bg-slate-100 text-indigo-900">
+                  Your rating: {observedStudentStress}/10
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="class-atmosphere">How would you describe the general atmosphere in your classroom?</Label>
+              <RadioGroup 
+                id="class-atmosphere" 
+                value={classAtmosphere} 
+                onValueChange={setClassAtmosphere}
+                className="flex flex-col space-y-1 mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="positive" id="positive" />
+                  <Label htmlFor="positive">Positive and energetic</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="focused" id="focused" />
+                  <Label htmlFor="focused">Focused and productive</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="mixed" id="mixed" />
+                  <Label htmlFor="mixed">Mixed, depends on the day</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="tense" id="tense" />
+                  <Label htmlFor="tense">Sometimes tense or anxious</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="struggling" id="struggling" />
+                  <Label htmlFor="struggling">Students are struggling</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label className="text-base">What are the most common wellbeing challenges you observe in your students?</Label>
+              <p className="text-sm text-slate-500 mb-4">
+                Select all that apply. This helps us provide relevant resources.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                {[
+                  { value: 'test_anxiety', label: 'Test/Exam Anxiety' },
+                  { value: 'social_issues', label: 'Social/Friendship Issues' },
+                  { value: 'fatigue', label: 'Fatigue/Low Energy' },
+                  { value: 'lack_focus', label: 'Difficulty Focusing' },
+                  { value: 'low_motivation', label: 'Low Motivation' },
+                  { value: 'perfectionism', label: 'Perfectionism' },
+                  { value: 'home_stress', label: 'Home/Family Stress' },
+                  { value: 'behavioral', label: 'Behavioral Concerns' },
+                  { value: 'emotional', label: 'Emotional Regulation' },
+                  { value: 'academic', label: 'Academic Pressure' }
+                ].map(item => (
+                  <div 
+                    key={item.value}
+                    className={`flex items-center space-x-2 rounded-md border p-3 cursor-pointer ${
+                      commonChallenges.includes(item.value) 
+                        ? 'bg-indigo-50 border-indigo-300' 
+                        : 'hover:bg-slate-50'
+                    }`}
+                    onClick={() => handleToggleChallenge(item.value)}
+                  >
+                    <Checkbox 
+                      id={`challenge-${item.value}`}
+                      checked={commonChallenges.includes(item.value)} 
+                      onCheckedChange={() => handleToggleChallenge(item.value)}
+                    />
+                    <label
+                      htmlFor={`challenge-${item.value}`}
+                      className="w-full cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {item.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="support-needed">
+                What resources or support would help you better address student wellbeing in your classroom?
+              </Label>
+              <Textarea
+                id="support-needed"
+                placeholder="For example: training materials, classroom activities, etc."
+                value={supportNeeded}
+                onChange={(e) => setSupportNeeded(e.target.value)}
+                className="h-24"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="interventions">
+                Do you have any specific intervention ideas that would help your students? (Optional)
+              </Label>
+              <Textarea
+                id="interventions"
+                placeholder="Share any ideas you have for interventions or activities..."
+                value={interventions}
+                onChange={(e) => setInterventions(e.target.value)}
+                className="h-24"
+              />
+            </div>
+          </div>
+        );
+      case 5:
+        return (
+          <div className="space-y-6 text-center">
+            <div className="flex flex-col items-center justify-center py-4">
+              <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-medium">Thank you!</h3>
+              <p className="text-slate-600 mt-2 max-w-md">
+                You're all set! Your responses will help us provide the most relevant resources and insights for your classroom.
+              </p>
+            </div>
+            
+            <div className="bg-slate-50 rounded-lg p-6 text-left">
+              <h4 className="font-medium mb-2">What happens next?</h4>
+              <ul className="space-y-2 text-sm text-slate-600">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <span>Access your teacher dashboard with wellbeing analytics</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <span>Monitor class-level wellbeing trends and insights</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <span>Get recommendations for classroom wellbeing activities</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5" />
+                  <span>Identify students who may need additional support</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 min-h-screen flex items-center justify-center">
-      <motion.div 
-        initial="hidden"
-        animate="visible"
-        variants={fadeVariants}
-        className="w-full"
-      >
-        <Card className="shadow-xl border-indigo-100 overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
-            <CardTitle className="text-2xl font-bold">Welcome to Reflectify</CardTitle>
-            <div className="flex flex-col gap-2">
-              <p className="text-indigo-100">
-                Help us personalize your experience - Step {step} of {totalSteps}
-              </p>
-              <Progress 
-                value={(step / totalSteps) * 100} 
-                className="h-2 bg-indigo-200/30"
-              />
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-blue-50 p-4 flex items-center justify-center">
+      <Card className="w-full max-w-2xl shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-indigo-100 flex items-center justify-center">
+            {isStudent ? (
+              <BookOpen className="h-8 w-8 text-indigo-600" />
+            ) : (
+              <School className="h-8 w-8 text-indigo-600" />
+            )}
+          </div>
+          <CardTitle className="text-2xl">
+            {isStudent ? "Student Onboarding" : "Teacher Onboarding"}
+          </CardTitle>
+          <CardDescription>
+            {isStudent 
+              ? "Help us personalize your wellbeing experience" 
+              : "Help us understand your classroom needs"
+            }
+          </CardDescription>
+          
+          <div className="w-full mt-4">
+            <Progress value={progress} className="h-2" />
+            <div className="flex justify-between mt-1 text-xs text-slate-500">
+              <span>Step {currentStep} of {totalSteps}</span>
+              <span>{progress}% Complete</span>
             </div>
-          </CardHeader>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="pt-6">
+          {isStudent ? renderStudentSurveyStep() : renderTeacherSurveyStep()}
+        </CardContent>
+        
+        <CardFooter className="flex justify-between border-t pt-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlePreviousStep}
+            disabled={currentStep === 1}
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
           
-          <CardContent className="p-6">
-            {step === 1 && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">About You</h2>
-                  <p className="text-slate-600 mb-6">
-                    Let's start with some basic information about you.
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="student_name">Your Full Name</Label>
-                    <Input
-                      id="student_name"
-                      value={formData.student_name || ""}
-                      onChange={(e) => handleChange("student_name", e.target.value)}
-                      placeholder="Enter your full name"
-                      className="border-indigo-200 focus:border-indigo-400"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="age">Your Age</Label>
-                    <RadioGroup 
-                      id="age"
-                      value={formData.age?.toString() || ""}
-                      onValueChange={(value) => handleChange("age", parseInt(value))}
-                      className="grid grid-cols-4 gap-2"
-                    >
-                      {[10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((age) => (
-                        <div key={age} className="flex items-center space-x-2">
-                          <RadioGroupItem value={age.toString()} id={`age-${age}`} />
-                          <Label htmlFor={`age-${age}`}>{age} years</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender</Label>
-                    <RadioGroup 
-                      id="gender"
-                      value={formData.gender || ""}
-                      onValueChange={(value) => handleChange("gender", value)}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="male" id="gender-male" />
-                        <Label htmlFor="gender-male">Male</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="female" id="gender-female" />
-                        <Label htmlFor="gender-female">Female</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="other" id="gender-other" />
-                        <Label htmlFor="gender-other">Other</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="prefer_not_to_say" id="gender-prefer" />
-                        <Label htmlFor="gender-prefer">Prefer not to say</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 2 && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">School Information</h2>
-                  <p className="text-slate-600 mb-6">
-                    Tell us about your grade and class.
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="grade_level">What grade are you in?</Label>
-                    <RadioGroup 
-                      id="grade_level"
-                      value={formData.grade_level?.toString() || ""}
-                      onValueChange={(value) => handleChange("grade_level", parseInt(value))}
-                      className="grid grid-cols-2 md:grid-cols-4 gap-2"
-                    >
-                      {[6, 7, 8, 9, 10, 11, 12].map((grade) => (
-                        <div key={grade} className="flex items-center space-x-2">
-                          <RadioGroupItem value={grade.toString()} id={`grade-${grade}`} />
-                          <Label htmlFor={`grade-${grade}`}>Grade {grade}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="class_section">Class Section</Label>
-                    <Input
-                      id="class_section"
-                      value={formData.class_section || ""}
-                      onChange={(e) => handleChange("class_section", e.target.value)}
-                      placeholder="e.g. A, B, Science, etc."
-                      className="border-indigo-200 focus:border-indigo-400"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="school_name">School Name</Label>
-                    <Input
-                      id="school_name"
-                      value={formData.school_name || ""}
-                      onChange={(e) => handleChange("school_name", e.target.value)}
-                      placeholder="Enter your school name"
-                      className="border-indigo-200 focus:border-indigo-400"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">Your Wellbeing</h2>
-                  <p className="text-slate-600 mb-6">
-                    How would you rate your overall wellbeing?
-                  </p>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <Label>
-                      On a scale from 1-10, how would you rate your overall wellbeing?
-                    </Label>
-                    
-                    <Slider
-                      id="wellbeing"
-                      min={1}
-                      max={10}
-                      step={1}
-                      value={[formData.baseline_wellbeing_score || 5]}
-                      onValueChange={(values) => handleChange("baseline_wellbeing_score", values[0])}
-                      className="py-4"
-                    />
-                    
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>1 - Not so great</span>
-                      <span>5 - Okay</span>
-                      <span>10 - Excellent</span>
-                    </div>
-                    
-                    <div className="text-center font-semibold text-xl mt-4 text-indigo-600">
-                      {formData.baseline_wellbeing_score || 5}
-                    </div>
-                  </div>
-                
-                  <div className="space-y-4">
-                    <Label>
-                      How would you describe your mood today?
-                    </Label>
-                    
-                    <Slider
-                      id="mood_today"
-                      min={1}
-                      max={10}
-                      step={1}
-                      value={[formData.mood_today || 5]}
-                      onValueChange={(values) => handleChange("mood_today", values[0])}
-                      className="py-4"
-                    />
-                    
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>1 - Very Low</span>
-                      <span>10 - Very High</span>
-                    </div>
-                    
-                    <div className="text-center font-semibold text-xl mt-4 text-indigo-600">
-                      {formData.mood_today || 5}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 4 && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">Lifestyle Information</h2>
-                  <p className="text-slate-600 mb-6">
-                    These questions help us understand your daily habits.
-                  </p>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <Label htmlFor="sleep_hours">
-                      How many hours do you typically sleep each night?
-                    </Label>
-                    <RadioGroup 
-                      id="sleep_hours"
-                      value={formData.sleep_hours?.toString() || ""}
-                      onValueChange={(value) => handleChange("sleep_hours", parseInt(value))}
-                      className="grid grid-cols-2 md:grid-cols-4 gap-2"
-                    >
-                      {[5, 6, 7, 8, 9, 10].map((hours) => (
-                        <div key={hours} className="flex items-center space-x-2">
-                          <RadioGroupItem value={hours.toString()} id={`sleep-${hours}`} />
-                          <Label htmlFor={`sleep-${hours}`}>{hours} hours</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <Label htmlFor="physical_activity">
-                      How would you describe your physical activity level?
-                    </Label>
-                    <RadioGroup 
-                      id="physical_activity"
-                      value={formData.physical_activity_level || ""}
-                      onValueChange={(value) => handleChange("physical_activity_level", value)}
-                      className="grid grid-cols-1 gap-2"
-                    >
-                      {["sedentary", "light", "moderate", "active", "very active"].map((level) => (
-                        <div key={level} className="flex items-center space-x-2">
-                          <RadioGroupItem value={level} id={`activity-${level}`} />
-                          <Label htmlFor={`activity-${level}`}>
-                            {level === "sedentary" ? "Sedentary (very little exercise)" : 
-                             level === "light" ? "Light (light exercise 1-2 days/week)" :
-                             level === "moderate" ? "Moderate (moderate exercise 2-3 days/week)" :
-                             level === "active" ? "Active (intense exercise 3-5 days/week)" :
-                             "Very Active (intense exercise 6-7 days/week)"}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <Label htmlFor="diet_quality">
-                      How would you rate the quality of your diet?
-                    </Label>
-                    <RadioGroup 
-                      id="diet_quality"
-                      value={formData.diet_quality || ""}
-                      onValueChange={(value) => handleChange("diet_quality", value)}
-                      className="grid grid-cols-1 gap-2"
-                    >
-                      {["poor", "fair", "good", "very_good", "excellent"].map((level) => (
-                        <div key={level} className="flex items-center space-x-2">
-                          <RadioGroupItem value={level} id={`diet-${level}`} />
-                          <Label htmlFor={`diet-${level}`}>
-                            {level === "poor" ? "Poor (mostly processed foods, irregular meals)" : 
-                             level === "fair" ? "Fair (some healthy foods, somewhat balanced)" :
-                             level === "good" ? "Good (mostly balanced, regular meals)" :
-                             level === "very_good" ? "Very Good (well-balanced, nutritious)" :
-                             "Excellent (optimal nutrition, very well balanced)"}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <Label htmlFor="screen_time">
-                      How many hours do you spend on screens daily (outside of school work)?
-                    </Label>
-                    <RadioGroup 
-                      id="screen_time"
-                      value={formData.screen_time_hours?.toString() || ""}
-                      onValueChange={(value) => handleChange("screen_time_hours", parseInt(value))}
-                      className="grid grid-cols-2 md:grid-cols-3 gap-2"
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
-                        <div key={hours} className="flex items-center space-x-2">
-                          <RadioGroupItem value={hours.toString()} id={`screen-${hours}`} />
-                          <Label htmlFor={`screen-${hours}`}>
-                            {hours < 8 ? `${hours} hours` : "8+ hours"}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 5 && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">Mental Health and Support</h2>
-                  <p className="text-slate-600 mb-6">
-                    This helps us understand your support systems and challenges.
-                  </p>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <Label>
-                      On a scale from 1-10, what is your current stress level?
-                    </Label>
-                    
-                    <Slider
-                      id="stress_level"
-                      min={1}
-                      max={10}
-                      step={1}
-                      value={[formData.stress_level || 5]}
-                      onValueChange={(values) => handleChange("stress_level", values[0])}
-                      className="py-4"
-                    />
-                    
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>1 - Very Low Stress</span>
-                      <span>10 - Very High Stress</span>
-                    </div>
-                    
-                    <div className="text-center font-semibold text-xl mt-4 text-indigo-600">
-                      {formData.stress_level || 5}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <Label>
-                      How strong is your social support network?
-                    </Label>
-                    
-                    <Slider
-                      id="social_support"
-                      min={1}
-                      max={10}
-                      step={1}
-                      value={[formData.social_support_level || 5]}
-                      onValueChange={(values) => handleChange("social_support_level", values[0])}
-                      className="py-4"
-                    />
-                    
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>1 - Limited Support</span>
-                      <span>10 - Strong Support</span>
-                    </div>
-                    
-                    <div className="text-center font-semibold text-xl mt-4 text-indigo-600">
-                      {formData.social_support_level || 5}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="academic_pressure">
-                      How would you rate your current level of academic pressure?
-                    </Label>
-                    <RadioGroup 
-                      id="academic_pressure"
-                      value={formData.academic_pressure?.toString() || ""}
-                      onValueChange={(value) => handleChange("academic_pressure", parseInt(value))}
-                      className="grid grid-cols-5 gap-2"
-                    >
-                      {[1, 2, 3, 4, 5].map((level) => (
-                        <div key={level} className="flex items-center space-x-2">
-                          <RadioGroupItem value={level.toString()} id={`academic-${level}`} />
-                          <Label htmlFor={`academic-${level}`}>
-                            {level === 1 ? "Very Low" : 
-                             level === 2 ? "Low" :
-                             level === 3 ? "Moderate" :
-                             level === 4 ? "High" :
-                             "Very High"}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="existing_conditions">
-                      Do you have any conditions that might affect your wellbeing at school?
-                    </Label>
-                    <Textarea
-                      id="existing_conditions"
-                      placeholder="For example: anxiety, ADHD, depression, etc."
-                      value={formData.existing_conditions || ""}
-                      onChange={(e) => handleChange("existing_conditions", e.target.value)}
-                      className="min-h-[100px] border-indigo-200 focus:border-indigo-400"
-                    />
-                    <p className="text-xs text-slate-500">This information is kept confidential and helps us support you better.</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 6 && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">Your Coping Strategies</h2>
-                  <p className="text-slate-600 mb-6">
-                    What activities help you feel better when you're stressed or upset?
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <CheckboxGroup 
-                    value={formData.preferred_coping_mechanisms || []}
-                    onValueChange={(value) => handleChange("preferred_coping_mechanisms", value)}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-2"
-                  >
-                    {copingMechanisms.map((mechanism) => (
-                      <div key={mechanism} className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-50 transition-colors duration-300">
-                        <CheckboxItem value={mechanism} id={`mechanism-${mechanism}`} />
-                        <Label htmlFor={`mechanism-${mechanism}`} className="cursor-pointer w-full">
-                          {mechanism}
-                        </Label>
-                      </div>
-                    ))}
-                  </CheckboxGroup>
-                  
-                  <div className="bg-blue-50 p-4 rounded-md mt-4 border border-blue-100 transition-all duration-300 transform hover:scale-[1.01]">
-                    <p className="text-sm text-blue-800">
-                      Thank you for completing this survey! Your responses will help us personalize your Reflectify experience.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </CardContent>
-          
-          <CardFooter className="px-6 py-4 bg-slate-50 flex justify-between">
-            {step > 1 ? (
-              <Button 
-                variant="outline" 
-                onClick={handleBack}
-                className="border-indigo-300 hover:bg-indigo-50 transition-all duration-300"
-                disabled={isSubmitting}
-              >
-                Back
-              </Button>
-            ) : (
-              <div></div>
-            )}
-            
-            {step < totalSteps ? (
-              <Button 
-                onClick={handleNext}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 transform hover:scale-[1.02]"
-                disabled={isSubmitting}
-              >
-                Continue
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleSubmit}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300 transform hover:scale-[1.02]"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  "Complete Survey"
-                )}
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
-      </motion.div>
+          {currentStep < totalSteps ? (
+            <Button 
+              type="button" 
+              onClick={handleNextStep}
+              disabled={
+                (isTeacher && currentStep === 1 && (!schoolName || !classSection)) ||
+                (isTeacher && currentStep === 2 && !classAtmosphere) ||
+                (isTeacher && currentStep === 3 && commonChallenges.length === 0) ||
+                (isTeacher && currentStep === 4 && !supportNeeded)
+              }
+            >
+              Next
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button 
+              type="button" 
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Complete"
+              )}
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   );
 }

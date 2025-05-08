@@ -12,7 +12,7 @@ interface AuthContextType {
   profile: Profile | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role?: Role) => Promise<void>;
+  signUp: (email: string, password: string, firstName: string, lastName: string, role: Role) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   refreshProfile: () => Promise<void | null>;
@@ -80,7 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) throw error;
       toast.success("Signed in successfully");
-      navigate("/");
     } catch (error: any) {
       toast.error(error.message || "Error signing in");
       throw error;
@@ -89,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function signUp(email: string, password: string, role: Role = 'student') {
+  async function signUp(email: string, password: string, firstName: string, lastName: string, role: Role) {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signUp({
@@ -97,6 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         options: {
           data: {
+            first_name: firstName,
+            last_name: lastName,
             role,
           }
         }

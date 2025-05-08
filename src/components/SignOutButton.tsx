@@ -15,10 +15,10 @@ export function SignOutButton() {
   
   return (
     <Button 
-      variant="ghost" 
+      variant="outline" 
       size="sm" 
       onClick={handleSignOut}
-      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+      className="flex items-center gap-1 text-red-600 hover:text-red-800 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all"
     >
       <LogOut className="h-4 w-4" />
       Sign Out

@@ -6,17 +6,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Loader2, Mail, Lock, LogIn } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { AlertCircle, Loader2, Mail, Lock, LogIn, UserRound } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Role } from "@/types/school-types";
 
 export default function Auth() {
   const { user, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState<Role>("student");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -53,9 +58,21 @@ export default function Auth() {
     setIsSubmitting(true);
     
     try {
+      // Validate form
+      if (!firstName.trim() || !lastName.trim()) {
+        throw new Error("First name and last name are required");
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role: role,
+          },
+        }
       });
       
       if (error) throw error;
@@ -74,6 +91,12 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        }
       });
       
       if (error) throw error;
@@ -102,15 +125,15 @@ export default function Auth() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl">Welcome</CardTitle>
-              <CardDescription>
+          <Card className="shadow-lg border-indigo-100">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl text-center">Welcome</CardTitle>
+              <CardDescription className="text-center">
                 Sign in to access your Reflectify account or create a new one.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="signin">
+              <Tabs defaultValue="signin" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="signin">Sign In</TabsTrigger>
                   <TabsTrigger value="signup">Create Account</TabsTrigger>
@@ -155,6 +178,9 @@ export default function Auth() {
                             required
                             disabled={isSubmitting}
                           />
+                        </div>
+                        <div className="text-right">
+                          <a href="#" className="text-xs text-indigo-600 hover:underline">Forgot password?</a>
                         </div>
                       </div>
                       <Button 
@@ -219,6 +245,34 @@ export default function Auth() {
                 <TabsContent value="signup">
                   <form onSubmit={handleSignUp}>
                     <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="first-name">First Name</Label>
+                          <div className="relative">
+                            <UserRound className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Input
+                              id="first-name"
+                              placeholder="John"
+                              className="pl-10"
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              required
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="last-name">Last Name</Label>
+                          <Input
+                            id="last-name"
+                            placeholder="Doe"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            required
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="signup-email">School Email</Label>
                         <div className="relative">
@@ -252,6 +306,28 @@ export default function Auth() {
                         <p className="text-xs text-slate-500">
                           Password must be at least 6 characters
                         </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>I am a:</Label>
+                        <RadioGroup 
+                          defaultValue="student" 
+                          className="grid grid-cols-3 gap-2"
+                          value={role}
+                          onValueChange={(value) => setRole(value as Role)}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="student" id="student" />
+                            <Label htmlFor="student">Student</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="teacher" id="teacher" />
+                            <Label htmlFor="teacher">Teacher</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="admin" id="admin" />
+                            <Label htmlFor="admin">Admin</Label>
+                          </div>
+                        </RadioGroup>
                       </div>
                       <Button 
                         type="submit" 
