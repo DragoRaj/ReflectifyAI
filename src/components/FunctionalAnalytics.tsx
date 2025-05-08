@@ -1,784 +1,636 @@
-import React, { useState, useEffect } from 'react';
-import { format, differenceInDays, formatDistanceToNow } from 'date-fns';
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  BarChart, 
+  Bar, 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar
-} from 'recharts';
-import { Shield, MessageCircle, BookText, Sparkles, Calendar, Smile, Frown, Meh, ArrowRight, Trophy, BarChart2 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from 'sonner';
+  Cell
+} from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  BarChart2, 
+  Calendar, 
+  ChevronDown,
+  FileSpreadsheet, 
+  LineChart as LineChartIcon, 
+  Lightbulb, 
+  Download,
+  PieChart as PieChartIcon 
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { analyzeMoodTrends, getAIWellbeingInsights } from "@/utils/aiUtils";
 
-// User model for this component
-interface UserStats {
-  startDate: string | null;
-  daysActive: number;
-  moodEntries: { date: string; mood: string; value: number }[];
-  journalEntries: number;
-  mindfulnessMinutes: number;
-  chatInteractions: number;
-  expressInteractions: number;
-  healthChecks: number;
-  contentAnalysis: number;
-  milestones: {
-    reached: string[];
-    upcoming: string[];
-  }
-}
-
-interface WellbeingScore {
-  emotional: number;
-  physical: number;
-  social: number;
-  intellectual: number;
-  spiritual: number;
-  environmental: number;
-}
-
-const EmptyStatePlaceholder = ({ message, icon: Icon }: { message: string, icon: React.ElementType }) => (
-  <div className="flex flex-col items-center justify-center h-60 p-8 text-center animate-fadeIn">
-    <div className="mb-4 p-4 rounded-full bg-secondary/50 text-muted-foreground">
-      <Icon className="h-10 w-10" />
-    </div>
-    <p className="text-muted-foreground max-w-xs">{message}</p>
-  </div>
-);
-
-const FunctionalAnalytics = () => {
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [wellbeingScores, setWellbeingScores] = useState<WellbeingScore>({
-    emotional: 0,
-    physical: 0,
-    social: 0,
-    intellectual: 0,
-    spiritual: 0,
-    environmental: 0
-  });
+export default function FunctionalAnalytics() {
+  const { user, profile } = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [moodData, setMoodData] = useState([]);
+  const [usageData, setUsageData] = useState([]);
+  const [insights, setInsights] = useState(null);
+  const [moodInsights, setMoodInsights] = useState(null);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const [timeframe, setTimeframe] = useState("week");
 
   useEffect(() => {
-    // Simulate loading from a database
-    setLoading(true);
-    
-    // Retrieve real user data from localStorage
-    const loadUserStats = () => {
-      // Get app start date from localStorage
-      const startDateStr = localStorage.getItem('appStartDate');
-      const startDate = startDateStr ? new Date(startDateStr) : new Date();
-      
-      if (!startDateStr) {
-        // First time use - set start date
-        localStorage.setItem('appStartDate', new Date().toISOString());
-      }
-      
-      // Get mood entries from localStorage
-      const moodEntriesStr = localStorage.getItem('moodEntries');
-      const moodEntries = moodEntriesStr ? JSON.parse(moodEntriesStr) : [];
-      
-      // Calculate days active
-      const daysActive = differenceInDays(new Date(), startDate) + 1;
-      
-      // Get journal entries count - using both generic count and actual entries
-      const journalCount = parseInt(localStorage.getItem('journalEntryCount') || '0');
-      const journalEntriesStr = localStorage.getItem('journalEntries');
-      const journalEntriesCount = journalEntriesStr ? JSON.parse(journalEntriesStr).length : 0;
-      const actualJournalCount = Math.max(journalCount, journalEntriesCount);
-      
-      // Get mindfulness minutes
-      const mindfulnessMinutes = parseInt(localStorage.getItem('mindfulnessMinutes') || '0');
-      const mindfulnessVisitCount = parseInt(localStorage.getItem('mindfulnessVisitCount') || '0');
-      const calculatedMindfulnessMinutes = Math.max(mindfulnessMinutes, mindfulnessVisitCount * 5); // Estimate 5 min per visit
-      
-      // Get chat interactions
-      const chatInteractions = parseInt(localStorage.getItem('chatInteractionCount') || '0');
-      const chatVisitCount = parseInt(localStorage.getItem('chatVisitCount') || '0');
-      const actualChatInteractions = Math.max(chatInteractions, chatVisitCount);
-      
-      // Get express interactions
-      const expressInteractions = parseInt(localStorage.getItem('expressInteractionCount') || '0');
-      const rantVisitCount = parseInt(localStorage.getItem('rantVisitCount') || '0');
-      const actualExpressInteractions = Math.max(expressInteractions, rantVisitCount);
-      
-      // Get health checks
-      const healthChecks = parseInt(localStorage.getItem('healthCheckCount') || '0');
-      const healthVisitCount = parseInt(localStorage.getItem('healthVisitCount') || '0');
-      const actualHealthChecks = Math.max(healthChecks, healthVisitCount);
-      
-      // Get content analysis count
-      const contentAnalysis = parseInt(localStorage.getItem('contentAnalysisCount') || '0');
-      const contentVisitCount = parseInt(localStorage.getItem('contentVisitCount') || '0');
-      const actualContentAnalysis = Math.max(contentAnalysis, contentVisitCount);
-      
-      // Calculate milestones
-      const milestones = calculateMilestones({
-        daysActive,
-        journalEntries: actualJournalCount,
-        mindfulnessMinutes: calculatedMindfulnessMinutes,
-        chatInteractions: actualChatInteractions,
-        expressInteractions: actualExpressInteractions,
-        healthChecks: actualHealthChecks,
-        contentAnalysis: actualContentAnalysis
-      });
-
-      return {
-        startDate: startDateStr,
-        daysActive,
-        moodEntries,
-        journalEntries: actualJournalCount,
-        mindfulnessMinutes: calculatedMindfulnessMinutes,
-        chatInteractions: actualChatInteractions,
-        expressInteractions: actualExpressInteractions,
-        healthChecks: actualHealthChecks,
-        contentAnalysis: actualContentAnalysis,
-        milestones
-      };
-    };
-
-    // Calculate wellbeing scores based on user activities
-    const calculateWellbeingScores = (data: UserStats): WellbeingScore => {
-      const scores: WellbeingScore = {
-        emotional: 0,
-        physical: 0,
-        social: 0,
-        intellectual: 0,
-        spiritual: 0,
-        environmental: 0
-      };
-
-      if (!data) return scores;
-
-      // Calculate emotional wellbeing based on mood entries, journal entries, express interactions
-      const moodValues = data.moodEntries.map(entry => entry.value);
-      const avgMood = moodValues.length > 0 ? moodValues.reduce((sum, val) => sum + val, 0) / moodValues.length : 0;
-      scores.emotional = Math.min(100, Math.round((avgMood / 5 * 40) + (data.journalEntries * 5) + (data.expressInteractions * 5)));
-      
-      // Calculate physical wellbeing based on health checks and mindfulness practice
-      scores.physical = Math.min(100, Math.round((data.healthChecks * 15) + (data.mindfulnessMinutes / 2)));
-      
-      // Calculate social wellbeing based on chat interactions
-      scores.social = Math.min(100, Math.round(data.chatInteractions * 10));
-      
-      // Calculate intellectual wellbeing based on content analysis and journal entries
-      scores.intellectual = Math.min(100, Math.round((data.contentAnalysis * 15) + (data.journalEntries * 5)));
-      
-      // Calculate spiritual wellbeing based on mindfulness minutes
-      scores.spiritual = Math.min(100, Math.round(data.mindfulnessMinutes * 1.5));
-      
-      // Environmental wellbeing (placeholder)
-      scores.environmental = Math.min(100, Math.round((data.daysActive * 2) + (data.healthChecks * 5)));
-
-      return scores;
-    };
-    
-    // Set timeout to simulate loading
-    setTimeout(() => {
-      const userStats = loadUserStats();
-      setStats(userStats);
-      setWellbeingScores(calculateWellbeingScores(userStats));
-      setLoading(false);
-    }, 1000);
-  }, []);
-  
-  const calculateMilestones = (data: any) => {
-    const milestones = {
-      reached: [] as string[],
-      upcoming: [] as string[]
-    };
-    
-    // Day-based milestones
-    if (data.daysActive >= 1) milestones.reached.push("First day using Reflectify");
-    else milestones.upcoming.push("First day using Reflectify");
-    
-    if (data.daysActive >= 7) milestones.reached.push("One week with Reflectify");
-    else milestones.upcoming.push("One week with Reflectify");
-    
-    if (data.daysActive >= 30) milestones.reached.push("One month wellbeing journey");
-    else milestones.upcoming.push("One month wellbeing journey");
-    
-    // Activity-based milestones
-    if (data.journalEntries >= 1) milestones.reached.push("First journal entry");
-    else milestones.upcoming.push("First journal entry");
-    
-    if (data.mindfulnessMinutes >= 10) milestones.reached.push("10 minutes of mindfulness");
-    else milestones.upcoming.push("10 minutes of mindfulness");
-    
-    if (data.chatInteractions >= 5) milestones.reached.push("5 wellbeing chats");
-    else milestones.upcoming.push("5 wellbeing chats");
-    
-    if (data.expressInteractions >= 3) milestones.reached.push("3 express sessions");
-    else milestones.upcoming.push("3 express sessions");
-    
-    if (data.healthChecks >= 1) milestones.reached.push("First health check");
-    else milestones.upcoming.push("First health check");
-    
-    if (data.contentAnalysis >= 2) milestones.reached.push("2 content analyses");
-    else milestones.upcoming.push("2 content analyses");
-    
-    return milestones;
-  };
-  
-  const generateProgressData = () => {
-    if (!stats) return [];
-    
-    const today = new Date();
-    const data = [];
-    
-    // Generate data for the past week or since start date (whichever is more recent)
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const formattedDate = format(date, 'MMM dd');
-      const dateKey = format(date, 'yyyy-MM-dd');
-      
-      // Count journal entries for this day
-      const journalEntriesStr = localStorage.getItem('journalEntries');
-      const journalEntries = journalEntriesStr ? JSON.parse(journalEntriesStr) : [];
-      const journalEntriesForDay = journalEntries.filter((entry: any) => {
-        const entryDate = new Date(entry.date);
-        return format(entryDate, 'yyyy-MM-dd') === dateKey;
-      }).length;
-      
-      // Count mood entries for this day
-      const moodEntriesStr = localStorage.getItem('moodEntries');
-      const moodEntries = moodEntriesStr ? JSON.parse(moodEntriesStr) : [];
-      const moodEntriesForDay = moodEntries.filter((entry: any) => {
-        return entry.date === format(date, 'M/d/yyyy');
-      }).length;
-      
-      // Calculate feature interactions for this day based on visit tracking
-      const featureInteractions = calculateDailyFeatureInteractions(date);
-      
-      const dayData = {
-        date: formattedDate,
-        journalEntries: journalEntriesForDay,
-        mindfulnessMinutes: featureInteractions.mindfulness * 5, // Estimate 5 minutes per session
-        interactions: featureInteractions.chat + featureInteractions.express + moodEntriesForDay
-      };
-      
-      data.push(dayData);
-    }
-    
-    return data;
-  };
-  
-  const calculateDailyFeatureInteractions = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const interactionLogs = localStorage.getItem('featureInteractionLogs');
-    let logs: Record<string, any>[] = [];
-    
-    if (interactionLogs) {
+    const fetchData = async () => {
       try {
-        logs = JSON.parse(interactionLogs);
-      } catch (e) {
-        console.error('Error parsing feature interaction logs', e);
+        setLoading(true);
+
+        // Get journal entries from Supabase if user is logged in
+        if (user?.id) {
+          const { data: journalData, error: journalError } = await supabase
+            .from("journal_entries")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false });
+
+          if (journalError) throw journalError;
+          setJournalEntries(journalData || []);
+        }
+
+        // Get mood data from local storage
+        const moodEntriesStr = localStorage.getItem('moodEntries');
+        const storedMoodEntries = moodEntriesStr ? JSON.parse(moodEntriesStr) : [];
+        setMoodData(storedMoodEntries);
+
+        // Generate usage data from local storage
+        const usageMetrics = [
+          {
+            name: "Journal",
+            visits: parseInt(localStorage.getItem('journalVisitCount') || '0'),
+            interactions: parseInt(localStorage.getItem('journalEntriesCount') || '0'),
+            lastUsed: localStorage.getItem('journalLastUsed')
+          },
+          {
+            name: "Chat",
+            visits: parseInt(localStorage.getItem('chatVisitCount') || '0'),
+            interactions: parseInt(localStorage.getItem('chatInteractionCount') || '0'),
+            lastUsed: localStorage.getItem('chatLastUsed')
+          },
+          {
+            name: "Express",
+            visits: parseInt(localStorage.getItem('expressVisitCount') || '0'),
+            interactions: parseInt(localStorage.getItem('expressInteractionCount') || '0'),
+            lastUsed: localStorage.getItem('expressLastUsed')
+          },
+          {
+            name: "Content",
+            visits: parseInt(localStorage.getItem('contentVisitCount') || '0'),
+            interactions: parseInt(localStorage.getItem('contentAnalysisCount') || '0'),
+            lastUsed: localStorage.getItem('contentLastUsed')
+          },
+          {
+            name: "Mindfulness",
+            visits: parseInt(localStorage.getItem('mindfulnessVisitCount') || '0'),
+            interactions: parseInt(localStorage.getItem('mindfulnessSessionCount') || '0'),
+            lastUsed: localStorage.getItem('mindfulnessLastUsed')
+          }
+        ];
+        
+        setUsageData(usageMetrics);
+
+      } catch (error) {
+        console.error("Error loading analytics data:", error);
+        toast.error("Failed to load analytics data");
+      } finally {
+        setLoading(false);
       }
-    }
-    
-    // Filter interactions for the given date
-    const dayInteractions = logs.filter(log => 
-      log.date === dateStr
-    );
-    
-    // Count interactions by feature
-    return {
-      chat: dayInteractions.filter(log => log.feature === 'chat').length,
-      express: dayInteractions.filter(log => log.feature === 'rant').length,
-      mindfulness: dayInteractions.filter(log => log.feature === 'mindfulness').length,
-      journal: dayInteractions.filter(log => log.feature === 'journal').length,
-      health: dayInteractions.filter(log => log.feature === 'health').length,
-      content: dayInteractions.filter(log => log.feature === 'content').length
     };
+
+    fetchData();
+  }, [user]);
+
+  const generateInsights = async () => {
+    if (journalEntries.length === 0) {
+      toast.error("You need journal entries to generate insights");
+      return;
+    }
+
+    try {
+      setLoadingInsights(true);
+      const aiInsights = await getAIWellbeingInsights(journalEntries);
+      setInsights(aiInsights);
+      toast.success("Generated wellbeing insights");
+    } catch (error) {
+      console.error("Error generating insights:", error);
+      toast.error("Failed to generate insights");
+    } finally {
+      setLoadingInsights(false);
+    }
   };
 
-  const generateActivityBreakdown = () => {
-    if (!stats) return [];
-    
-    return [
-      { name: 'Content Analysis', value: stats.contentAnalysis || 0 },
-      { name: 'Chat', value: stats.chatInteractions || 0 },
-      { name: 'Express', value: stats.expressInteractions || 0 },
-      { name: 'Mindfulness', value: stats.mindfulnessMinutes || 0 },
-      { name: 'Journal', value: stats.journalEntries || 0 },
-      { name: 'Health', value: stats.healthChecks || 0 }
-    ];
+  const generateMoodAnalysis = async () => {
+    if (moodData.length === 0) {
+      toast.error("You need mood data to generate analysis");
+      return;
+    }
+
+    try {
+      setLoadingInsights(true);
+      const analysis = await analyzeMoodTrends(moodData);
+      setMoodInsights(analysis);
+      toast.success("Generated mood analysis");
+    } catch (error) {
+      console.error("Error analyzing mood:", error);
+      toast.error("Failed to analyze mood data");
+    } finally {
+      setLoadingInsights(false);
+    }
   };
 
-  const generateWellbeingRadarData = () => {
-    if (!stats) return [];
+  // Filter data based on timeframe selection
+  const getTimeframeFilteredData = (data, dateField = "date") => {
+    if (!data || data.length === 0) return [];
     
-    return [
-      { subject: 'Emotional', A: wellbeingScores.emotional, fullMark: 100 },
-      { subject: 'Physical', A: wellbeingScores.physical, fullMark: 100 },
-      { subject: 'Social', A: wellbeingScores.social, fullMark: 100 },
-      { subject: 'Intellectual', A: wellbeingScores.intellectual, fullMark: 100 },
-      { subject: 'Spiritual', A: wellbeingScores.spiritual, fullMark: 100 },
-      { subject: 'Environmental', A: wellbeingScores.environmental, fullMark: 100 },
-    ];
+    const now = new Date();
+    const filtered = data.filter(item => {
+      const itemDate = new Date(item[dateField]);
+      const diffDays = Math.floor((now - itemDate) / (24 * 60 * 60 * 1000));
+      
+      switch(timeframe) {
+        case "week": return diffDays <= 7;
+        case "month": return diffDays <= 30;
+        case "year": return diffDays <= 365;
+        default: return true;
+      }
+    });
+    
+    return filtered;
   };
 
-  // Generate personalized insights based on wellbeing scores
-  const generateInsights = () => {
-    if (!wellbeingScores) return [];
-    
-    const insights = [];
-    
-    // Emotional wellbeing insights
-    if (wellbeingScores.emotional < 30) {
-      insights.push({
-        area: 'Emotional',
-        insight: 'Consider using the Express feature more regularly to process your feelings, or try daily journaling.',
-        priority: 'high'
-      });
-    } else if (wellbeingScores.emotional < 70) {
-      insights.push({
-        area: 'Emotional',
-        insight: "You're making good progress with emotional wellbeing. Regular mood check-ins could help maintain this balance.",
-        priority: 'medium'
-      });
-    } else {
-      insights.push({
-        area: 'Emotional',
-        insight: 'Your emotional wellbeing appears strong. Keep using the techniques that work for you.',
-        priority: 'low'
-      });
-    }
-    
-    // Physical wellbeing insights
-    if (wellbeingScores.physical < 30) {
-      insights.push({
-        area: 'Physical',
-        insight: 'Consider using the Health Analysis feature to track your activity levels and get personalized recommendations.',
-        priority: 'high'
-      });
-    } else if (wellbeingScores.physical < 70) {
-      insights.push({
-        area: 'Physical',
-        insight: 'Your physical activity shows positive signs. Regular health checks can help you continue to improve.',
-        priority: 'medium'
-      });
-    }
-    
-    // Mindfulness insights
-    if (wellbeingScores.spiritual < 40) {
-      insights.push({
-        area: 'Mindfulness',
-        insight: 'Try incorporating regular mindfulness sessions into your routine. Even 5 minutes daily can make a difference.',
-        priority: 'high'
-      });
-    }
-    
-    // Social wellbeing insights
-    if (wellbeingScores.social < 40) {
-      insights.push({
-        area: 'Social',
-        insight: 'Your social wellbeing score could benefit from more engagement. Consider using the Chat feature to explore social aspects of wellbeing.',
-        priority: 'medium'
-      });
-    }
-    
-    // Add a general insight for newer users
-    if (stats && stats.daysActive < 7) {
-      insights.push({
-        area: 'General',
-        insight: 'Welcome to your wellbeing journey! Explore different features to build a complete picture of your wellbeing.',
-        priority: 'low'
-      });
-    }
-    
-    return insights.slice(0, 3); // Return top 3 insights
+  // Prepare chart data
+  const moodChartData = getTimeframeFilteredData(moodData).map(entry => ({
+    date: entry.date,
+    value: entry.value,
+    mood: entry.mood
+  }));
+
+  const journalMoodData = getTimeframeFilteredData(journalEntries, "created_at").map(entry => ({
+    date: new Date(entry.created_at).toLocaleDateString(),
+    mood: entry.mood
+  }));
+
+  // Aggregate mood counts for pie chart
+  const moodCounts = moodData.reduce((acc, entry) => {
+    acc[entry.mood] = (acc[entry.mood] || 0) + 1;
+    return acc;
+  }, {});
+
+  const moodPieData = Object.keys(moodCounts).map(mood => ({
+    name: mood,
+    value: moodCounts[mood]
+  }));
+
+  // Colors for pie chart
+  const MOOD_COLORS = {
+    "happy": "#4ade80",
+    "excited": "#fbbf24",
+    "loving": "#fb7185",
+    "neutral": "#60a5fa",
+    "calm": "#b45309",
+    "peaceful": "#34d399",
+    "sad": "#a78bfa",
+    "angry": "#ef4444"
   };
 
-  const COLORS = ['#16a34a', '#0891b2', '#8b5cf6', '#ec4899', '#f97316', '#06b6d4'];
-
-  const renderNoDataYet = () => (
-    <EmptyStatePlaceholder 
-      message="No data available yet. As you use Reflectify, your analytics will appear here." 
-      icon={BarChart2}
-    />
-  );
-
-  const renderCustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="glass-card p-3">
-          <p className="font-medium text-sm">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={`item-${index}`} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-  
-    return null;
-  };
-
-  if (loading) {
+  const renderMoodPieChart = () => {
+    if (moodPieData.length === 0) return null;
+    
     return (
-      <div className="w-full py-12 flex flex-col items-center justify-center animate-pulse">
-        <BarChart2 className="h-16 w-16 text-emerald-500/50 mb-4" />
-        <p className="text-muted-foreground">Loading your analytics...</p>
-      </div>
+      <PieChart width={300} height={300}>
+        <Pie
+          data={moodPieData}
+          cx={150}
+          cy={150}
+          innerRadius={60}
+          outerRadius={100}
+          paddingAngle={2}
+          dataKey="value"
+          nameKey="name"
+          label={({name}) => name}
+        >
+          {moodPieData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={MOOD_COLORS[entry.name] || `#${Math.floor(Math.random()*16777215).toString(16)}`} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(value, name) => [`${value} times`, name]} />
+      </PieChart>
     );
-  }
+  };
 
-  const hasNoActivity = !stats || (
-    stats.journalEntries === 0 &&
-    stats.mindfulnessMinutes === 0 &&
-    stats.chatInteractions === 0 &&
-    stats.expressInteractions === 0 &&
-    stats.healthChecks === 0 &&
-    stats.contentAnalysis === 0
-  );
-
-  const insights = generateInsights();
+  const usageBarData = usageData
+    .filter(item => item.interactions > 0)
+    .sort((a, b) => b.interactions - a.interactions);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
-      <div className="space-y-2">
-        <h2 className="text-3xl font-display font-semibold tracking-tight reflectify-gradient-text">Your Wellbeing Analytics</h2>
-        <p className="text-muted-foreground max-w-3xl">
-          Track your progress, discover insights about your wellbeing journey, and see how your habits are evolving over time.
-        </p>
+    <div className="container mx-auto p-4 max-w-7xl">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-indigo-800">Analytics Dashboard</h1>
+        <p className="text-slate-600">Track your wellbeing patterns and app usage</p>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-card rounded-xl p-6 hover-glow staggered-item">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-                <Calendar className="h-5 w-5" />
-              </div>
-              <h3 className="font-medium">Wellbeing Journey</h3>
-            </div>
-            {stats?.startDate && (
-              <span className="text-xs text-muted-foreground">
-                Since {format(new Date(stats.startDate), 'MMM d, yyyy')}
-              </span>
-            )}
-          </div>
-          
-          <div className="text-3xl font-semibold mb-1">
-            {stats?.daysActive || 0}
-            <span className="text-base font-normal text-muted-foreground ml-2">days</span>
-          </div>
-          
-          <p className="text-sm text-muted-foreground mb-4">
-            {stats?.startDate ? (
-              `You started your wellbeing journey ${formatDistanceToNow(new Date(stats.startDate))} ago`
-            ) : (
-              "You're just starting your wellbeing journey today"
-            )}
-          </p>
-          
-          <div className="h-1 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full" style={{ 
-              width: `${Math.min((stats?.daysActive || 0) / 30 * 100, 100)}%`
-            }}></div>
-          </div>
-          <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-            <span>Day 1</span>
-            <span>30 days</span>
-          </div>
-        </div>
+
+      <div className="flex justify-between items-center mb-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList>
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart2 className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="mood" className="flex items-center gap-2">
+              <LineChartIcon className="h-4 w-4" />
+              Mood Tracking
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4" />
+              AI Insights
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
         
-        <div className="glass-card rounded-xl p-6 hover-glow staggered-item">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-full bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400">
-              <Trophy className="h-5 w-5" />
+        <div className="flex items-center gap-2">
+          <div className="relative inline-block text-left">
+            <div className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium shadow-sm">
+              <Calendar className="h-4 w-4" />
+              <span>{timeframe === "week" ? "Last 7 days" : timeframe === "month" ? "Last 30 days" : "Last Year"}</span>
+              <ChevronDown className="h-4 w-4" />
             </div>
-            <h3 className="font-medium">Milestones</h3>
+            <select
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              value={timeframe}
+              onChange={(e) => setTimeframe(e.target.value)}
+            >
+              <option value="week">Last 7 days</option>
+              <option value="month">Last 30 days</option>
+              <option value="year">Last Year</option>
+            </select>
           </div>
           
-          {stats?.milestones.reached.length ? (
-            <div className="space-y-3 mb-4">
-              <p className="text-sm font-medium">Reached:</p>
-              <div className="space-y-2">
-                {stats.milestones.reached.map((milestone, index) => (
-                  <div key={`reached-${index}`} className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></div>
-                    <span>{milestone}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground mb-4">No milestones reached yet</p>
-          )}
-          
-          {stats?.milestones.upcoming.length ? (
-            <>
-              <p className="text-sm font-medium">Upcoming:</p>
-              <div className="space-y-2 text-muted-foreground">
-                {stats.milestones.upcoming.slice(0, 3).map((milestone, index) => (
-                  <div key={`upcoming-${index}`} className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-                    <span>{milestone}</span>
-                  </div>
-                ))}
-                {stats.milestones.upcoming.length > 3 && (
-                  <p className="text-xs">+{stats.milestones.upcoming.length - 3} more</p>
-                )}
-              </div>
-            </>
-          ) : null}
-        </div>
-        
-        <div className="glass-card rounded-xl p-6 hover-glow staggered-item">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
-              <Smile className="h-5 w-5" />
-            </div>
-            <h3 className="font-medium">Mood Tracking</h3>
-          </div>
-          
-          {(stats?.moodEntries?.length || 0) > 0 ? (
-            <div className="h-32">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={stats?.moodEntries.slice(-7)}
-                  margin={{ top: 5, right: 5, left: -20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eaeaea" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip content={renderCustomTooltip} />
-                  <Line type="monotone" dataKey="value" stroke="#16a34a" strokeWidth={2} dot={{ stroke: '#16a34a', strokeWidth: 2 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-32 text-center">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Meh className="h-5 w-5 text-gray-400" />
-                <ArrowRight className="h-4 w-4 text-gray-400" />
-                <Smile className="h-5 w-5 text-emerald-400" />
-              </div>
-              <p className="text-sm text-muted-foreground">Use the Chat feature to start tracking your mood</p>
-            </div>
-          )}
+          <Button variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export Data
+          </Button>
         </div>
       </div>
-      
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="mb-6 bg-emerald-50 dark:bg-indigo-900/50">
-          <TabsTrigger value="overview">Activity Overview</TabsTrigger>
-          <TabsTrigger value="breakdown">Feature Usage</TabsTrigger>
-          <TabsTrigger value="insights">Wellbeing Insights</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-6">
-          <div className="glass-card rounded-xl p-6">
-            <h3 className="text-xl font-medium mb-6">Activity Timeline</h3>
-            
-            {hasNoActivity ? (
-              <EmptyStatePlaceholder
-                message="Start using Reflectify features to see your activity timeline." 
-                icon={Calendar}
-              />
-            ) : (
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={generateProgressData()}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                  >
+
+      <TabsContent value="overview" className="mt-4 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium">Journal Entries</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{journalEntries.length}</div>
+              <p className="text-sm text-slate-500">
+                {journalEntries.length > 0 
+                  ? `Last entry: ${new Date(journalEntries[0].created_at).toLocaleDateString()}`
+                  : "No entries yet"}
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium">Mood Logs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{moodData.length}</div>
+              <p className="text-sm text-slate-500">
+                {moodData.length > 0 
+                  ? `Latest mood: ${moodData[moodData.length - 1].mood}`
+                  : "No mood data yet"}
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium">Average Mood</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {journalEntries.length > 0 
+                  ? (journalEntries.reduce((sum, entry) => sum + entry.mood, 0) / journalEntries.length).toFixed(1)
+                  : "N/A"}
+                <span className="text-sm text-slate-500 ml-1">/ 10</span>
+              </div>
+              <p className="text-sm text-slate-500">Based on journal entries</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>App Usage</span>
+                <PieChartIcon className="h-5 w-5 text-slate-400" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-[250px] w-full" />
+                </div>
+              ) : usageBarData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={usageBarData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip content={renderCustomTooltip} />
+                    <Tooltip />
                     <Legend />
-                    <Bar name="Journal Entries" dataKey="journalEntries" stackId="a" fill="#16a34a" />
-                    <Bar name="Mindfulness (min)" dataKey="mindfulnessMinutes" stackId="a" fill="#0891b2" />
-                    <Bar name="Interactions" dataKey="interactions" stackId="a" fill="#8b5cf6" />
+                    <Bar dataKey="visits" name="Visits" fill="#60a5fa" />
+                    <Bar dataKey="interactions" name="Interactions" fill="#6366f1" />
                   </BarChart>
                 </ResponsiveContainer>
+              ) : (
+                <div className="text-center py-12 text-slate-500">
+                  <FileSpreadsheet className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p>No usage data available</p>
+                  <p className="text-sm mt-1">Start using the app to see analytics</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Mood Distribution</span>
+                <PieChartIcon className="h-5 w-5 text-slate-400" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center items-center">
+              {loading ? (
+                <Skeleton className="h-[250px] w-[250px] rounded-full" />
+              ) : moodPieData.length > 0 ? (
+                renderMoodPieChart()
+              ) : (
+                <div className="text-center py-12 text-slate-500">
+                  <FileSpreadsheet className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p>No mood data available</p>
+                  <p className="text-sm mt-1">Log your mood to see distribution</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="mood" className="mt-4 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Mood Tracking</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-[400px] w-full" />
+            ) : moodChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={moodChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={[0, 5]} />
+                  <Tooltip formatter={(value, name) => [value, name === "value" ? "Mood Score" : name]} />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    name="Mood Score"
+                    stroke="#6366f1" 
+                    activeDot={{ r: 8 }} 
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-12 text-slate-500">
+                <FileSpreadsheet className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p>No mood data available</p>
+                <p className="text-sm mt-1">Use the chat feature to log your mood</p>
+                <Button className="mt-4" onClick={() => window.location.hash = "chat"}>
+                  Log Mood
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Journal Mood Entries</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-[400px] w-full" />
+            ) : journalMoodData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={journalMoodData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={[0, 10]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="mood" 
+                    name="Journal Mood"
+                    stroke="#a78bfa" 
+                    activeDot={{ r: 8 }}
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-12 text-slate-500">
+                <FileSpreadsheet className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p>No journal mood data available</p>
+                <p className="text-sm mt-1">Create journal entries to track mood</p>
+                <Button className="mt-4" onClick={() => window.location.hash = "journal"}>
+                  Create Journal Entry
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-center mt-6">
+          <Button 
+            onClick={generateMoodAnalysis}
+            disabled={loadingInsights || moodData.length === 0}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
+            {loadingInsights ? "Analyzing..." : "Get AI Mood Analysis"}
+          </Button>
+        </div>
+
+        {moodInsights && (
+          <Card className="border-indigo-200 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-indigo-600" />
+                AI Mood Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Overall Trend</h3>
+                  <p className="text-slate-700">{moodInsights.overallTrend}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4 mt-6">
+                  {moodInsights.insights.map((insight, index) => (
+                    <div key={index} className="p-4 rounded-lg bg-gradient-to-r from-indigo-50/50 to-purple-50/50 border border-indigo-100">
+                      <h4 className="font-medium text-indigo-800 mb-2">{insight.title}</h4>
+                      <p className="text-slate-700 mb-3">{insight.description}</p>
+                      <p className="text-sm font-medium text-indigo-600">Suggestion: {insight.suggestion}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+
+      <TabsContent value="insights" className="mt-4 space-y-6">
+        <div className="flex justify-center mb-6">
+          <Button 
+            onClick={generateInsights}
+            disabled={loadingInsights || journalEntries.length === 0}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
+            {loadingInsights ? "Generating..." : "Generate AI Wellbeing Insights"}
+          </Button>
+        </div>
+
+        {!insights && !loadingInsights && (
+          <div className="text-center py-12">
+            <Lightbulb className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium">No AI insights yet</h3>
+            <p className="text-slate-500 max-w-lg mx-auto mt-2">
+              Click the button above to generate AI insights based on your journal entries and tracked mood data.
+            </p>
+            {journalEntries.length === 0 && (
+              <div className="mt-4">
+                <p className="text-sm text-amber-600">You need journal entries to generate insights.</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-2"
+                  onClick={() => window.location.hash = "journal"}
+                >
+                  Create Journal Entry
+                </Button>
               </div>
             )}
           </div>
-        </TabsContent>
-        
-        <TabsContent value="breakdown" className="space-y-6">
-          <div className="glass-card rounded-xl p-6">
-            <h3 className="text-xl font-medium mb-6">Feature Usage</h3>
-            
-            {hasNoActivity ? (
-              <EmptyStatePlaceholder
-                message="As you use different features, your usage patterns will appear here." 
-                icon={MessageCircle}
-              />
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={generateActivityBreakdown()}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={5}
-                        dataKey="value"
-                        label
-                      >
-                        {generateActivityBreakdown().map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={renderCustomTooltip} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+        )}
+
+        {loadingInsights && (
+          <div className="space-y-4">
+            <div className="max-w-2xl mx-auto">
+              <Skeleton className="h-8 w-1/3 mb-2" />
+              <Skeleton className="h-4 w-full mb-1" />
+              <Skeleton className="h-4 w-5/6 mb-1" />
+              <Skeleton className="h-4 w-4/6" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <div>
+                <Skeleton className="h-8 w-1/2 mb-2" />
+                <Skeleton className="h-4 w-full mb-1" />
+                <Skeleton className="h-4 w-full mb-1" />
+              </div>
+              <div>
+                <Skeleton className="h-8 w-1/2 mb-2" />
+                <Skeleton className="h-4 w-full mb-1" />
+                <Skeleton className="h-4 w-full mb-1" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {insights && (
+          <Card className="border-indigo-200 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-indigo-600" />
+                Wellbeing Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Mood Trend</h3>
+                  <p className="text-slate-700">{insights.moodTrend}</p>
                 </div>
                 
-                <div className="glass-card rounded-xl p-6">
-                  <h4 className="text-lg font-medium mb-4">Feature Breakdown</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2 text-amber-700">Areas of Concern</h3>
+                    <ul className="space-y-2">
+                      {insights.concerns.map((concern, index) => (
+                        <li key={index} className="flex gap-2">
+                          <span className="bg-amber-100 text-amber-800 rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                            {index + 1}
+                          </span>
+                          <span className="text-slate-700">{concern}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                   
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-emerald-500" />
-                        <span className="text-sm">Content Analysis</span>
+                  <div>
+                    <h3 className="text-lg font-medium mb-2 text-emerald-700">Positive Patterns</h3>
+                    <ul className="space-y-2">
+                      {insights.positives.map((positive, index) => (
+                        <li key={index} className="flex gap-2">
+                          <span className="bg-emerald-100 text-emerald-800 rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                            {index + 1}
+                          </span>
+                          <span className="text-slate-700">{positive}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-3 text-indigo-700">Suggestions for Improvement</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {insights.suggestions.map((suggestion, index) => (
+                      <div key={index} className="p-4 rounded-lg bg-gradient-to-r from-indigo-50/50 to-purple-50/50 border border-indigo-100">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="bg-indigo-100 text-indigo-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
+                            {index + 1}
+                          </span>
+                          <h4 className="font-medium">Suggestion</h4>
+                        </div>
+                        <p className="text-slate-700">{suggestion}</p>
                       </div>
-                      <span className="font-medium">{stats?.contentAnalysis || 0}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="h-4 w-4 text-teal-500" />
-                        <span className="text-sm">Chat</span>
-                      </div>
-                      <span className="font-medium">{stats?.chatInteractions || 0}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="h-4 w-4 text-purple-500" />
-                        <span className="text-sm">Express</span>
-                      </div>
-                      <span className="font-medium">{stats?.expressInteractions || 0}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-pink-500" />
-                        <span className="text-sm">Mindfulness</span>
-                      </div>
-                      <span className="font-medium">{stats?.mindfulnessMinutes || 0}min</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <BookText className="h-4 w-4 text-orange-500" />
-                        <span className="text-sm">Journal</span>
-                      </div>
-                      <span className="font-medium">{stats?.journalEntries || 0}</span>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="insights" className="space-y-6">
-          <div className="glass-card rounded-xl p-6">
-            <h3 className="text-xl font-medium mb-6">Wellbeing Insights</h3>
-            
-            {hasNoActivity ? (
-              <EmptyStatePlaceholder
-                message="Use Reflectify regularly to generate personalized wellbeing insights." 
-                icon={Sparkles}
-              />
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart outerRadius={90} data={generateWellbeingRadarData()}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="subject" />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                      <Radar name="Wellbeing Score" dataKey="A" stroke="#16a34a" fill="#16a34a" fillOpacity={0.6} />
-                      <Legend />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-                
-                <div className="glass-card rounded-xl p-6">
-                  <h4 className="text-lg font-medium mb-4">Personal Insights</h4>
-                  
-                  {insights.length > 0 ? (
-                    <div className="space-y-4">
-                      {insights.map((insight, index) => (
-                        <div 
-                          key={`insight-${index}`}
-                          className={`p-3 rounded-lg border ${
-                            insight.priority === 'high' 
-                              ? 'border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-700/30' 
-                              : insight.priority === 'medium'
-                              ? 'border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-700/30'
-                              : 'border-emerald-200 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-700/30'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                              insight.priority === 'high'
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-800/20 dark:text-amber-300'
-                                : insight.priority === 'medium'
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-800/20 dark:text-blue-300'
-                                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800/20 dark:text-emerald-300'
-                            }`}>
-                              {insight.area}
-                            </span>
-                          </div>
-                          <p className="text-sm">{insight.insight}</p>
-                        </div>
-                      ))}
-                      
-                      <button 
-                        onClick={() => toast.info('Weekly Wellbeing Report', {
-                          description: 'Your personalized wellbeing report has been updated with the latest insights based on your activity patterns.',
-                        })}
-                        className="reflectify-button text-sm mt-2 w-full"
-                      >
-                        Generate Detailed Wellbeing Report
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      <p>
-                        Continue using Reflectify to unlock personalized insights about your wellbeing patterns and trends.
-                      </p>
-                      <p className="mt-2">
-                        As you use more features, we'll analyze your data to provide actionable recommendations and observations.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
     </div>
   );
-};
-
-export default FunctionalAnalytics;
+}

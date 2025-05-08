@@ -1,5 +1,5 @@
 
-const GEMINI_API_KEY = "AIzaSyDJDWd17Om9K0NFx8jNcoRoIwQ1NRWYLEo";
+const GEMINI_API_KEY = "AIzaSyDrVNCmoSPUvEXjQyfRm-fAQxoPUEYBzfU";
 const GEMINI_API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 export const getAIAnalysis = async (prompt: string): Promise<string> => {
@@ -11,7 +11,6 @@ export const getAIAnalysis = async (prompt: string): Promise<string> => {
       },
       body: JSON.stringify({
         contents: [{
-          role: "user",
           parts: [{ text: prompt }]
         }],
         generationConfig: {
@@ -42,7 +41,6 @@ export const analyzeContent = async (content: string) => {
       },
       body: JSON.stringify({
         contents: [{
-          role: "user",
           parts: [{
             text: `Analyze the following social media post for toxicity, harmful content, and appropriateness. 
             Give scores from 0-1 for: toxicity, insult, profanity, identity_attack, and threat.
@@ -79,6 +77,130 @@ export const analyzeContent = async (content: string) => {
     }
   } catch (error) {
     console.error("Analysis error:", error);
+    throw error;
+  }
+};
+
+export const getAIWellbeingInsights = async (journalEntries) => {
+  try {
+    // Format journal entries for the AI prompt
+    const entriesText = journalEntries.map(entry => 
+      `Date: ${new Date(entry.created_at).toLocaleDateString()}, Mood: ${entry.mood}/10, Title: ${entry.title}, Content: ${entry.content}`
+    ).join("\n\n");
+
+    const prompt = `
+      Analyze the following journal entries and provide wellbeing insights. Focus on:
+      1. Overall mood trends
+      2. Potential areas of concern
+      3. Positive patterns to reinforce
+      4. Three actionable suggestions for improvement
+
+      Format your response as a valid JSON with these sections:
+      {
+        "moodTrend": "string",
+        "concerns": ["string", "string"],
+        "positives": ["string", "string"],
+        "suggestions": ["string", "string", "string"]
+      }
+
+      Journal Entries:
+      ${entriesText}
+    `;
+
+    const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.3,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
+      })
+    });
+
+    if (!response.ok) throw new Error("Failed to get wellbeing insights");
+    
+    const data = await response.json();
+    
+    try {
+      // Extract the JSON from the text response
+      const textResponse = data.candidates[0].content.parts[0].text;
+      // Find the JSON object in the text
+      const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (err) {
+      console.error("Error parsing insights response:", err);
+      throw new Error("Could not parse insights result");
+    }
+  } catch (error) {
+    console.error("Error getting wellbeing insights:", error);
+    throw error;
+  }
+};
+
+export const analyzeMoodTrends = async (moodData) => {
+  try {
+    const moodDataString = JSON.stringify(moodData);
+    
+    const prompt = `
+      Analyze the following mood tracking data and provide insights on the user's emotional wellbeing trends.
+      For each insight, provide a brief explanation of what it means and a suggestion for the user.
+      
+      Format your response as a valid JSON with these sections:
+      {
+        "overallTrend": "string",
+        "insights": [
+          {"title": "string", "description": "string", "suggestion": "string"},
+          {"title": "string", "description": "string", "suggestion": "string"},
+          {"title": "string", "description": "string", "suggestion": "string"}
+        ]
+      }
+
+      Mood Data (date, mood name, value from 1-5):
+      ${moodDataString}
+    `;
+
+    const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.3,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
+      })
+    });
+
+    if (!response.ok) throw new Error("Failed to analyze mood trends");
+    
+    const data = await response.json();
+    
+    try {
+      // Extract the JSON from the text response
+      const textResponse = data.candidates[0].content.parts[0].text;
+      // Find the JSON object in the text
+      const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (err) {
+      console.error("Error parsing mood analysis response:", err);
+      throw new Error("Could not parse mood analysis result");
+    }
+  } catch (error) {
+    console.error("Error analyzing mood trends:", error);
     throw error;
   }
 };

@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAIAnalysis } from "@/utils/aiUtils";
 
 export default function WellbeingChatPage() {
   const { user, profile } = useAuth();
@@ -28,20 +29,6 @@ export default function WellbeingChatPage() {
   const [chatHistory, setChatHistory] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // Sample responses to simulate AI chat
-  const sampleResponses = [
-    "Thank you for sharing that with me. How long have you been feeling this way?",
-    "It sounds like you're going through a difficult time. What helps you feel better when you're stressed?",
-    "I understand that can be challenging. Have you tried talking to someone you trust about this?",
-    "That's a normal reaction to stress. Remember to practice self-care and be kind to yourself.",
-    "I'm here to listen. Would you like to tell me more about what's been happening?",
-    "It can be helpful to break down big problems into smaller, more manageable steps. What's one small thing you could do today?",
-    "Remember that you're not alone in feeling this way. Many students experience similar challenges.",
-    "That's great progress! What positive changes have you noticed since you started doing that?",
-    "I'm sorry to hear you're struggling. Have you considered speaking with your school counselor about this?",
-    "Let's focus on what you can control. What's one aspect of this situation that you have influence over?"
-  ];
-
   useEffect(() => {
     async function fetchChatHistory() {
       if (!user) return;
@@ -51,6 +38,7 @@ export default function WellbeingChatPage() {
         const { data, error } = await supabase
           .from("chat_interactions")
           .select("*")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: true });
 
         if (error) {
@@ -80,11 +68,14 @@ export default function WellbeingChatPage() {
     try {
       setSending(true);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Get random response
-      const aiResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+      // Get AI response using the Gemini API
+      const aiResponse = await getAIAnalysis(`
+        You are a supportive AI assistant for students. The student says: "${message}"
+        
+        Provide a helpful, empathetic response that addresses their message. 
+        Be conversational, supportive, and provide guidance if appropriate.
+        Keep your response to 2-3 sentences.
+      `);
       
       // Save to database
       const { error } = await supabase
@@ -127,8 +118,14 @@ export default function WellbeingChatPage() {
     if (!window.confirm("Are you sure you want to clear your chat history?")) return;
     
     try {
-      // This would require additional permission on the database
-      // For now just clear the UI
+      // Delete all chat interactions for this user
+      const { error } = await supabase
+        .from("chat_interactions")
+        .delete()
+        .eq("user_id", user.id);
+        
+      if (error) throw error;
+      
       setChatHistory([]);
       toast.success("Chat history cleared");
     } catch (error) {
