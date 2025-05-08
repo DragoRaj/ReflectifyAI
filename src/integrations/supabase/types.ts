@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_interactions: {
+        Row: {
+          ai_response: string
+          created_at: string
+          id: string
+          mood: string | null
+          user_id: string
+          user_message: string
+        }
+        Insert: {
+          ai_response: string
+          created_at?: string
+          id?: string
+          mood?: string | null
+          user_id: string
+          user_message: string
+        }
+        Update: {
+          ai_response?: string
+          created_at?: string
+          id?: string
+          mood?: string | null
+          user_id?: string
+          user_message?: string
+        }
+        Relationships: []
+      }
       class_memberships: {
         Row: {
           class_id: string
@@ -166,6 +193,57 @@ export type Database = {
           },
         ]
       }
+      journal_entries: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          mood: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          mood: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          mood?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mindfulness_sessions: {
+        Row: {
+          completed: boolean
+          created_at: string
+          duration_seconds: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          duration_seconds: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_surveys: {
         Row: {
           baseline_wellbeing_score: number
@@ -266,6 +344,84 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      teacher_insights: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          recommendations: string
+          student_id: string
+          teacher_id: string
+          trend_description: string
+          updated_at: string
+          wellbeing_summary: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          recommendations: string
+          student_id: string
+          teacher_id: string
+          trend_description: string
+          updated_at?: string
+          wellbeing_summary: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          recommendations?: string
+          student_id?: string
+          teacher_id?: string
+          trend_description?: string
+          updated_at?: string
+          wellbeing_summary?: string
+        }
+        Relationships: []
+      }
+      teacher_surveys: {
+        Row: {
+          class_atmosphere: string
+          class_section: string
+          common_challenges: string[]
+          created_at: string
+          grade_level: number
+          id: string
+          intervention_suggestions: string | null
+          observed_student_stress: number
+          school_name: string
+          support_resources_needed: string
+          teacher_id: string
+        }
+        Insert: {
+          class_atmosphere: string
+          class_section: string
+          common_challenges: string[]
+          created_at?: string
+          grade_level: number
+          id?: string
+          intervention_suggestions?: string | null
+          observed_student_stress: number
+          school_name: string
+          support_resources_needed: string
+          teacher_id: string
+        }
+        Update: {
+          class_atmosphere?: string
+          class_section?: string
+          common_challenges?: string[]
+          created_at?: string
+          grade_level?: number
+          id?: string
+          intervention_suggestions?: string | null
+          observed_student_stress?: number
+          school_name?: string
+          support_resources_needed?: string
+          teacher_id?: string
         }
         Relationships: []
       }

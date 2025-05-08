@@ -98,22 +98,28 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
             setNeedsOnboarding(false);
           }
         } else if (profile?.role === 'teacher') {
-          // Check for teacher onboarding
-          const { data, error } = await supabase
-            .from("teacher_surveys")
-            .select("*")
-            .eq("teacher_id", user.id)
-            .maybeSingle();
-            
-          if (error) {
-            console.error("Error checking teacher onboarding:", error);
-          }
-            
-          if (!data) {
-            // No teacher survey found, needs onboarding
-            setNeedsOnboarding(true);
-          } else {
-            // Survey exists, no onboarding needed
+          // Check for teacher onboarding - using the updated type-safe approach
+          try {
+            const { data, error } = await supabase
+              .from("teacher_surveys")
+              .select("*")
+              .eq("teacher_id", user.id)
+              .maybeSingle();
+              
+            if (error) {
+              console.error("Error checking teacher onboarding:", error);
+            }
+              
+            if (!data) {
+              // No teacher survey found, needs onboarding
+              setNeedsOnboarding(true);
+            } else {
+              // Survey exists, no onboarding needed
+              setNeedsOnboarding(false);
+            }
+          } catch (e) {
+            console.error("Error in teacher onboarding check:", e);
+            // Default to not showing onboarding if there's an error
             setNeedsOnboarding(false);
           }
         } else {
@@ -143,29 +149,6 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
   }
   
   return <>{children}</>;
-};
-
-// SignOutButton component for navigation bar
-const SignOutButton = () => {
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-  
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-  
-  return (
-    <Button 
-      variant="ghost" 
-      size="sm" 
-      onClick={handleSignOut}
-      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-    >
-      <LogOut className="h-4 w-4" />
-      Sign Out
-    </Button>
-  );
 };
 
 // Component to handle feature-specific splash screens
