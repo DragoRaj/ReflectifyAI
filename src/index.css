@@ -1,739 +1,98 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+/* Import fonts first */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&display=swap');
 
+/* Then tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --sidebar-background: 240 10% 3.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 210 40% 98%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    
-    --radius: 0.75rem;
-    
-    --sidebar-background: 213 100% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 213 94% 95%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 221 83% 53%;
-    
-    --theme-color: 221 83% 53%;
-    --theme-color-darker: 221 83% 40%;
-    --theme-text: 221 83% 53%;
-    --theme-icon: 221 83% 53%;
-    --theme-color-lighter: 221 83% 65%;
-    --theme-gradient-start: 217 91% 60%;
-    --theme-gradient-end: 224 76% 48%;
-  }
-
-  [data-theme="blue"] {
-    --theme-color: 221 83% 53%;
-    --theme-color-darker: 221 83% 40%;
-    --theme-color-lighter: 221 83% 65%;
-    --theme-text: 221 83% 53%;
-    --theme-icon: 221 83% 53%;
-    --primary: 221 83% 53%;
-    --ring: 221 83% 53%;
-    --theme-gradient-start: 217 91% 60%;
-    --theme-gradient-end: 224 76% 48%;
-  }
-
-  [data-theme="purple"] {
-    --theme-color: 250 83% 53%;
-    --theme-color-darker: 250 83% 40%;
-    --theme-color-lighter: 250 83% 65%;
-    --theme-text: 250 83% 53%;
-    --theme-icon: 250 83% 53%;
-    --primary: 250 83% 53%;
-    --ring: 250 83% 53%;
-    --theme-gradient-start: 245 85% 65%;
-    --theme-gradient-end: 255 80% 45%;
-  }
-
-  [data-theme="teal"] {
-    --theme-color: 171 83% 45%;
-    --theme-color-darker: 171 83% 35%;
-    --theme-color-lighter: 171 83% 55%;
-    --theme-text: 171 83% 45%;
-    --theme-icon: 171 83% 45%;
-    --primary: 171 83% 45%;
-    --ring: 171 83% 45%;
-    --theme-gradient-start: 166 85% 55%;
-    --theme-gradient-end: 176 80% 40%;
-  }
-  
-  [data-theme="pink"] {
-    --theme-color: 330 80% 60%;
-    --theme-color-darker: 330 80% 50%;
-    --theme-color-lighter: 330 80% 70%;
-    --theme-text: 330 80% 60%;
-    --theme-icon: 330 80% 60%;
-    --primary: 330 80% 60%;
-    --ring: 330 80% 60%;
-    --theme-gradient-start: 325 85% 70%;
-    --theme-gradient-end: 335 75% 50%;
-  }
-  
-  [data-theme="amber"] {
-    --theme-color: 43 96% 58%;
-    --theme-color-darker: 43 96% 48%;
-    --theme-color-lighter: 43 96% 68%;
-    --theme-text: 43 96% 58%;
-    --theme-icon: 43 96% 58%;
-    --primary: 43 96% 58%;
-    --ring: 43 96% 58%;
-    --theme-gradient-start: 38 95% 65%;
-    --theme-gradient-end: 48 97% 51%;
-  }
-  
-  [data-theme="green"] {
-    --theme-color: 142 72% 50%;
-    --theme-color-darker: 142 72% 40%;
-    --theme-color-lighter: 142 72% 60%;
-    --theme-text: 142 72% 50%;
-    --theme-icon: 142 72% 50%;
-    --primary: 142 72% 50%;
-    --ring: 142 72% 50%;
-    --theme-gradient-start: 137 75% 60%;
-    --theme-gradient-end: 147 68% 42%;
-  }
-  
-  [data-theme="crimson"] {
-    --theme-color: 348 83% 47%;
-    --theme-color-darker: 348 83% 37%;
-    --theme-color-lighter: 348 83% 57%;
-    --theme-text: 348 83% 47%;
-    --theme-icon: 348 83% 47%;
-    --primary: 348 83% 47%;
-    --ring: 348 83% 47%;
-    --theme-gradient-start: 343 85% 57%;
-    --theme-gradient-end: 353 80% 40%;
-  }
-  
-  [data-theme="indigo"] {
-    --theme-color: 263 70% 50%;
-    --theme-color-darker: 263 70% 40%;
-    --theme-color-lighter: 263 70% 60%;
-    --theme-text: 263 70% 50%;
-    --theme-icon: 263 70% 50%;
-    --primary: 263 70% 50%;
-    --ring: 263 70% 50%;
-    --theme-gradient-start: 258 75% 60%;
-    --theme-gradient-end: 268 65% 40%;
-  }
-  
-  [data-theme="emerald"] {
-    --theme-color: 152 69% 40%;
-    --theme-color-darker: 152 69% 30%;
-    --theme-color-lighter: 152 69% 50%;
-    --theme-text: 152 69% 40%;
-    --theme-icon: 152 69% 40%;
-    --primary: 152 69% 40%;
-    --ring: 152 69% 40%;
-    --theme-gradient-start: 147 72% 50%;
-    --theme-gradient-end: 157 65% 35%;
-  }
-  
-  [data-theme="violet"] {
-    --theme-color: 270 76% 60%;
-    --theme-color-darker: 270 76% 50%;
-    --theme-color-lighter: 270 76% 70%;
-    --theme-text: 270 76% 60%;
-    --theme-icon: 270 76% 60%;
-    --primary: 270 76% 60%;
-    --ring: 270 76% 60%;
-    --theme-gradient-start: 265 80% 70%;
-    --theme-gradient-end: 275 72% 50%;
-  }
-  
-  [data-theme="coral"] {
-    --theme-color: 16 85% 64%;
-    --theme-color-darker: 16 85% 54%;
-    --theme-color-lighter: 16 85% 74%;
-    --theme-text: 16 85% 64%;
-    --theme-icon: 16 85% 64%;
-    --primary: 16 85% 64%;
-    --ring: 16 85% 64%;
-    --theme-gradient-start: 11 90% 70%;
-    --theme-gradient-end: 21 80% 58%;
-  }
-  
-  [data-theme="cyan"] {
-    --theme-color: 187 72% 47%;
-    --theme-color-darker: 187 72% 37%;
-    --theme-color-lighter: 187 72% 57%;
-    --theme-text: 187 72% 47%;
-    --theme-icon: 187 72% 47%;
-    --primary: 187 72% 47%;
-    --ring: 187 72% 47%;
-    --theme-gradient-start: 182 75% 57%;
-    --theme-gradient-end: 192 68% 40%;
+    --seafoam-50: 210, 40%, 98%;
+    --mint-100: 213, 94%, 95%;
+    --emerald-100: 213, 94%, 95%;
+    --emerald-400: 217, 91%, 60%;
+    --emerald-500: 221, 83%, 53%;
+    --emerald-600: 224, 76%, 48%;
+    --teal-300: 217, 91%, 60%;
+    --teal-400: 221, 83%, 53%;
+    --indigo-800: 217, 33%, 17%;
+    --indigo-900: 222, 47%, 11%;
+    --indigo-950: 223, 47%, 11%;
+    --slate-900: 222, 47%, 11%;
   }
 
   .dark {
-    --background: 222 47% 11%;
+    --background: 222.2 47.4% 11.2%;
     --foreground: 210 40% 98%;
-    
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    
-    --popover: 222 47% 11%;
+    --muted: 212.5 26.8% 14.3%;
+    --muted-foreground: 215 20.2% 65.9%;
+    --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
-    
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20.2% 65.1%;
-    
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    
-    --secondary: 217 33% 17%;
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 212.5 26.8% 14.3%;
     --secondary-foreground: 210 40% 98%;
-  }
-  
-  .dark[data-theme="blue"] {
-    --theme-color: 217 91% 60%;
-    --theme-color-darker: 217 91% 50%;
-    --theme-color-lighter: 217 91% 70%;
-    --theme-text: 217 91% 60%;
-    --theme-icon: 217 91% 60%;
-    --primary: 217 91% 60%;
-    --ring: 224 76% 48%;
-    --theme-gradient-start: 213 94% 68%;
-    --theme-gradient-end: 221 83% 53%;
-  }
-
-  .dark[data-theme="purple"] {
-    --theme-color: 257 91% 65%;
-    --theme-color-darker: 257 91% 55%;
-    --theme-color-lighter: 257 91% 75%;
-    --theme-text: 257 91% 65%;
-    --theme-icon: 257 91% 65%;
-    --primary: 257 91% 65%;
-    --ring: 264 76% 54%;
-    --theme-gradient-start: 254 95% 72%;
-    --theme-gradient-end: 261 87% 58%;
-  }
-
-  .dark[data-theme="teal"] {
-    --theme-color: 177 91% 50%;
-    --theme-color-darker: 177 91% 40%;
-    --theme-color-lighter: 177 91% 60%;
-    --theme-text: 177 91% 50%;
-    --theme-icon: 177 91% 50%;
-    --primary: 177 91% 50%;
-    --ring: 176 76% 42%;
-    --theme-gradient-start: 174 95% 58%;
-    --theme-gradient-end: 180 87% 45%;
-  }
-  
-  .dark[data-theme="pink"] {
-    --theme-color: 327 91% 65%;
-    --theme-color-darker: 327 91% 55%;
-    --theme-color-lighter: 327 91% 75%;
-    --theme-text: 327 91% 65%;
-    --theme-icon: 327 91% 65%;
-    --primary: 327 91% 65%;
-    --ring: 330 76% 54%;
-    --theme-gradient-start: 323 95% 72%;
-    --theme-gradient-end: 331 87% 58%;
-  }
-  
-  .dark[data-theme="amber"] {
-    --theme-color: 43 91% 65%;
-    --theme-color-darker: 43 91% 55%;
-    --theme-color-lighter: 43 91% 75%;
-    --theme-text: 43 91% 65%;
-    --theme-icon: 43 91% 65%;
-    --primary: 43 91% 65%;
-    --ring: 43 76% 54%;
-    --theme-gradient-start: 39 95% 72%;
-    --theme-gradient-end: 47 87% 58%;
-  }
-  
-  .dark[data-theme="green"] {
-    --theme-color: 142 71% 55%;
-    --theme-color-darker: 142 71% 45%;
-    --theme-color-lighter: 142 71% 65%;
-    --theme-text: 142 71% 55%;
-    --theme-icon: 142 71% 55%;
-    --primary: 142 71% 55%;
-    --ring: 142 76% 44%;
-    --theme-gradient-start: 138 80% 62%;
-    --theme-gradient-end: 146 68% 48%;
-  }
-  
-  .dark[data-theme="crimson"] {
-    --theme-color: 348 83% 57%;
-    --theme-color-darker: 348 83% 47%;
-    --theme-color-lighter: 348 83% 67%;
-    --theme-text: 348 83% 57%;
-    --theme-icon: 348 83% 57%;
-    --primary: 348 83% 57%;
-    --ring: 348 83% 47%;
-    --theme-gradient-start: 344 88% 64%;
-    --theme-gradient-end: 352 78% 50%;
-  }
-  
-  .dark[data-theme="indigo"] {
-    --theme-color: 263 76% 60%;
-    --theme-color-darker: 263 76% 50%;
-    --theme-color-lighter: 263 76% 70%;
-    --theme-text: 263 76% 60%;
-    --theme-icon: 263 76% 60%;
-    --primary: 263 76% 60%;
-    --ring: 263 76% 50%;
-    --theme-gradient-start: 259 81% 67%;
-    --theme-gradient-end: 267 71% 53%;
-  }
-  
-  .dark[data-theme="emerald"] {
-    --theme-color: 152 69% 50%;
-    --theme-color-darker: 152 69% 40%;
-    --theme-color-lighter: 152 69% 60%;
-    --theme-text: 152 69% 50%;
-    --theme-icon: 152 69% 50%;
-    --primary: 152 69% 50%;
-    --ring: 152 69% 40%;
-    --theme-gradient-start: 148 74% 57%;
-    --theme-gradient-end: 156 64% 43%;
-  }
-  
-  .dark[data-theme="violet"] {
-    --theme-color: 270 76% 70%;
-    --theme-color-darker: 270 76% 60%;
-    --theme-color-lighter: 270 76% 80%;
-    --theme-text: 270 76% 70%;
-    --theme-icon: 270 76% 70%;
-    --primary: 270 76% 70%;
-    --ring: 270 76% 60%;
-    --theme-gradient-start: 266 81% 77%;
-    --theme-gradient-end: 274 71% 63%;
-  }
-  
-  .dark[data-theme="coral"] {
-    --theme-color: 16 85% 69%;
-    --theme-color-darker: 16 85% 59%;
-    --theme-color-lighter: 16 85% 79%;
-    --theme-text: 16 85% 69%;
-    --theme-icon: 16 85% 69%;
-    --primary: 16 85% 69%;
-    --ring: 16 85% 59%;
-    --theme-gradient-start: 12 90% 76%;
-    --theme-gradient-end: 20 80% 62%;
-  }
-  
-  .dark[data-theme="cyan"] {
-    --theme-color: 187 72% 57%;
-    --theme-color-darker: 187 72% 47%;
-    --theme-color-lighter: 187 72% 67%;
-    --theme-text: 187 72% 57%;
-    --theme-icon: 187 72% 57%;
-    --primary: 187 72% 57%;
-    --ring: 187 72% 47%;
-    --theme-gradient-start: 183 77% 64%;
-    --theme-gradient-end: 191 67% 50%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --sidebar-background: 240 10% 3.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 210 40% 98%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 222.2 84% 4.9%;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+@keyframes accordion-down {
+  from {
+    height: 0;
   }
-
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    transition: color 0.5s ease, background-color 0.5s ease;
-    font-family: 'Inter', sans-serif;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Montserrat', sans-serif;
+  to {
+    height: var(--radix-accordion-content-height);
   }
 }
 
-@layer components {
-  .theme-text {
-    @apply text-[hsl(var(--theme-text))];
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
   }
-
-  .theme-bg {
-    @apply bg-[hsl(var(--theme-color))];
+  to {
+    height: 0;
   }
-  
-  .theme-border {
-    @apply border-[hsl(var(--theme-color))];
-  }
-  
-  .theme-ring {
-    @apply ring-[hsl(var(--theme-color))];
-  }
-  
-  .glass-card {
-    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-blue-100 dark:border-blue-800/20 shadow-sm transition-all duration-300;
-  }
-  
-  .reflectify-gradient-text {
-    @apply bg-gradient-to-r from-[hsl(var(--theme-gradient-start))] to-[hsl(var(--theme-gradient-end))] bg-clip-text text-transparent;
-  }
-  
-  .reflectify-button {
-    @apply px-4 py-2 rounded-full bg-gradient-to-r from-[hsl(var(--theme-gradient-start))] to-[hsl(var(--theme-gradient-end))] text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-[hsl(var(--theme-color))]/20 active:scale-95;
-  }
-  
-  .tab-button {
-    @apply relative px-4 py-2 rounded-lg transition-all duration-300 font-medium text-sm;
-  }
-  
-  .tab-button.active {
-    @apply text-[hsl(var(--theme-color))] dark:text-[hsl(var(--theme-color))];
-  }
-  
-  .tab-button.active::after {
-    @apply content-[''] absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[hsl(var(--theme-gradient-start))] to-[hsl(var(--theme-gradient-end))] dark:from-[hsl(var(--theme-gradient-start))] dark:to-[hsl(var(--theme-gradient-end))] rounded-full transform scale-x-100 transition-transform duration-300;
-  }
-  
-  .tab-button:not(.active)::after {
-    @apply content-[''] absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[hsl(var(--theme-gradient-start))] to-[hsl(var(--theme-gradient-end))] dark:from-[hsl(var(--theme-gradient-start))] dark:to-[hsl(var(--theme-gradient-end))] rounded-full transform scale-x-0 transition-transform duration-300;
-  }
-  
-  .tab-button:hover:not(.active)::after {
-    @apply scale-x-100;
-  }
-  
-  .shimmer {
-    @apply relative overflow-hidden;
-  }
-  
-  .shimmer::before {
-    @apply content-[''] absolute top-0 -left-[100%] w-[100%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer;
-  }
-  
-  .theme-switch {
-    @apply relative h-[24px] w-[44px] cursor-pointer rounded-full bg-slate-200 transition-colors duration-300 ease-in-out data-[state=checked]:bg-slate-700 outline-none;
-  }
-  
-  .theme-switch[data-state="checked"] > span {
-    @apply translate-x-5;
-  }
-  
-  .theme-switch > span {
-    @apply block h-[20px] w-[20px] translate-x-0.5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-300 will-change-transform data-[state=checked]:translate-x-[22px];
-  }
-  
-  .splash-content {
-    @apply relative flex flex-col items-center justify-center z-10;
-  }
-  
-  .splash-logo {
-    @apply relative z-10 text-center;
-  }
-  
-  .splash-particles {
-    @apply absolute inset-0 z-0 overflow-hidden;
-  }
-  
-  .particle {
-    @apply absolute rounded-full blur-sm;
-    width: var(--size);
-    height: var(--size);
-    animation: float var(--speed) infinite ease-in-out var(--delay);
-  }
-  
-  .fade-transition {
-    animation: fadeTransition 0.3s ease-in-out;
-  }
-  
-  .theme-gradient {
-    @apply bg-gradient-to-r from-[hsl(var(--theme-gradient-start))] to-[hsl(var(--theme-gradient-end))];
-  }
-  
-  .theme-text-gradient {
-    @apply bg-gradient-to-r from-[hsl(var(--theme-gradient-start))] to-[hsl(var(--theme-gradient-end))];
-  }
-  
-  .theme-glow {
-    @apply shadow-[0_0_15px_rgba(var(--theme-r,59),var(--theme-g,130),var(--theme-b,246),0.5)];
-  }
-  
-  .theme-bottom-gradient {
-    @apply bg-gradient-to-t from-[hsl(var(--theme-gradient-start))]/30 to-transparent;
-  }
-  
-  .card-gradient {
-    @apply bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm;
-  }
-
-  .animate-breathe {
-    animation: breathe 6s ease-in-out infinite alternate;
-  }
-  
-  .animate-pulse-subtle {
-    animation: pulseSubtle 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  .animate-float {
-    animation: float 6s infinite ease-in-out;
-  }
-  
-  .animate-shimmer {
-    animation: shimmer 2s infinite linear;
-  }
-  
-  .animate-pulsate {
-    animation: pulsate 6s ease-in-out infinite alternate;
-  }
-
-  .animate-orbit {
-    animation: orbit 8s linear infinite;
-  }
-  
-  @keyframes fadeTransition {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-  }
-  
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0) scale(1);
-      filter: drop-shadow(0 10px 15px rgba(59, 130, 246, 0.3));
-    }
-    50% {
-      transform: translateY(-15px) scale(1.05);
-      filter: drop-shadow(0 20px 25px rgba(59, 130, 246, 0.5));
-    }
-  }
-  
-  @keyframes breathe {
-    0%, 100% { transform: scale(1); opacity: 0.3; }
-    50% { transform: scale(1.2); opacity: 0.7; }
-  }
-  
-  @keyframes pulseSubtle {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-  
-  @keyframes shimmer {
-    to { transform: translateX(200%); }
-  }
-  
-  @keyframes pulsate {
-    0%, 100% { transform: scale(1); opacity: 0.3; }
-    50% { transform: scale(1.3); opacity: 0.6; }
-  }
-
-  @keyframes orbit {
-    from { transform: rotate(0deg) translateX(50px) rotate(0deg); }
-    to { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
-  }
-}
-
-@keyframes fadeTransition {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-    filter: drop-shadow(0 10px 15px rgba(59, 130, 246, 0.3));
-  }
-  50% {
-    transform: translateY(-15px) scale(1.05);
-    filter: drop-shadow(0 20px 25px rgba(59, 130, 246, 0.5));
-  }
-}
-
-@keyframes breathe {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.2); opacity: 0.7; }
-}
-
-@keyframes pulseSubtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-@keyframes shimmer {
-  to { transform: translateX(200%); }
-}
-
-@keyframes pulsate {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.3); opacity: 0.6; }
-}
-
-@keyframes orbit {
-  from { transform: rotate(0deg) translateX(50px) rotate(0deg); }
-  to { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
-}
-
-@keyframes advancedFloat {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-    opacity: 0.4;
-  }
-  25% {
-    transform: translate(15px, -20px) rotate(5deg) scale(1.1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translate(30px, 0) rotate(0deg) scale(1);
-    opacity: 0.5;
-  }
-  75% {
-    transform: translate(15px, 20px) rotate(-5deg) scale(0.9);
-    opacity: 0.3;
-  }
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes pulseSubtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-@keyframes orbit {
-  from { transform: rotate(0deg) translateX(50px) rotate(0deg); }
-  to { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
-}
-
-.gradient-button {
-  @apply relative overflow-hidden;
-  background: linear-gradient(135deg, 
-    hsl(var(--theme-gradient-start)), 
-    hsl(var(--theme-gradient-end))
-  );
-}
-
-.gradient-button::before {
-  @apply content-[''] absolute inset-0 opacity-0 transition-opacity duration-300;
-  background: linear-gradient(135deg, 
-    hsl(var(--theme-gradient-start)), 
-    hsl(var(--theme-color-lighter))
-  );
-}
-
-.gradient-button:hover::before {
-  @apply opacity-100;
-}
-
-.gradient-card {
-  @apply relative overflow-hidden;
-  background: linear-gradient(135deg, 
-    hsl(var(--card)/97%), 
-    hsl(var(--card)/92%)
-  );
-}
-
-.gradient-card::before {
-  @apply content-[''] absolute -inset-[2px] -z-10 rounded-[inherit] opacity-40;
-  background: linear-gradient(135deg, 
-    hsl(var(--theme-gradient-start)/50%), 
-    transparent, 
-    hsl(var(--theme-gradient-end)/30%)
-  );
-}
-
-.recharts-wrapper {
-  margin: 0 auto;
-}
-
-.recharts-legend-item {
-  margin-right: 10px !important;
-}
-
-.recharts-tooltip-cursor {
-  opacity: 0.1 !important;
-}
-
-.recharts-default-tooltip {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  border-radius: 8px !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
-}
-
-.dark .recharts-cartesian-axis-tick-value {
-  fill: rgba(255, 255, 255, 0.6) !important;
-}
-
-.dark .recharts-text {
-  fill: rgba(255, 255, 255, 0.8) !important;
-}
-
-.dark .recharts-legend-item-text {
-  color: rgba(255, 255, 255, 0.8) !important;
-}
-
-.dark .recharts-cartesian-grid line {
-  stroke: rgba(255, 255, 255, 0.1) !important;
-}
-
-.dark .recharts-default-tooltip {
-  background-color: rgba(30, 41, 59, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-.splash-advanced {
-  @apply relative z-10;
-}
-
-.splash-advanced-particle {
-  @apply absolute rounded-full bg-white/40 blur-sm;
-  animation: advancedFloat 8s infinite ease-in-out;
-}
-
-.splash-swirl {
-  @apply absolute blur-2xl opacity-30;
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    hsla(var(--theme-gradient-start), 0.7) 0%,
-    hsla(var(--theme-color), 0.6) 25%, 
-    hsla(var(--theme-color-lighter), 0.5) 50%,
-    hsla(var(--theme-color), 0.4) 75%, 
-    hsla(var(--theme-gradient-end), 0.7) 100%
-  );
-  animation: spin 15s linear infinite;
-}
-
-.splash-glow {
-  @apply absolute rounded-full blur-3xl;
-  background: radial-gradient(
-    circle at center,
-    hsla(var(--theme-gradient-start), 0.6) 0%,
-    hsla(var(--theme-color), 0.3) 50%,
-    transparent 80%
-  );
-  animation: pulsate 6s ease-in-out infinite alternate;
 }

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -97,7 +96,10 @@ export default function StudentDashboard() {
                         <TrendingUp className="w-3 h-3 mr-1" /> Improving
                       </span>
                     </div>
-                    <Progress value={wellbeingScore * 10} className="h-2 bg-indigo-200" indicatorClassName="bg-indigo-600" />
+                    <Progress 
+                      value={wellbeingScore * 10} 
+                      className="h-2 bg-indigo-200" 
+                    />
                   </div>
                 </div>
                 <Button 

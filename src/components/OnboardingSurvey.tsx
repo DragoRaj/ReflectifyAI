@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -15,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
+import { CheckboxItem } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle2, 
@@ -238,7 +237,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                     }`}
                     onClick={() => handleToggleCopingMechanism(item.value)}
                   >
-                    <Checkbox 
+                    <CheckboxItem 
                       id={item.value}
                       checked={preferredCopingMechanisms.includes(item.value)} 
                       onCheckedChange={() => handleToggleCopingMechanism(item.value)}
@@ -425,7 +424,7 @@ export default function OnboardingSurvey({ onComplete }: OnboardingSurveyProps) 
                     }`}
                     onClick={() => handleToggleChallenge(item.value)}
                   >
-                    <Checkbox 
+                    <CheckboxItem 
                       id={`challenge-${item.value}`}
                       checked={commonChallenges.includes(item.value)} 
                       onCheckedChange={() => handleToggleChallenge(item.value)}
