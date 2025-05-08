@@ -208,6 +208,19 @@ export default function FunctionalAnalytics() {
     "angry": "#ef4444"
   };
 
+  // Calculate average mood - Fix: Ensure we're working with numbers
+  const calculateAverageMood = () => {
+    if (journalEntries.length === 0) return "N/A";
+    
+    const sum = journalEntries.reduce((total, entry) => {
+      // Ensure the mood is treated as a number
+      const moodValue = typeof entry.mood === 'number' ? entry.mood : 0;
+      return total + moodValue;
+    }, 0);
+    
+    return (sum / journalEntries.length).toFixed(1);
+  };
+
   const renderMoodPieChart = () => {
     if (moodPieData.length === 0) return null;
     
@@ -323,9 +336,7 @@ export default function FunctionalAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {journalEntries.length > 0 
-                  ? (journalEntries.reduce((sum, entry) => sum + entry.mood, 0) / journalEntries.length).toFixed(1)
-                  : "N/A"}
+                {calculateAverageMood()}
                 <span className="text-sm text-slate-500 ml-1">/ 10</span>
               </div>
               <p className="text-sm text-slate-500">Based on journal entries</p>
