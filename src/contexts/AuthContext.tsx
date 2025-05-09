@@ -5,6 +5,7 @@ import { Profile, Role } from "@/types/school-types";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 
 interface AuthContextType {
   session: Session | null;
@@ -21,59 +22,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  async function fetchProfile(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error) throw error;
-      setProfile(data as Profile);
-    } catch (error: any) {
-      console.error("Error fetching profile:", error.message);
-    }
-  }
+  const { 
+    session, 
+    user, 
+    profile, 
+    isLoading, 
+    refreshProfile 
+  } = useSupabaseAuth();
 
   async function signIn(email: string, password: string) {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -83,14 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       toast.error(error.message || "Error signing in");
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   }
 
   async function signUp(email: string, password: string, firstName: string, lastName: string, role: Role) {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -107,22 +63,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       toast.error(error.message || "Error signing up");
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   }
 
   async function signOut() {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success("Signed out successfully");
       navigate("/auth");
     } catch (error: any) {
       toast.error(error.message || "Error signing out");
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -130,7 +81,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       if (!user) throw new Error("No user logged in");
       
-      setIsLoading(true);
       const { error } = await supabase
         .from("profiles")
         .update(data)
@@ -138,20 +88,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) throw error;
       
-      setProfile((prev) => prev ? { ...prev, ...data } : null);
+      await refreshProfile();
       toast.success("Profile updated successfully");
     } catch (error: any) {
       toast.error(error.message || "Error updating profile");
       throw error;
-    } finally {
-      setIsLoading(false);
     }
-  }
-
-  // Add a function to refresh the profile
-  async function refreshProfile() {
-    if (!user) return null;
-    return fetchProfile(user.id);
   }
 
   return (

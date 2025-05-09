@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +8,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
 import FeatureSplashScreen from "@/components/FeatureSplashScreen";
-import { BarChart2, MessageCircle, Shield, HeartPulse, Sparkles, Home, BookText, LogOut } from "lucide-react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Auth from "./pages/Auth";
 import Dashboard from "./components/dashboard/Dashboard";
@@ -18,12 +16,13 @@ import TeacherDashboard from "./components/teacher/TeacherDashboard";
 import JournalPage from "./components/JournalPage";
 import WellbeingChatPage from "./components/WellbeingChatPage";
 import MindfulnessPage from "./components/MindfulnessPage";
-import OnboardingSurvey from "./components/OnboardingSurvey";
 import DevConsole from "./components/DevConsole";
-import { supabase } from "@/integrations/supabase/client";
 import { Role } from "@/types/school-types";
 import FunctionalAnalytics from "@/components/FunctionalAnalytics";
 import ThemeProvider from "@/components/ThemeProvider";
+import { LoadingScreen } from "@/components/ui/loading-screen";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { OnboardingCheck } from "@/components/OnboardingCheck";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +31,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return <LoadingScreen message="Verifying your account..." />;
   }
   
   if (!user) {
@@ -53,7 +52,7 @@ const RoleRoute = ({
   const { profile, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return <LoadingScreen message="Loading your profile..." />;
   }
   
   if (!profile || !allowedRoles.includes(profile.role)) {
@@ -118,7 +117,7 @@ const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
   }, [user, profile]);
   
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return <LoadingScreen message="Preparing your experience..." />;
   }
   
   if (needsOnboarding) {
@@ -137,19 +136,18 @@ const FeatureRouter = () => {
     description: "",
     icon: null as React.ReactNode
   });
-  const { profile } = useAuth();
+  const { profile, isLoading } = useAuth();
   
   useEffect(() => {
-    // Get feature from URL hash
-    const featureId = location.hash.replace('#', '') || 'home';
+    // Get feature from URL hash or path
+    const featureId = location.hash.replace('#', '') || location.pathname.substring(1) || 'home';
 
-    // Only show splash screen when hash changes and it's not the initial load
-    // or if the user specifically navigated to a feature using the hash
+    // Only show splash screen when path changes and it's not the initial load
     const isInitialLoad = sessionStorage.getItem('initialLoadComplete') !== 'true';
-    const hashChanged = location.hash && !isInitialLoad;
+    const pathChanged = location.pathname !== '/' && !isInitialLoad;
     
-    // Show splash screen for direct feature navigation or hash changes
-    if (hashChanged || (location.hash && isInitialLoad)) {
+    // Show splash screen for direct feature navigation or path changes
+    if (pathChanged || (location.pathname !== '/' && isInitialLoad)) {
       // Track this feature visit in localStorage for analytics
       const featureKey = `${featureId}VisitCount`;
       const currentCount = parseInt(localStorage.getItem(featureKey) || '0');
@@ -229,11 +227,9 @@ const FeatureRouter = () => {
 
   // Determine which dashboard to show based on user role
   const DashboardRouter = () => {
-    const { profile, isLoading } = useAuth();
+    if (isLoading) return <LoadingScreen message="Loading your dashboard..." />;
     
-    if (isLoading) return <div className="flex justify-center items-center h-screen">Loading profile...</div>;
-    
-    if (!profile) return <div className="flex justify-center items-center h-screen">Loading profile...</div>;
+    if (!profile) return <LoadingScreen message="Retrieving your profile..." />;
     
     return (
       <OnboardingCheck>
@@ -328,7 +324,9 @@ const AuthenticatedApp = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <FeatureRouter />
+        <AppSidebar>
+          <FeatureRouter />
+        </AppSidebar>
       </AuthProvider>
     </BrowserRouter>
   );

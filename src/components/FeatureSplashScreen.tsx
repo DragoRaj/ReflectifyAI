@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTheme } from './ThemeProvider';
+import { motion } from 'framer-motion';
 
 interface FeatureSplashScreenProps {
   featureName: string;
@@ -30,46 +31,122 @@ export default function FeatureSplashScreen({
   }, [onComplete]);
   
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${
-      animationComplete ? 'opacity-0' : 'opacity-100'
-    } ${isDarkMode ? 'bg-slate-900' : 'bg-white'}`}>
+    <motion.div 
+      className={`fixed inset-0 z-50 flex items-center justify-center ${
+        isDarkMode ? 'bg-slate-900' : 'bg-white'
+      }`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="relative flex flex-col items-center">
         {/* Animated circular background */}
-        <div className={`absolute inset-0 flex items-center justify-center -z-10`}>
-          <div className={`w-64 h-64 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-gray-100'} animate-pulse`}></div>
-          <div className={`absolute w-48 h-48 rounded-full ${
-            isDarkMode ? 'bg-gradient-to-r from-indigo-700/40 to-purple-700/40' : 'bg-gradient-to-r from-indigo-200 to-purple-200'
-          } animate-pulse`}></div>
-        </div>
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center -z-10"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <motion.div 
+            className={`w-64 h-64 rounded-full ${isDarkMode ? 'bg-slate-800' : 'bg-gray-100'}`}
+            animate={{ 
+              scale: [1, 1.05, 1],
+              opacity: [0.8, 1, 0.8] 
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          
+          <motion.div 
+            className={`absolute w-48 h-48 rounded-full ${
+              isDarkMode 
+                ? 'bg-gradient-to-r from-indigo-700/40 to-purple-700/40' 
+                : 'bg-gradient-to-r from-indigo-200 to-purple-200'
+            }`}
+            animate={{ 
+              rotate: 360,
+              scale: [0.9, 1, 0.9]
+            }}
+            transition={{ 
+              rotate: { duration: 8, repeat: Infinity, ease: "linear" },
+              scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+            }}
+          />
+        </motion.div>
         
-        <div className="mb-6 transform animate-bounce">
-          <div className={`p-6 rounded-full ${
-            isDarkMode 
-              ? 'bg-gradient-to-br from-indigo-700 to-purple-800 shadow-[0_0_20px_5px_rgba(124,58,237,0.3)]' 
-              : 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-[0_0_20px_5px_rgba(124,58,237,0.2)]'
-          }`}>
+        <motion.div 
+          className="mb-6"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ 
+            delay: 0.2,
+            type: "spring",
+            stiffness: 200,
+            damping: 10
+          }}
+        >
+          <motion.div 
+            className={`p-6 rounded-full ${
+              isDarkMode 
+                ? 'bg-gradient-to-br from-indigo-700 to-purple-800 shadow-[0_0_20px_5px_rgba(124,58,237,0.3)]' 
+                : 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-[0_0_20px_5px_rgba(124,58,237,0.2)]'
+            }`}
+            animate={{ 
+              y: [0, -10, 0],
+              rotate: [0, -5, 0, 5, 0]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: 1,
+              ease: "easeInOut"
+            }}
+          >
             {React.isValidElement(icon) &&
               React.cloneElement(icon as React.ReactElement, {
                 className: "h-12 w-12 text-white"
               })}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         
-        <div className="space-y-2 text-center">
+        <motion.div 
+          className="space-y-2 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
           <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
             {featureName}
           </h2>
           <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             {featureDescription}
           </p>
-        </div>
+        </motion.div>
         
-        <div className="mt-8">
-          <div className="relative h-1 w-48 overflow-hidden rounded-full bg-gray-200">
-            <div className="absolute left-0 top-0 h-full w-full bg-gradient-to-r from-indigo-500 to-purple-600 animate-loader"></div>
+        <motion.div 
+          className="mt-8 w-48"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <div className="relative h-1 w-full overflow-hidden rounded-full bg-gray-200">
+            <motion.div 
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-indigo-500 to-purple-600"
+              animate={{ x: ["0%", "100%"] }}
+              transition={{ 
+                duration: 1.5, 
+                repeat: Infinity,
+                repeatType: "loop",
+                ease: "linear" 
+              }}
+              style={{ width: "50%" }}
+            />
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

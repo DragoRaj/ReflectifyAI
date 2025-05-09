@@ -12,19 +12,48 @@ export function useSupabaseAuth() {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // First check if the profile exists
+      const { data, error, count } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+        .select("*", { count: 'exact' })
+        .eq("id", userId);
       
       if (error) {
         console.error("Error fetching user profile:", error);
         return null;
       }
       
-      setProfile(data);
-      return data;
+      // If no profile exists yet, create one
+      if (count === 0) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData && userData.user) {
+          const { data: newProfile, error: insertError } = await supabase
+            .from("profiles")
+            .insert([
+              { 
+                id: userId,
+                email: userData.user.email,
+                role: 'student' // Default role
+              }
+            ])
+            .select('*')
+            .single();
+          
+          if (insertError) {
+            console.error("Error creating user profile:", insertError);
+            return null;
+          }
+          
+          setProfile(newProfile);
+          return newProfile;
+        }
+      } else if (data && data.length > 0) {
+        // Profile exists, use the first one
+        setProfile(data[0]);
+        return data[0];
+      }
+      
+      return null;
     } catch (error) {
       console.error("Exception fetching user profile:", error);
       return null;
