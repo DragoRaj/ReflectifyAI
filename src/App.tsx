@@ -1,9 +1,20 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { 
+  Home, 
+  BarChart2, 
+  MessageCircle, 
+  BookText, 
+  Sparkles, 
+  HeartPulse,
+  Shield
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "@/components/SplashScreen";
@@ -23,6 +34,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { OnboardingCheck } from "@/components/OnboardingCheck";
+import OnboardingSurvey from "@/components/OnboardingSurvey";
 
 const queryClient = new QueryClient();
 
@@ -58,70 +70,6 @@ const RoleRoute = ({
   if (!profile || !allowedRoles.includes(profile.role)) {
     // If user doesn't have the correct role, redirect to their dashboard
     return <Navigate to="/" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Component to handle onboarding status
-const OnboardingCheck = ({ children }: { children: React.ReactNode }) => {
-  const { user, profile } = useAuth();
-  const [needsOnboarding, setNeedsOnboarding] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(true);
-  
-  useEffect(() => {
-    async function checkOnboardingStatus() {
-      if (!user || !profile) return;
-      
-      try {
-        if (profile.role === 'student') {
-          const { data, error } = await supabase
-            .from("onboarding_surveys")
-            .select("*")
-            .eq("student_id", user.id)
-            .maybeSingle();
-            
-          if (error) {
-            console.error("Error checking onboarding:", error);
-          }
-            
-          setNeedsOnboarding(!data);
-        } else if (profile.role === 'teacher') {
-          const { data, error } = await supabase
-            .from("teacher_surveys")
-            .select("*")
-            .eq("teacher_id", user.id)
-            .maybeSingle();
-              
-          if (error) {
-            console.error("Error checking teacher onboarding:", error);
-          }
-              
-          setNeedsOnboarding(!data);
-        } else {
-          // Admin doesn't need onboarding
-          setNeedsOnboarding(false);
-        }
-      } catch (error) {
-        console.error("Error checking onboarding status:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    if (profile) {
-      checkOnboardingStatus();
-    } else {
-      setLoading(false);
-    }
-  }, [user, profile]);
-  
-  if (loading) {
-    return <LoadingScreen message="Preparing your experience..." />;
-  }
-  
-  if (needsOnboarding) {
-    return <OnboardingSurvey onComplete={() => setNeedsOnboarding(false)} />;
   }
   
   return <>{children}</>;

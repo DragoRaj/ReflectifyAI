@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -29,7 +29,7 @@ interface NavItem {
 export function AppSidebar({ children }: { children: React.ReactNode }) {
   const { profile, signOut } = useAuth();
   const location = useLocation();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [expanded, setExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -135,7 +135,10 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 
           <SidebarFooter className="mt-auto p-4">
             <div className="flex flex-col gap-2">
-              <ThemeSwitcher />
+              <ThemeSwitcher 
+                isDarkMode={isDarkMode} 
+                onDarkModeChange={toggleDarkMode} 
+              />
               <Button 
                 variant="ghost" 
                 className="w-full justify-start" 

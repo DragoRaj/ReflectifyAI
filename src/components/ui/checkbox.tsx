@@ -63,4 +63,7 @@ const CheckboxGroup = ({
   );
 };
 
-export { CheckboxItem, CheckboxGroup };
+// Alias for compatibility
+const Checkbox = CheckboxItem;
+
+export { CheckboxItem, CheckboxGroup, Checkbox };

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { CheckboxItem } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -239,7 +239,7 @@ export function TeacherSurvey({ onComplete }: { onComplete: () => void }) {
                     <div className="grid grid-cols-2 gap-2">
                       {challengeOptions.map((option) => (
                         <div key={option.id} className="flex items-center space-x-2">
-                          <Checkbox
+                          <CheckboxItem
                             id={option.id}
                             checked={formData.common_challenges.includes(option.id)}
                             onCheckedChange={(checked) => handleCheckboxChange(option.id, checked as boolean)}
