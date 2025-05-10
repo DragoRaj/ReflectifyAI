@@ -13,50 +13,25 @@ export function useSupabaseAuth() {
   const fetchUserProfile = async (userId: string) => {
     try {
       // First check if the profile exists
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
-        .select("*", { count: 'exact' })
-        .eq("id", userId);
+        .select("*")
+        .eq("id", userId)
+        .single();
       
       if (error) {
         console.error("Error fetching user profile:", error);
         return null;
       }
       
-      // If no profile exists yet, create one
-      if (count === 0) {
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData && userData.user) {
-          const { data: newProfile, error: insertError } = await supabase
-            .from("profiles")
-            .insert([
-              { 
-                id: userId,
-                email: userData.user.email,
-                role: 'student' // Default role
-              }
-            ])
-            .select('*')
-            .single();
-          
-          if (insertError) {
-            console.error("Error creating user profile:", insertError);
-            return null;
-          }
-          
-          setProfile(newProfile);
-          return newProfile;
-        }
-      } else if (data && data.length > 0) {
-        // Profile exists, use the first one
-        setProfile(data[0]);
-        return data[0];
-      }
-      
-      return null;
+      // Profile exists
+      setProfile(data);
+      return data;
     } catch (error) {
       console.error("Exception fetching user profile:", error);
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,6 +50,7 @@ export function useSupabaseAuth() {
           }, 0);
         } else {
           setProfile(null);
+          setIsLoading(false);
         }
       }
     );
