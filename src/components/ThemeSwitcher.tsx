@@ -8,24 +8,26 @@ interface ThemeSwitcherProps {
   isDarkMode: boolean;
   onDarkModeChange: (isDark: boolean) => void;
   showLabel?: boolean;
+  size?: "sm" | "default";
 }
 
 const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ 
   isDarkMode, 
   onDarkModeChange,
-  showLabel = true
+  showLabel = true,
+  size = "default"
 }) => {
   return (
     <Button
       variant="ghost"
-      size="sm"
+      size={size}
       className="w-full justify-start"
       onClick={() => onDarkModeChange(!isDarkMode)}
     >
       {isDarkMode ? (
-        <Moon className="h-4 w-4 mr-2" />
+        <Moon className={`${size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} ${showLabel ? "mr-2" : ""}`} />
       ) : (
-        <Sun className="h-4 w-4 mr-2" />
+        <Sun className={`${size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} ${showLabel ? "mr-2" : ""}`} />
       )}
       <AnimatePresence>
         {showLabel && (

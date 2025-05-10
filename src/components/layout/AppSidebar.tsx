@@ -16,7 +16,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/components/ThemeProvider";
-import { MenuIcon, HomeIcon, BarChart2Icon, MessageCircleIcon, BookIcon, SparklesIcon, UserIcon, LogOut } from "lucide-react";
+import { 
+  ChevronRight,
+  MenuIcon, 
+  HomeIcon, 
+  BarChart2Icon, 
+  MessageCircleIcon, 
+  BookIcon, 
+  SparklesIcon, 
+  UserIcon, 
+  LogOut 
+} from "lucide-react";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 interface NavItem {
@@ -90,82 +100,63 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <div className="flex min-h-screen w-full">
-        <div 
-          className="group relative"
-          onMouseEnter={() => setExpanded(true)}
-          onMouseLeave={() => setExpanded(false)}
-        >
-          <Sidebar>
-            <SidebarHeader>
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center space-x-2">
-                  <div className="h-8 w-8 rounded-full bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center">
-                    <span className="text-white font-bold">R</span>
-                  </div>
-                  <AnimatePresence>
-                    {expanded && (
-                      <motion.span
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: "auto" }}
-                        exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="font-bold text-xl text-indigo-700 dark:text-indigo-400 overflow-hidden whitespace-nowrap"
-                      >
-                        Reflectify
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </div>
-                <SidebarTrigger className="opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="flex min-h-screen w-full">
+      <motion.div 
+        className={`fixed left-0 top-0 h-full z-40 ${expanded ? 'w-64' : 'w-16'}`}
+        initial={false}
+        animate={{ width: expanded ? '16rem' : '4rem' }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        onMouseEnter={() => setExpanded(true)}
+        onMouseLeave={() => setExpanded(false)}
+      >
+        <div className="h-full bg-gradient-to-b from-indigo-900 to-purple-900 dark:from-indigo-950 dark:to-purple-950 text-white shadow-lg shadow-indigo-500/20 flex flex-col">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 rounded-full bg-indigo-400 dark:bg-indigo-300 flex items-center justify-center">
+                <span className="text-indigo-900 font-bold">R</span>
               </div>
-            </SidebarHeader>
+              <AnimatePresence>
+                {expanded && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="font-bold text-xl text-white overflow-hidden whitespace-nowrap"
+                  >
+                    Reflectify
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white opacity-70 hover:opacity-100 p-1 hover:bg-white/10"
+              onClick={toggleSidebar}
+            >
+              <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
+            </Button>
+          </div>
 
-            <SidebarContent>
-              <SidebarMenu>
-                {filteredNavItems.map((item) => (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname === item.path}
-                      tooltip={!expanded ? item.label : undefined}
-                    >
-                      <NavLink to={item.path} className="flex items-center gap-2">
-                        {item.icon}
-                        <AnimatePresence>
-                          {expanded && (
-                            <motion.span
-                              initial={{ opacity: 0, width: 0 }}
-                              animate={{ opacity: 1, width: "auto" }}
-                              exit={{ opacity: 0, width: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden whitespace-nowrap"
-                            >
-                              {item.label}
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarContent>
-
-            <SidebarFooter className="mt-auto p-4">
-              <div className="flex flex-col gap-2">
-                <ThemeSwitcher 
-                  isDarkMode={isDarkMode} 
-                  onDarkModeChange={toggleDarkMode} 
-                  showLabel={expanded}
-                />
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start" 
-                  onClick={signOut}
+          <div className="mt-6 flex-1 overflow-y-auto">
+            <div className="space-y-1 px-3">
+              {filteredNavItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) => `
+                    flex items-center px-3 py-2.5 rounded-lg
+                    ${isActive 
+                      ? 'bg-white/20 text-white' 
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }
+                    transition-all duration-200
+                  `}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <span className="flex items-center justify-center h-5 w-5">
+                    {item.icon}
+                  </span>
                   <AnimatePresence>
                     {expanded && (
                       <motion.span
@@ -173,22 +164,53 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
                         animate={{ opacity: 1, width: "auto" }}
                         exit={{ opacity: 0, width: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="overflow-hidden whitespace-nowrap"
+                        className="ml-3 overflow-hidden whitespace-nowrap"
                       >
-                        Sign out
+                        {item.label}
                       </motion.span>
                     )}
                   </AnimatePresence>
-                </Button>
-              </div>
-            </SidebarFooter>
-          </Sidebar>
-        </div>
+                </NavLink>
+              ))}
+            </div>
+          </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {children}
+          <div className="p-3 border-t border-white/10 space-y-3">
+            <ThemeSwitcher 
+              isDarkMode={isDarkMode} 
+              onDarkModeChange={toggleDarkMode} 
+              showLabel={expanded}
+              size="sm"
+            />
+            
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10" 
+              onClick={signOut}
+            >
+              <LogOut className={`h-4 w-4 ${expanded ? 'mr-2' : ''}`} />
+              <AnimatePresence>
+                {expanded && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden whitespace-nowrap"
+                  >
+                    Sign out
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Button>
+          </div>
         </div>
+      </motion.div>
+
+      <div className={`flex-1 transition-all duration-300 ${expanded ? 'ml-64' : 'ml-16'}`}>
+        {children}
       </div>
-    </SidebarProvider>
+    </div>
   );
 }

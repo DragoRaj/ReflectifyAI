@@ -11,7 +11,14 @@ import ThemeProvider from "@/components/ThemeProvider";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import AppRoutes from "@/components/routing/AppRoutes";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false
+    }
+  }
+});
 
 const AuthenticatedApp = () => {
   return (
