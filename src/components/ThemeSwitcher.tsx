@@ -25,9 +25,9 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
       onClick={() => onDarkModeChange(!isDarkMode)}
     >
       {isDarkMode ? (
-        <Moon className={`${size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} ${showLabel ? "mr-2" : ""}`} />
-      ) : (
         <Sun className={`${size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} ${showLabel ? "mr-2" : ""}`} />
+      ) : (
+        <Moon className={`${size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} ${showLabel ? "mr-2" : ""}`} />
       )}
       <AnimatePresence>
         {showLabel && (
@@ -38,7 +38,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden whitespace-nowrap"
           >
-            {isDarkMode ? "Light Mode" : "Dark Mode"}
+            {isDarkMode ? "Dark Mode" : "Light Mode"}
           </motion.span>
         )}
       </AnimatePresence>
