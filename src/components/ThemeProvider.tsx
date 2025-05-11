@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
@@ -46,6 +47,7 @@ export default function ThemeProvider({
     return theme === "dark";
   });
 
+  // Full theme application
   useEffect(() => {
     const root = window.document.documentElement;
     
@@ -57,9 +59,11 @@ export default function ThemeProvider({
         : "light";
       root.classList.add(systemTheme);
       setIsDarkMode(systemTheme === "dark");
+      document.body.style.colorScheme = systemTheme;
     } else {
       root.classList.add(theme);
       setIsDarkMode(theme === "dark");
+      document.body.style.colorScheme = theme;
     }
     
     localStorage.setItem("theme", theme);
@@ -73,6 +77,7 @@ export default function ThemeProvider({
       setIsDarkMode(event.matches);
       document.documentElement.classList.toggle("dark", event.matches);
       document.documentElement.classList.toggle("light", !event.matches);
+      document.body.style.colorScheme = event.matches ? 'dark' : 'light';
     }
     
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

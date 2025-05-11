@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { BarChart2, Home, Shield, Sparkles } from "lucide-react";
@@ -11,6 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import { useTheme } from "@/components/ThemeProvider";
 import DevControls from "@/components/DevControls";
 
 interface MainLayoutProps {
@@ -50,15 +52,16 @@ const featureGroups = [
 ];
 
 const MainLayout = ({ children, className }: MainLayoutProps) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState("home");
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const isDark = localStorage.getItem("darkMode") === "true" || 
-                  window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setIsDarkMode(isDark);
-    updateTheme(isDark);
+    // Remove this as theme is now managed by ThemeProvider
+    // const isDark = localStorage.getItem("darkMode") === "true" || 
+    //               window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // setIsDarkMode(isDark);
+    // updateTheme(isDark);
     
     setTimeout(() => {
       setIsLoaded(true);
@@ -70,20 +73,22 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
     }
   }, []);
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    updateTheme(newDarkMode);
-    localStorage.setItem("darkMode", String(newDarkMode));
-  };
+  // Remove this as toggleDarkMode is now managed by ThemeProvider
+  // const toggleDarkMode = () => {
+  //   const newDarkMode = !isDarkMode;
+  //   setIsDarkMode(newDarkMode);
+  //   updateTheme(newDarkMode);
+  //   localStorage.setItem("darkMode", String(newDarkMode));
+  // };
 
-  const updateTheme = (isDark: boolean) => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
+  // Remove this function as theme is now managed by ThemeProvider
+  // const updateTheme = (isDark: boolean) => {
+  //   if (isDark) {
+  //     document.documentElement.classList.add("dark");
+  //   } else {
+  //     document.documentElement.classList.remove("dark");
+  //   }
+  // };
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
@@ -108,10 +113,10 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
 
   return (
     <div className={cn("min-h-screen bg-gradient-to-b from-background to-accent/30 transition-colors duration-500", className)}>
-      <header className="fixed top-0 left-0 right-0 z-50 py-3 px-6 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-border transition-all duration-500 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 py-3 px-6 backdrop-blur-lg bg-background/80 dark:bg-background/80 border-b border-border transition-all duration-500 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="font-display font-semibold text-xl text-foreground dark:text-foreground">
+            <span className="font-display font-semibold text-xl text-foreground">
               Reflectify
             </span>
           </div>

@@ -13,7 +13,6 @@ DECLARE
 BEGIN
   -- Get role from user metadata, default to 'student' if not set
   user_role := COALESCE(
-    (new.raw_user_meta_data->>'role')::TEXT,
     (new.raw_user_meta_data->>'role')::TEXT, 
     default_role
   );
@@ -27,7 +26,7 @@ BEGIN
   VALUES (
     new.id, 
     new.email, 
-    user_role::user_role, 
+    user_role::public.user_role, 
     first_name, 
     last_name
   );
