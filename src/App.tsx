@@ -7,7 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
 import SplashScreen from "@/components/SplashScreen";
-import ThemeProvider from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import AppRoutes from "@/components/routing/AppRoutes";
 
