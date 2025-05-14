@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -177,8 +176,6 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 
           <div className="p-3 border-t border-white/10 space-y-3">
             <ThemeSwitcher 
-              isDarkMode={isDarkMode} 
-              onDarkModeChange={toggleDarkMode} 
               showLabel={expanded}
               size="sm"
             />
