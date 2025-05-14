@@ -19,7 +19,7 @@ import {
   Line,
 } from "recharts";
 import { toast } from "sonner";
-import { AlertTriangle, TrendingUp, TrendingDown, Minus, Search } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, Minus, Search, School } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import StudentList from "./StudentList";
 import ClassList from "./ClassList";
@@ -30,27 +30,63 @@ export default function Dashboard() {
   const [classes, setClasses] = useState<ClassWellbeingSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [schoolInfo, setSchoolInfo] = useState<{ id: string; name: string } | null>(null);
 
   const isAdmin = profile?.role === "admin";
 
   useEffect(() => {
+    async function fetchAdminSchoolInfo() {
+      if (!profile?.school_id) return null;
+      
+      try {
+        const { data, error } = await supabase
+          .from("schools")
+          .select("id, name")
+          .eq("id", profile.school_id)
+          .single();
+          
+        if (error) throw error;
+        
+        setSchoolInfo(data);
+        return data;
+      } catch (error: any) {
+        console.error("Error fetching school info:", error.message);
+        toast.error("Failed to load school information");
+        return null;
+      }
+    }
+    
     async function fetchDashboardData() {
       try {
-        // In a real app, these would be separate API calls to edge functions
-        // for better performance and processing
+        setLoading(true);
         
-        // Fetch students data
-        const { data: studentsData, error: studentsError } = await supabase
+        let school = null;
+        
+        // If admin, fetch their associated school first
+        if (isAdmin && profile?.school_id) {
+          school = await fetchAdminSchoolInfo();
+        }
+        
+        // Fetch profiles with school filter if admin has a school
+        let profilesQuery = supabase
           .from("profiles")
           .select(`
             id as student_id,
             first_name,
             last_name,
             email,
+            school_id,
             wellbeing_metrics!inner(wellbeing_score, measured_at),
             concern_flags(id, concern_level, reason, resolved, created_at)
           `)
           .eq("role", "student");
+          
+        // If admin has a school, filter by that school
+        if (isAdmin && school?.id) {
+          profilesQuery = profilesQuery.eq("school_id", school.id);
+        }
+        
+        const { data: studentsData, error: studentsError } = await profilesQuery;
 
         if (studentsError) throw studentsError;
 
@@ -87,9 +123,9 @@ export default function Dashboard() {
         
         setStudents(processedStudents);
         
-        // Fetch classes data
+        // Fetch classes data filtered by the admin's school if applicable
         if (isAdmin) {
-          const { data: classesData, error: classesError } = await supabase
+          let classesQuery = supabase
             .from("classes")
             .select(`
               id as class_id,
@@ -98,9 +134,16 @@ export default function Dashboard() {
               class_memberships!inner(user_id, role)
             `);
             
+          // If admin has a school, filter by that school
+          if (school?.id) {
+            classesQuery = classesQuery.eq("school_id", school.id);
+          }
+          
+          const { data: classesData, error: classesError } = await classesQuery;
+            
           if (classesError) throw classesError;
           
-          // Process class data - in real app, this would come from a database view or function
+          // Process class data
           const processedClasses = classesData.map((classItem: any) => {
             const studentIds = classItem.class_memberships
               .filter((m: any) => m.role === 'student')
@@ -138,7 +181,7 @@ export default function Dashboard() {
     return fullName.includes(term) || email.includes(term);
   });
   
-  // Mock data for charts
+  // Dynamic data for charts
   const wellbeingOverTimeData = [
     { month: "Jan", average: 6.2 },
     { month: "Feb", average: 6.5 },
@@ -162,9 +205,17 @@ export default function Dashboard() {
   return (
     <div className="p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-indigo-800">
-          {isAdmin ? "Administrator Dashboard" : "Teacher Dashboard"}
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-indigo-800">
+            {isAdmin ? "Administrator Dashboard" : "Teacher Dashboard"}
+          </h1>
+          {schoolInfo && (
+            <div className="flex items-center text-slate-600 mt-1">
+              <School className="h-4 w-4 mr-1" />
+              <span>{schoolInfo.name}</span>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
@@ -195,8 +246,10 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(students.reduce((sum, student) => sum + student.average_wellbeing, 0) / 
-                (students.length || 1)).toFixed(1)}
+              {students.length > 0 
+                ? (students.reduce((sum, student) => sum + student.average_wellbeing, 0) / 
+                  (students.length || 1)).toFixed(1)
+                : "N/A"}
               <span className="text-sm text-slate-500 ml-1">/ 10</span>
             </div>
           </CardContent>
@@ -222,55 +275,78 @@ export default function Dashboard() {
         </TabsList>
         
         <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Wellbeing Trends</CardTitle>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={wellbeingOverTimeData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis domain={[0, 10]} />
-                    <Tooltip />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="average" 
-                      stroke="#6366f1" 
-                      strokeWidth={2} 
-                      name="Average Wellbeing"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
+          {students.length === 0 ? (
+            <Card className="p-8 text-center">
+              <h3 className="text-lg font-medium mb-2">No Student Data Available</h3>
+              <p className="text-slate-600">
+                {schoolInfo 
+                  ? `There are no students associated with ${schoolInfo.name} yet.` 
+                  : "No school has been selected or no students are available."}
+              </p>
+              <Button className="mt-4">Manage Students</Button>
             </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Concern Categories</CardTitle>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={concernsByTypeData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="type" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" name="Number of Concerns" fill="#a78bfa" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Wellbeing Trends</CardTitle>
+                </CardHeader>
+                <CardContent className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={wellbeingOverTimeData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis domain={[0, 10]} />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="average" 
+                        stroke="#6366f1" 
+                        strokeWidth={2} 
+                        name="Average Wellbeing"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Concern Categories</CardTitle>
+                </CardHeader>
+                <CardContent className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={concernsByTypeData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="type" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="count" name="Number of Concerns" fill="#a78bfa" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
         
         <TabsContent value="students">
           <Card>
             <CardContent className="p-0">
-              <StudentList students={filteredStudents} />
+              {students.length === 0 ? (
+                <div className="py-8 text-center">
+                  <h3 className="text-lg font-medium mb-2">No Students Available</h3>
+                  <p className="text-slate-600">
+                    {schoolInfo 
+                      ? `There are no students associated with ${schoolInfo.name} yet.` 
+                      : "No school has been selected or no students are available."}
+                  </p>
+                </div>
+              ) : (
+                <StudentList students={filteredStudents} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -279,7 +355,19 @@ export default function Dashboard() {
           {isAdmin && (
             <Card>
               <CardContent className="p-0">
-                <ClassList classes={classes} />
+                {classes.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <h3 className="text-lg font-medium mb-2">No Classes Available</h3>
+                    <p className="text-slate-600">
+                      {schoolInfo 
+                        ? `There are no classes associated with ${schoolInfo.name} yet.` 
+                        : "No school has been selected or no classes are available."}
+                    </p>
+                    <Button className="mt-4">Add Class</Button>
+                  </div>
+                ) : (
+                  <ClassList classes={classes} />
+                )}
               </CardContent>
             </Card>
           )}

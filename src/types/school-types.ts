@@ -1,4 +1,3 @@
-
 export type Role = 'student' | 'teacher' | 'admin';
 
 export interface Profile {
@@ -114,4 +113,13 @@ export interface ClassWellbeingSummary {
   average_wellbeing: number;
   students_count: number;
   flagged_students_count: number;
+}
+
+export interface AdminSurvey {
+  id: string;
+  admin_id: string;
+  school_id: string | null;
+  school_name: string;
+  position: string | null;
+  created_at: string;
 }

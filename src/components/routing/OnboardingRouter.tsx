@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import OnboardingSurvey from "@/components/OnboardingSurvey";
+import { TeacherSurvey } from "@/components/surveys/TeacherSurvey";
+import AdminSurvey from "@/components/surveys/AdminSurvey";
 import { supabase } from "@/integrations/supabase/client";
 
 const OnboardingRouter = ({ children }: { children: React.ReactNode }) => {
@@ -39,8 +41,20 @@ const OnboardingRouter = ({ children }: { children: React.ReactNode }) => {
           }
               
           setNeedsOnboarding(!data);
+        } else if (profile.role === 'admin') {
+          const { data, error } = await supabase
+            .from("admin_surveys")
+            .select("*")
+            .eq("admin_id", user.id)
+            .maybeSingle();
+              
+          if (error) {
+            console.error("Error checking admin onboarding:", error);
+          }
+              
+          setNeedsOnboarding(!data);
         } else {
-          // Admin doesn't need onboarding
+          // Default case, shouldn't normally be reached
           setNeedsOnboarding(false);
         }
       } catch (error) {
@@ -62,7 +76,13 @@ const OnboardingRouter = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (needsOnboarding) {
-    return <OnboardingSurvey onComplete={() => setNeedsOnboarding(false)} />;
+    if (profile?.role === 'teacher') {
+      return <TeacherSurvey onComplete={() => setNeedsOnboarding(false)} />;
+    } else if (profile?.role === 'admin') {
+      return <AdminSurvey onComplete={() => setNeedsOnboarding(false)} />;
+    } else {
+      return <OnboardingSurvey onComplete={() => setNeedsOnboarding(false)} />;
+    }
   }
   
   return <>{children}</>;

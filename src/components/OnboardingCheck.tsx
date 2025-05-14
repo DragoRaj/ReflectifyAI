@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import OnboardingSurvey from "@/components/OnboardingSurvey";
 import { TeacherSurvey } from "@/components/surveys/TeacherSurvey";
+import AdminSurvey from "@/components/surveys/AdminSurvey";
 
 interface OnboardingCheckProps {
   children: React.ReactNode;
@@ -44,8 +45,20 @@ export function OnboardingCheck({ children }: OnboardingCheckProps) {
           }
               
           setNeedsOnboarding(!data);
+        } else if (profile.role === 'admin') {
+          const { data, error } = await supabase
+            .from("admin_surveys")
+            .select("*")
+            .eq("admin_id", user.id)
+            .maybeSingle();
+              
+          if (error) {
+            console.error("Error checking admin onboarding:", error);
+          }
+              
+          setNeedsOnboarding(!data);
         } else {
-          // Admin doesn't need onboarding
+          // Default case, shouldn't normally be reached
           setNeedsOnboarding(false);
         }
       } catch (error) {
@@ -69,6 +82,8 @@ export function OnboardingCheck({ children }: OnboardingCheckProps) {
   if (needsOnboarding) {
     if (profile?.role === 'teacher') {
       return <TeacherSurvey onComplete={() => setNeedsOnboarding(false)} />;
+    } else if (profile?.role === 'admin') {
+      return <AdminSurvey onComplete={() => setNeedsOnboarding(false)} />;
     } else {
       return <OnboardingSurvey onComplete={() => setNeedsOnboarding(false)} />;
     }

@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_surveys: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          position: string | null
+          school_id: string | null
+          school_name: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          position?: string | null
+          school_id?: string | null
+          school_name: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          position?: string | null
+          school_id?: string | null
+          school_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_surveys_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_interactions: {
         Row: {
           ai_response: string
@@ -393,6 +428,7 @@ export type Database = {
           id: string
           intervention_suggestions: string | null
           observed_student_stress: number
+          school_id: string | null
           school_name: string
           support_resources_needed: string
           teacher_id: string
@@ -406,6 +442,7 @@ export type Database = {
           id?: string
           intervention_suggestions?: string | null
           observed_student_stress: number
+          school_id?: string | null
           school_name: string
           support_resources_needed: string
           teacher_id: string
@@ -419,11 +456,20 @@ export type Database = {
           id?: string
           intervention_suggestions?: string | null
           observed_student_stress?: number
+          school_id?: string | null
           school_name?: string
           support_resources_needed?: string
           teacher_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "teacher_surveys_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wellbeing_metrics: {
         Row: {
