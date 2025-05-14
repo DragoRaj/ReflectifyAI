@@ -1,28 +1,27 @@
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface ThemeSwitcherProps {
-  isDarkMode: boolean;
-  onDarkModeChange: (isDark: boolean) => void;
   showLabel?: boolean;
   size?: "sm" | "default";
 }
 
 const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ 
-  isDarkMode, 
-  onDarkModeChange,
   showLabel = true,
   size = "default"
 }) => {
+  const { isDarkMode, toggleDarkMode } = useTheme();
+
   return (
     <Button
       variant="ghost"
       size={size}
       className="w-full justify-start"
-      onClick={() => onDarkModeChange(!isDarkMode)}
+      onClick={toggleDarkMode}
     >
       {isDarkMode ? (
         <Moon className={`${size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} ${showLabel ? "mr-2" : ""}`} />

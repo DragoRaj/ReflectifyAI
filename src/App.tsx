@@ -1,16 +1,17 @@
 
+import * as React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
 import SplashScreen from "@/components/SplashScreen";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import AppRoutes from "@/components/routing/AppRoutes";
 
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -33,9 +34,9 @@ const AuthenticatedApp = () => {
 };
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = React.useState(true);
   
-  useEffect(() => {
+  React.useEffect(() => {
     // Regular behavior - show initial splash unless it's been shown already
     const shouldSkipSplash = sessionStorage.getItem('initialLoadComplete') === 'true';
     

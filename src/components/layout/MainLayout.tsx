@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { BarChart2, Home, Shield, Sparkles } from "lucide-react";
@@ -12,7 +11,6 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
-import { useTheme } from "@/components/ThemeProvider";
 import DevControls from "@/components/DevControls";
 
 interface MainLayoutProps {
@@ -52,17 +50,10 @@ const featureGroups = [
 ];
 
 const MainLayout = ({ children, className }: MainLayoutProps) => {
-  const { isDarkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState("home");
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Remove this as theme is now managed by ThemeProvider
-    // const isDark = localStorage.getItem("darkMode") === "true" || 
-    //               window.matchMedia("(prefers-color-scheme: dark)").matches;
-    // setIsDarkMode(isDark);
-    // updateTheme(isDark);
-    
     setTimeout(() => {
       setIsLoaded(true);
     }, 300);
@@ -72,23 +63,6 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
       setActiveTab(hash);
     }
   }, []);
-
-  // Remove this as toggleDarkMode is now managed by ThemeProvider
-  // const toggleDarkMode = () => {
-  //   const newDarkMode = !isDarkMode;
-  //   setIsDarkMode(newDarkMode);
-  //   updateTheme(newDarkMode);
-  //   localStorage.setItem("darkMode", String(newDarkMode));
-  // };
-
-  // Remove this function as theme is now managed by ThemeProvider
-  // const updateTheme = (isDark: boolean) => {
-  //   if (isDark) {
-  //     document.documentElement.classList.add("dark");
-  //   } else {
-  //     document.documentElement.classList.remove("dark");
-  //   }
-  // };
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
@@ -179,7 +153,7 @@ const MainLayout = ({ children, className }: MainLayoutProps) => {
           </nav>
           
           <div className="flex items-center space-x-4">
-            <ThemeSwitcher isDarkMode={isDarkMode} onDarkModeChange={toggleDarkMode} />
+            <ThemeSwitcher />
             
             <button className="rounded-full bg-primary/10 dark:bg-primary/20 p-2 transition hover:bg-primary/20 dark:hover:bg-primary/30">
               <span className="sr-only">User settings</span>
