@@ -25,9 +25,7 @@ export default function AdminSurvey({ onComplete }: AdminSurveyProps) {
   
   // Admin survey fields
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
-  const [newSchoolName, setNewSchoolName] = useState<string>("");
   const [position, setPosition] = useState<string>("");
-  const [isNewSchool, setIsNewSchool] = useState<boolean>(false);
 
   const totalSteps = 3;
 
@@ -76,28 +74,13 @@ export default function AdminSurvey({ onComplete }: AdminSurveyProps) {
     
     setLoading(true);
     try {
-      let schoolId = selectedSchoolId;
-      
-      // If admin is creating a new school
-      if (isNewSchool && newSchoolName) {
-        const { data: newSchool, error: schoolError } = await supabase
-          .from('schools')
-          .insert({ name: newSchoolName })
-          .select('id')
-          .single();
-          
-        if (schoolError) throw schoolError;
-        
-        schoolId = newSchool.id;
-      }
-      
       // Submit admin survey
       const { error } = await supabase
         .from('admin_surveys')
         .insert({
           admin_id: user.id,
-          school_id: schoolId,
-          school_name: isNewSchool ? newSchoolName : schools.find(s => s.id === selectedSchoolId)?.name || "",
+          school_id: selectedSchoolId,
+          school_name: schools.find(s => s.id === selectedSchoolId)?.name || "",
           position: position
         });
         
@@ -106,7 +89,7 @@ export default function AdminSurvey({ onComplete }: AdminSurveyProps) {
       // Update the admin's profile with the school_id
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ school_id: schoolId })
+        .update({ school_id: selectedSchoolId })
         .eq('id', user.id);
         
       if (profileError) throw profileError;
@@ -136,44 +119,21 @@ export default function AdminSurvey({ onComplete }: AdminSurveyProps) {
                   <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
                 </div>
               ) : (
-                <>
-                  <Select
-                    value={isNewSchool ? "new" : selectedSchoolId}
-                    onValueChange={(value) => {
-                      if (value === "new") {
-                        setIsNewSchool(true);
-                        setSelectedSchoolId("");
-                      } else {
-                        setIsNewSchool(false);
-                        setSelectedSchoolId(value);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a school" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {schools.map(school => (
-                        <SelectItem key={school.id} value={school.id}>
-                          {school.name}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="new">+ Add a new school</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  {isNewSchool && (
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor="new-school">New School Name</Label>
-                      <Input
-                        id="new-school"
-                        value={newSchoolName}
-                        onChange={(e) => setNewSchoolName(e.target.value)}
-                        placeholder="Enter school name"
-                      />
-                    </div>
-                  )}
-                </>
+                <Select
+                  value={selectedSchoolId}
+                  onValueChange={setSelectedSchoolId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a school" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {schools.map(school => (
+                      <SelectItem key={school.id} value={school.id}>
+                        {school.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
           </div>
@@ -282,7 +242,7 @@ export default function AdminSurvey({ onComplete }: AdminSurveyProps) {
               type="button" 
               onClick={handleNextStep}
               disabled={
-                (currentStep === 1 && (!selectedSchoolId && !isNewSchool) || (isNewSchool && !newSchoolName)) ||
+                (currentStep === 1 && !selectedSchoolId) ||
                 (currentStep === 2 && !position)
               }
             >

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -37,14 +36,15 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
   const { user, profile, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fetchingSchools, setFetchingSchools] = useState(true);
+  const [fetchingClasses, setFetchingClasses] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [progress, setProgress] = useState(20);
   const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
+  const [classes, setClasses] = useState<{ id: string; name: string; grade_level: number }[]>([]);
   
   // Teacher survey fields
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
-  const [newSchoolName, setNewSchoolName] = useState<string>("");
-  const [schoolName, setSchoolName] = useState<string>("");
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [teacherGradeLevel, setTeacherGradeLevel] = useState<number>(9);
   const [classSection, setClassSection] = useState<string>("");
   const [observedStudentStress, setObservedStudentStress] = useState<number>(5);
@@ -52,7 +52,6 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
   const [commonChallenges, setCommonChallenges] = useState<string[]>([]);
   const [supportNeeded, setSupportNeeded] = useState<string>("");
   const [interventions, setInterventions] = useState<string>("");
-  const [isNewSchool, setIsNewSchool] = useState<boolean>(false);
 
   const totalSteps = 5;
 
@@ -82,6 +81,33 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
     fetchSchools();
   }, []);
 
+  useEffect(() => {
+    if (selectedSchoolId) {
+      setFetchingClasses(true);
+      async function fetchClasses() {
+        try {
+          const { data, error } = await supabase
+            .from("classes")
+            .select("id, name, grade_level")
+            .eq("school_id", selectedSchoolId)
+            .order("grade_level")
+            .order("name");
+
+          if (error) throw error;
+          
+          setClasses(data || []);
+        } catch (error: any) {
+          console.error("Error fetching classes:", error.message);
+          toast.error("Failed to load classes");
+        } finally {
+          setFetchingClasses(false);
+        }
+      }
+
+      fetchClasses();
+    }
+  }, [selectedSchoolId]);
+
   const handleNextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -109,28 +135,13 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
     
     setLoading(true);
     try {
-      let schoolId = selectedSchoolId;
-      
-      // If teacher is creating a new school
-      if (isNewSchool && newSchoolName) {
-        const { data: newSchool, error: schoolError } = await supabase
-          .from('schools')
-          .insert({ name: newSchoolName })
-          .select('id')
-          .single();
-          
-        if (schoolError) throw schoolError;
-        
-        schoolId = newSchool.id;
-      }
-      
       // Submit teacher survey
       const { error } = await supabase
         .from('teacher_surveys')
         .insert({
           teacher_id: user.id,
-          school_id: schoolId,
-          school_name: isNewSchool ? newSchoolName : schoolName,
+          school_id: selectedSchoolId,
+          school_name: schools.find(s => s.id === selectedSchoolId)?.name || "",
           grade_level: teacherGradeLevel,
           class_section: classSection,
           observed_student_stress: observedStudentStress,
@@ -145,10 +156,25 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
       // Update the teacher's profile with the school_id
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ school_id: schoolId })
+        .update({ school_id: selectedSchoolId })
         .eq('id', user.id);
         
       if (profileError) throw profileError;
+      
+      // Create class membership if a class was selected
+      if (selectedClassId) {
+        const { error: membershipError } = await supabase
+          .from('class_memberships')
+          .insert({
+            user_id: user.id,
+            class_id: selectedClassId,
+            role: 'teacher'
+          });
+          
+        if (membershipError) {
+          console.error('Error creating class membership:', membershipError);
+        }
+      }
       
       // Refresh the profile to update any onboarding flags
       await refreshProfile();
@@ -175,49 +201,63 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
                   <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
                 </div>
               ) : (
-                <>
-                  <Select
-                    value={isNewSchool ? "new" : selectedSchoolId}
-                    onValueChange={(value) => {
-                      if (value === "new") {
-                        setIsNewSchool(true);
-                        setSelectedSchoolId("");
-                        setSchoolName("");
-                      } else {
-                        setIsNewSchool(false);
-                        setSelectedSchoolId(value);
-                        const school = schools.find(s => s.id === value);
-                        if (school) {
-                          setSchoolName(school.name);
-                        }
+                <Select
+                  value={selectedSchoolId}
+                  onValueChange={(value) => {
+                    setSelectedSchoolId(value);
+                    setSelectedClassId("");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a school" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {schools.map(school => (
+                      <SelectItem key={school.id} value={school.id}>
+                        {school.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="class-select">Select Your Class</Label>
+              {fetchingClasses ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                </div>
+              ) : (
+                <Select
+                  value={selectedClassId}
+                  onValueChange={(value) => {
+                    setSelectedClassId(value);
+                    const selectedClass = classes.find(c => c.id === value);
+                    if (selectedClass) {
+                      setTeacherGradeLevel(selectedClass.grade_level);
+                      
+                      // Extract class section (e.g., "A" from "Class 9A")
+                      const classNameParts = selectedClass.name.split(' ');
+                      if (classNameParts.length > 1) {
+                        const section = classNameParts[1].replace(/\d+/g, '');
+                        setClassSection(section);
                       }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a school" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {schools.map(school => (
-                        <SelectItem key={school.id} value={school.id}>
-                          {school.name}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="new">+ Add a new school</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  {isNewSchool && (
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor="new-school">New School Name</Label>
-                      <Input
-                        id="new-school"
-                        value={newSchoolName}
-                        onChange={(e) => setNewSchoolName(e.target.value)}
-                        placeholder="Enter school name"
-                      />
-                    </div>
-                  )}
-                </>
+                    }
+                  }}
+                  disabled={!selectedSchoolId || classes.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={classes.length === 0 ? "No classes available" : "Select a class"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map(cls => (
+                      <SelectItem key={cls.id} value={cls.id}>
+                        {cls.name} (Grade {cls.grade_level})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
             
@@ -227,7 +267,7 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
                 <Input 
                   type="number" 
                   id="teacher-grade-level" 
-                  min={6} 
+                  min={3} 
                   max={12} 
                   value={teacherGradeLevel} 
                   onChange={(e) => setTeacherGradeLevel(parseInt(e.target.value))} 
@@ -236,12 +276,21 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
               
               <div className="space-y-2">
                 <Label htmlFor="class-section">Class/Section</Label>
-                <Input 
-                  id="class-section"
-                  placeholder="e.g. 9A, Science"
+                <Select
                   value={classSection}
-                  onChange={(e) => setClassSection(e.target.value)}
-                />
+                  onValueChange={setClassSection}
+                >
+                  <SelectTrigger id="class-section">
+                    <SelectValue placeholder="Select a section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['A', 'B', 'C', 'D', 'E'].map(section => (
+                      <SelectItem key={section} value={section}>
+                        Section {section}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -463,7 +512,7 @@ export function TeacherSurvey({ onComplete }: TeacherSurveyProps) {
               type="button" 
               onClick={handleNextStep}
               disabled={
-                (currentStep === 1 && (!selectedSchoolId && !isNewSchool) || (isNewSchool && !newSchoolName)) ||
+                (currentStep === 1 && !selectedSchoolId) ||
                 (currentStep === 2 && !classAtmosphere) ||
                 (currentStep === 3 && commonChallenges.length === 0) ||
                 (currentStep === 4 && !supportNeeded)

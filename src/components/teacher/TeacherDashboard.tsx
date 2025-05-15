@@ -37,26 +37,79 @@ import {
   ChevronRight,
   TrendingUp,
   TrendingDown,
-  Minus
+  Minus,
+  School
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function TeacherDashboard() {
   const { profile } = useAuth();
-  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [insights, setInsights] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState(3); // Mock notification count
+  const [notifications, setNotifications] = useState(3);
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [schoolInfo, setSchoolInfo] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
+    async function fetchTeacherSchool() {
+      if (!profile?.school_id) return null;
+      
+      try {
+        const { data, error } = await supabase
+          .from("schools")
+          .select("id, name")
+          .eq("id", profile.school_id)
+          .single();
+          
+        if (error) throw error;
+        
+        setSchoolInfo(data);
+        return data;
+      } catch (error: any) {
+        console.error("Error fetching school info:", error.message);
+        toast.error("Failed to load school information");
+        return null;
+      }
+    }
+  
     async function fetchDashboardData() {
       try {
-        // Fetch students data
+        setLoading(true);
+        
+        // First, fetch the teacher's school
+        let school = null;
+        if (profile?.school_id) {
+          school = await fetchTeacherSchool();
+        }
+        
+        if (!school) {
+          toast.error("School information not found. Please complete onboarding.");
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch classes data for this teacher's school
+        const { data: classesData, error: classesError } = await supabase
+          .from("classes")
+          .select("id, name, grade_level, school_id")
+          .eq("school_id", school.id)
+          .order("grade_level")
+          .order("name");
+          
+        if (classesError) throw classesError;
+        
+        setClasses(classesData || []);
+        
+        // If a class is not selected, use the first class
+        const classId = selectedClassId || (classesData?.length > 0 ? classesData[0].id : null);
+        setSelectedClassId(classId);
+        
+        // Fetch students in this school
         const { data: studentsData, error: studentsError } = await supabase
           .from("profiles")
           .select(`
@@ -64,30 +117,60 @@ export default function TeacherDashboard() {
             first_name, 
             last_name, 
             email, 
-            role
+            school_id,
+            wellbeing_metrics(wellbeing_score, measured_at),
+            concern_flags(id, concern_level, reason, resolved, created_at)
           `)
-          .eq("role", "student");
-
+          .eq("role", "student")
+          .eq("school_id", school.id);
+          
         if (studentsError) throw studentsError;
         
-        // Process students with well-being data (mock data for now)
+        // Process students with wellbeing data
         const processedStudents = studentsData.map((student: any) => {
+          const metrics = student.wellbeing_metrics || [];
+          
+          // Calculate average wellbeing score
+          const average = metrics.length > 0 
+            ? metrics.reduce((sum: number, m: any) => sum + m.wellbeing_score, 0) / metrics.length 
+            : null;
+          
+          // Determine trend
+          let trend = 'stable';
+          if (metrics.length > 1) {
+            // Sort metrics by date
+            const sortedMetrics = [...metrics].sort((a: any, b: any) => 
+              new Date(a.measured_at).getTime() - new Date(b.measured_at).getTime()
+            );
+            
+            const firstScore = sortedMetrics[0].wellbeing_score;
+            const lastScore = sortedMetrics[sortedMetrics.length - 1].wellbeing_score;
+            
+            if (lastScore - firstScore > 0.5) trend = 'improving';
+            else if (firstScore - lastScore > 0.5) trend = 'declining';
+          }
+          
+          // Get latest check-in date
+          const lastCheckIn = metrics.length > 0
+            ? new Date(Math.max(...metrics.map((m: any) => new Date(m.measured_at).getTime())))
+            : null;
+            
           return {
             ...student,
-            wellbeing_score: Math.floor(Math.random() * 3 + 6), // Random score between 6-9
-            trend: ['improving', 'stable', 'declining'][Math.floor(Math.random() * 3)],
-            last_check_in: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() // Random date in last 7 days
+            wellbeing_score: average !== null ? parseFloat(average.toFixed(1)) : 7,
+            trend,
+            last_check_in: lastCheckIn ? lastCheckIn.toISOString() : null
           };
         });
         
         setStudents(processedStudents || []);
         
-        // Fetch mock insights
+        // Generate some mock insights (in a real app, these would come from the backend)
         const mockInsights = [
           {
             id: 1,
             title: "Well-being Trend Alert",
-            description: "3 students showed declining wellbeing scores this week",
+            description: `${processedStudents.filter((s: any) => s.trend === 'declining').length} students showed declining wellbeing scores this week`,
             type: "alert", 
             created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
           },
@@ -111,8 +194,8 @@ export default function TeacherDashboard() {
         setLoading(false);
         
       } catch (error: any) {
-        console.error("Error fetching dashboard data:", error);
-        toast.error("Failed to load dashboard data");
+        console.error("Error fetching dashboard data:", error.message);
+        toast.error(`Failed to load dashboard data: ${error.message}`);
         setLoading(false);
       }
     }
@@ -120,7 +203,7 @@ export default function TeacherDashboard() {
     if (profile) {
       fetchDashboardData();
     }
-  }, [profile]);
+  }, [profile, selectedClassId]);
 
   // Mock data for charts
   const wellbeingOverTimeData = [
@@ -131,13 +214,51 @@ export default function TeacherDashboard() {
     { month: "May", average: 7.4 },
   ];
 
-  const concernsByTypeData = [
-    { type: "Academic", count: 8, color: "#8b5cf6" },
-    { type: "Social", count: 5, color: "#3b82f6" },
-    { type: "Emotional", count: 7, color: "#ef4444" },
-    { type: "Behavioral", count: 3, color: "#f97316" },
-    { type: "Health", count: 4, color: "#10b981" },
-  ];
+  // Calculate real concern statistics from the students data
+  const calculateConcernsByType = () => {
+    const concerns: Record<string, number> = {
+      "Academic": 0,
+      "Social": 0, 
+      "Emotional": 0,
+      "Behavioral": 0,
+      "Health": 0
+    };
+    
+    students.forEach((student: any) => {
+      if (student.concern_flags && student.concern_flags.length > 0) {
+        student.concern_flags.forEach((flag: any) => {
+          // Categorize concerns based on reason text
+          if (flag.reason?.includes("test") || flag.reason?.includes("exam") || flag.reason?.includes("grade")) {
+            concerns["Academic"]++;
+          } else if (flag.reason?.includes("friend") || flag.reason?.includes("social") || flag.reason?.includes("peer")) {
+            concerns["Social"]++;
+          } else if (flag.reason?.includes("anxious") || flag.reason?.includes("sad") || flag.reason?.includes("mood")) {
+            concerns["Emotional"]++;
+          } else if (flag.reason?.includes("disrupt") || flag.reason?.includes("behav") || flag.reason?.includes("attention")) {
+            concerns["Behavioral"]++;
+          } else if (flag.reason?.includes("sick") || flag.reason?.includes("health") || flag.reason?.includes("sleep")) {
+            concerns["Health"]++;
+          } else {
+            // Default category if no specific keywords are matched
+            concerns["Emotional"]++;
+          }
+        });
+      }
+    });
+    
+    // Convert to array format for charts
+    return Object.entries(concerns).map(([type, count]) => ({
+      type,
+      count,
+      color: type === "Academic" ? "#8b5cf6" : 
+             type === "Social" ? "#3b82f6" : 
+             type === "Emotional" ? "#ef4444" : 
+             type === "Behavioral" ? "#f97316" : 
+             "#10b981"
+    }));
+  };
+
+  const concernsByTypeData = calculateConcernsByType();
   
   const activityData = [
     { name: "Journal Entries", value: 42, color: "#8b5cf6" },
@@ -160,6 +281,16 @@ export default function TeacherDashboard() {
     return <div className="flex justify-center items-center h-64">Loading dashboard...</div>;
   }
 
+  // Calculate the average wellbeing score across all students
+  const averageWellbeing = students.length > 0
+    ? parseFloat((students.reduce((sum: number, student: any) => sum + student.wellbeing_score, 0) / students.length).toFixed(1))
+    : 7.0;
+    
+  // Count students requiring attention
+  const studentsNeedingAttention = students.filter((student: any) => 
+    student.concern_flags?.some((flag: any) => !flag.resolved)
+  ).length;
+
   return (
     <div className="container mx-auto p-4 max-w-7xl">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -167,7 +298,12 @@ export default function TeacherDashboard() {
           <h1 className="text-3xl font-bold text-indigo-800">
             Teacher Dashboard
           </h1>
-          <p className="text-slate-600">Monitor student wellbeing and insights</p>
+          {schoolInfo && (
+            <div className="flex items-center text-slate-600 mt-1">
+              <School className="h-4 w-4 mr-1" />
+              <span>{schoolInfo.name}</span>
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
@@ -185,6 +321,28 @@ export default function TeacherDashboard() {
           <SignOutButton />
         </div>
       </div>
+      
+      {classes.length > 0 && (
+        <div className="mb-6">
+          <Label htmlFor="class-filter" className="text-sm font-medium mb-2 block">Filter by Class</Label>
+          <Select
+            value={selectedClassId || ''}
+            onValueChange={(value) => setSelectedClassId(value)}
+          >
+            <SelectTrigger className="w-full sm:w-[250px]">
+              <SelectValue placeholder="Select a class" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Classes</SelectItem>
+              {classes.map((cls: any) => (
+                <SelectItem key={cls.id} value={cls.id}>
+                  {cls.name} (Grade {cls.grade_level})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-8">
         <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 shadow border-indigo-100/60">
@@ -207,7 +365,7 @@ export default function TeacherDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-900">7.4<span className="text-sm text-emerald-700/70 ml-1">/ 10</span></div>
+            <div className="text-3xl font-bold text-emerald-900">{averageWellbeing}<span className="text-sm text-emerald-700/70 ml-1">/ 10</span></div>
           </CardContent>
         </Card>
         
@@ -219,7 +377,7 @@ export default function TeacherDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-900">3</div>
+            <div className="text-3xl font-bold text-amber-900">{studentsNeedingAttention}</div>
           </CardContent>
         </Card>
         
@@ -464,6 +622,11 @@ export default function TeacherDashboard() {
                                 <span className="font-medium text-slate-900">
                                   {student.first_name} {student.last_name}
                                 </span>
+                                {student.concern_flags?.some((flag: any) => !flag.resolved) && (
+                                  <Badge variant="destructive" className="ml-2">
+                                    <AlertCircle className="h-3 w-3 mr-1" /> Concern
+                                  </Badge>
+                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
@@ -483,7 +646,7 @@ export default function TeacherDashboard() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                              {new Date(student.last_check_in).toLocaleDateString()}
+                              {student.last_check_in ? new Date(student.last_check_in).toLocaleDateString() : "Never"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <Button variant="outline" size="sm" className="border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">View Profile</Button>
@@ -546,86 +709,81 @@ export default function TeacherDashboard() {
                         Students Requiring Attention
                       </h3>
                       <p className="text-slate-600 mt-1">
-                        The following students have shown declining wellbeing metrics that may require intervention.
+                        The following students have shown declining wellbeing metrics that may require intervention:
                       </p>
                       
                       <div className="mt-4 space-y-3">
                         {students
-                          .filter((s: any) => s.trend === 'declining')
+                          .filter((s: any) => s.trend === 'declining' || s.concern_flags?.some((flag: any) => !flag.resolved))
+                          .slice(0, 3)
                           .map((student: any) => (
-                            <div key={student.id} className="flex items-center justify-between rounded-lg border p-3 bg-red-50 border-red-200">
+                            <div key={student.id} className="flex items-center justify-between bg-red-50 rounded p-3 border border-red-100">
                               <div className="flex items-center">
-                                <Avatar className="h-8 w-8 mr-2">
+                                <Avatar className="h-8 w-8 mr-3">
                                   <AvatarFallback className="bg-red-100 text-red-700">
                                     {student.first_name?.[0]}{student.last_name?.[0]}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <p className="font-medium text-red-900">{student.first_name} {student.last_name}</p>
-                                  <p className="text-xs text-red-700">Score: {student.wellbeing_score}/10</p>
+                                  <p className="font-medium">{student.first_name} {student.last_name}</p>
+                                  <p className="text-xs text-slate-500">
+                                    {student.concern_flags?.length > 0 
+                                      ? student.concern_flags[0].reason 
+                                      : "Declining wellbeing trend"}
+                                  </p>
                                 </div>
                               </div>
-                              <Button size="sm" variant="destructive" className="bg-red-600 hover:bg-red-700">Review</Button>
+                              <Button variant="outline" size="sm" className="border-red-200 hover:bg-red-100 text-red-700">
+                                Take Action
+                              </Button>
                             </div>
-                          ))
-                        }
+                          ))}
                       </div>
+                      
+                      {students.filter((s: any) => s.trend === 'declining' || s.concern_flags?.some((flag: any) => !flag.resolved)).length > 3 && (
+                        <div className="mt-3">
+                          <Button variant="link" className="text-indigo-600 p-0">
+                            View all students requiring attention
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
                 
-                <div className="rounded-lg border p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div className="w-full">
-                      <h3 className="font-medium text-lg flex items-center text-indigo-900">
-                        <FileText className="h-5 w-5 text-blue-500 mr-2" />
-                        Recommended Resources
-                      </h3>
-                      <p className="text-slate-600 mt-1">
-                        Resources and activities that may benefit your students based on recent wellbeing data.
+                <div className="rounded-lg border p-6 bg-green-50">
+                  <h3 className="font-medium text-lg flex items-center text-green-700">
+                    <FileText className="h-5 w-5 text-green-600 mr-2" />
+                    Recommended Activities
+                  </h3>
+                  <p className="text-slate-600 mt-1">
+                    Based on recent wellbeing trends, consider incorporating these activities:
+                  </p>
+                  
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <h4 className="font-medium text-green-800">Mindfulness Sessions</h4>
+                      <p className="text-sm text-slate-600 mt-1">
+                        5-10 minute guided mindfulness exercises at the start of class can help reduce anxiety.
                       </p>
-                      
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="rounded-lg border p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
-                          <h4 className="font-medium text-blue-900">Exam Stress Management</h4>
-                          <p className="text-sm text-slate-600 mt-1">
-                            A collection of activities and techniques to help students manage exam-related anxiety.
-                          </p>
-                          <Button size="sm" variant="link" className="mt-2 pl-0 text-blue-600 hover:text-blue-800">
-                            View Resource
-                          </Button>
-                        </div>
-                        
-                        <div className="rounded-lg border p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
-                          <h4 className="font-medium text-blue-900">Group Mindfulness Session</h4>
-                          <p className="text-sm text-slate-600 mt-1">
-                            Guided mindfulness activities designed for classroom settings.
-                          </p>
-                          <Button size="sm" variant="link" className="mt-2 pl-0 text-blue-600 hover:text-blue-800">
-                            View Resource
-                          </Button>
-                        </div>
-                        
-                        <div className="rounded-lg border p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
-                          <h4 className="font-medium text-blue-900">Social Connection Activities</h4>
-                          <p className="text-sm text-slate-600 mt-1">
-                            Classroom activities to strengthen social bonds and build community.
-                          </p>
-                          <Button size="sm" variant="link" className="mt-2 pl-0 text-blue-600 hover:text-blue-800">
-                            View Resource
-                          </Button>
-                        </div>
-                        
-                        <div className="rounded-lg border p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
-                          <h4 className="font-medium text-blue-900">Emotional Intelligence Workshop</h4>
-                          <p className="text-sm text-slate-600 mt-1">
-                            Materials for teaching emotional awareness and healthy expression.
-                          </p>
-                          <Button size="sm" variant="link" className="mt-2 pl-0 text-blue-600 hover:text-blue-800">
-                            View Resource
-                          </Button>
-                        </div>
-                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <h4 className="font-medium text-green-800">Peer Support Circles</h4>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Facilitating small group discussions where students can share concerns in a safe space.
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <h4 className="font-medium text-green-800">Stress Management Workshop</h4>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Teaching practical coping skills for academic stress ahead of exam periods.
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <h4 className="font-medium text-green-800">Positive Journaling</h4>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Weekly gratitude or reflection prompts to build positive thinking habits.
+                      </p>
                     </div>
                   </div>
                 </div>
