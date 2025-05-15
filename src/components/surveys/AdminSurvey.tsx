@@ -74,13 +74,20 @@ export default function AdminSurvey({ onComplete }: AdminSurveyProps) {
     
     setLoading(true);
     try {
+      // Get the school name for the selected school ID
+      let schoolName = "";
+      const selectedSchool = schools.find(s => s.id === selectedSchoolId);
+      if (selectedSchool) {
+        schoolName = selectedSchool.name;
+      }
+
       // Submit admin survey
       const { error } = await supabase
         .from('admin_surveys')
         .insert({
           admin_id: user.id,
           school_id: selectedSchoolId,
-          school_name: schools.find(s => s.id === selectedSchoolId)?.name || "",
+          school_name: schoolName,
           position: position
         });
         

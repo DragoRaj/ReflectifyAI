@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -107,10 +106,15 @@ const OnboardingSurvey = ({ onComplete }: OnboardingSurveyProps) => {
       
       if (error) throw error;
       
+      // Get the school name for storage
+      const selectedSchool = schools.find(s => s.id === selectedSchoolId);
+      
       // Update the student's profile with the school_id
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ school_id: selectedSchoolId })
+        .update({ 
+          school_id: selectedSchoolId,
+        })
         .eq('id', user.id);
         
       if (profileError) throw profileError;
